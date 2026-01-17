@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自我測驗 | 本草學園</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="logo">🌿 本草學園</div>
+        <ul class="menu">
+            <li><a href="index.html">中藥查詢</a></li>
+            <li><a href="quiz.html" class="active">自我測驗</a></li>
+            <li><a href="mistakes.html">錯題複習</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="quiz-container" id="quiz-container">
+            <div class="quiz-header">
+                <h2>💊 功效測驗</h2>
+                <span id="score-display" style="background:#fff; padding:5px 15px; border-radius:20px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">分數: 0</span>
+            </div>
+            
+            <div id="quiz-card" class="quiz-card">
+                </div>
+
+            <button class="btn-primary" onclick="startQuiz()">下一題 / 換一題</button>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
