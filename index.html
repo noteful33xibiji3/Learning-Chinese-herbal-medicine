@@ -9,9 +9,14 @@
 </head>
 <body>
     <nav>
-        <div class="logo">🌿 本草學園</div>
-        <ul class="menu">
+        <div class="nav-left">
+            <button class="back-btn" onclick="history.back()">❮</button>
+            <a href="index.html" class="logo">🌿 本草學園</a>
+        </div>
+        <div class="burger" onclick="toggleMenu()">☰</div>
+        <ul class="menu" id="nav-menu">
             <li><a href="index.html" class="active">中藥查詢</a></li>
+            <li><a href="pharmacognosy.html">生藥分類</a></li>
             <li><a href="quiz.html">自我測驗</a></li>
             <li><a href="mistakes.html">錯題複習</a></li>
         </ul>
@@ -20,11 +25,17 @@
     <main>
         <div class="hero">
             <h1>中藥資料庫</h1>
-            <p>輸入中藥名、生藥名或科名進行搜尋</p>
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="例如：知母、Liliaceae、大二...">
+            <p>輸入中藥名、英文名、成分或科名</p>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="例如：黃連, Berberine..." autocomplete="off">
+                    <button onclick="triggerSearch()">搜尋</button>
+                </div>
+                <div id="suggestions" class="suggestions-list"></div>
             </div>
         </div>
+
         <div id="herb-grid" class="herb-grid">
             </div>
     </main>
