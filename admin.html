@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增中藥助手 | 本草學園</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        textarea { height: 80px; }
+        .output-area { background: #333; color: #fff; padding: 15px; border-radius: 10px; font-family: monospace; margin-top: 20px; white-space: pre-wrap; word-break: break-all; }
+        .required::after { content: " *"; color: red; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🌿 本草後台</div>
+        <ul class="menu">
+            <li><a href="index.html">回前台</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="form-container">
+            <h2>📝 新增中藥資料</h2>
+            <p>填寫完畢後，複製下方的 JSON 代碼貼到 GitHub 的 herbs.json 中。</p>
+            
+            <div class="form-group">
+                <label class="required">中藥名 (Chinese Name)</label>
+                <input type="text" id="cname" placeholder="例如：人參">
+            </div>
+            <div class="form-group">
+                <label class="required">科名 (Family)</label>
+                <input type="text" id="family" placeholder="例如：五加科 (Araliaceae)">
+            </div>
+            <div class="form-group">
+                <label>生藥名 (Latin Name)</label>
+                <input type="text" id="latin" placeholder="例如：Ginseng Radix">
+            </div>
+            <div class="form-group">
+                <label>用部 (Used Part)</label>
+                <input type="text" id="part" placeholder="例如：根">
+            </div>
+            <div class="form-group">
+                <label>功效 (用逗號分隔)</label>
+                <input type="text" id="effects" placeholder="例如：大補元氣, 復脈固脫">
+            </div>
+            <div class="form-group">
+                <label>主治/備註</label>
+                <textarea id="indication" placeholder="相關筆記..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>年級</label>
+                <select id="grade">
+                    <option value="大一">大一</option>
+                    <option value="大二">大二</option>
+                    <option value="大三">大三</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" onclick="generateJSON()">生成 JSON 代碼</button>
+
+            <h3>複製以下代碼：</h3>
+            <div class="output-area" id="output">...尚未生成...</div>
+            <button class="btn-secondary" onclick="copyToClipboard()" style="margin-top:10px;">一鍵複製</button>
+        </div>
+    </main>
+
+    <script>
+        function generateJSON() {
+            // 取得當前時間戳當作 ID，避免重複
+            const id = Date.now(); 
+            const cname = document.getElementById('cname').value;
+            const family = document.getElementById('family').value;
+            
+            if(!cname || !family) {
+                alert('中藥名和科名是必填的喔！');
+                return;
+            }
+
+            const effectsArr = document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+
+            const newHerb = {
+                id: id,
+                chinese_name: cname,
+                latin_name: document.getElementById('latin').value || "",
+                family: family,
+                used_part: document.getElementById('part').value || "",
+                effects: effectsArr,
+                indications: document.getElementById('indication').value || "",
+                grade: document.getElementById('grade').value,
+                image: "images/placeholder.jpg", // 預設圖片
+                wrong_effects: [] // 留空，讓程式自動隨機抓
+            };
+
+            // 加上逗號，方便直接貼
+            const jsonString = "," + JSON.stringify(newHerb, null, 2);
+            document.getElementById('output').innerText = jsonString;
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('output').innerText;
+            navigator.clipboard.writeText(text).then(() => alert('複製成功！請去 GitHub 貼上。'));
+        }
+    </script>
+</body>
+</html>
