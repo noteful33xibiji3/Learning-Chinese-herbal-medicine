@@ -43,7 +43,7 @@
     "used_part": "根",
     "effects": ["補血活血", "調經止痛", "潤腸通便"],
     "indications": "血虛萎黃，月經不調，腸燥便秘",
-    "grade": "大三",
+    "grade": "大二上",
     "image": "images/dang-gui.jpg",
     "wrong_effects": ["活血化瘀", "行氣止痛", "利尿通淋"]
   },
@@ -55,7 +55,7 @@
     "used_part": "根",
     "effects": ["補氣升陽", "固表止汗", "利水消腫"],
     "indications": "氣虛乏力，中氣下陷，自汗水腫",
-    "grade": "大三",
+    "grade": "大二上",
     "image": "images/huang-qi.jpg",
     "wrong_effects": ["滋陰降火", "清熱涼血", "軟堅散結"]
   }
