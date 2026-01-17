@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生藥學分類 | 本草學園</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="logo">🌿 本草學園</div>
+        <ul class="menu">
+            <li><a href="index.html">中藥查詢</a></li>
+            <li><a href="pharmacognosy.html" class="active">生藥分類</a></li>
+            <li><a href="quiz.html">自我測驗</a></li>
+            <li><a href="mistakes.html">錯題複習</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="pharma-layout">
+            <aside class="category-sidebar">
+                <h3>🧪 生藥分類</h3>
+                <div id="category-buttons" class="category-buttons">
+                    </div>
+            </aside>
+
+            <section class="content-area">
+                <div class="breadcrumb" id="breadcrumb">請選擇左側分類</div>
+                
+                <div id="subcategory-container" class="subcategory-chips"></div>
+
+                <div id="intro-card" class="intro-card" style="display:none;">
+                    <h2 id="intro-title">分類名稱</h2>
+                    <p id="intro-text">分類簡介...</p>
+                </div>
+
+                <h3 id="herb-list-title" style="display:none; margin-top:30px;">相關中藥</h3>
+                <div id="herb-grid" class="herb-grid">
+                    </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
