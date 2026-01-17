@@ -29,7 +29,11 @@
             
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="search-input" placeholder="例如：黃連, Berberine..." autocomplete="off">
+                    <input type="text" id="search-input" 
+                           placeholder="例如：黃連, Berberine..." 
+                           autocomplete="off"
+                           oninput="showSuggestions(this.value)"
+                           onkeydown="if(event.key === 'Enter') triggerSearch()">
                     <button onclick="triggerSearch()">搜尋</button>
                 </div>
                 <div id="suggestions" class="suggestions-list"></div>
