@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "chinese_name": "麻黃",
+    "latin_name": "Ephedrae Herba",
+    "family": "麻黃科",
+    "used_part": "草質莖",
+    "effects": ["發汗解表", "宣肺平喘", "利水消腫"],
+    "indications": "風寒感冒，胸悶喘咳，風水浮腫",
+    "grade": "大二上",
+    "image": "images/ma-huang.jpg",
+    "wrong_effects": ["補氣固表", "清熱解毒", "涼血止血"]
+  },
+  {
+    "id": 2,
+    "chinese_name": "桂枝",
+    "latin_name": "Cinnamomi Ramulus",
+    "family": "樟科",
+    "used_part": "嫩枝",
+    "effects": ["發汗解肌", "溫通經脈", "助陽化氣"],
+    "indications": "風寒感冒，脘腹冷痛，痰飲",
+    "grade": "大二上",
+    "image": "images/gui-zhi.jpg",
+    "wrong_effects": ["清熱瀉火", "滋陰補腎", "收斂止血"]
+  },
+  {
+    "id": 3,
+    "chinese_name": "紫蘇",
+    "latin_name": "Perillae Folium",
+    "family": "唇形科",
+    "used_part": "葉",
+    "effects": ["解表散寒", "行氣和胃"],
+    "indications": "風寒感冒，咳嗽嘔惡，妊娠嘔吐",
+    "grade": "大一",
+    "image": "images/zi-su.jpg",
+    "wrong_effects": ["清熱燥濕", "瀉下攻積", "安神定志"]
+  },
+  {
+    "id": 4,
+    "chinese_name": "當歸",
+    "latin_name": "Angelicae Sinensis Radix",
+    "family": "繖形科",
+    "used_part": "根",
+    "effects": ["補血活血", "調經止痛", "潤腸通便"],
+    "indications": "血虛萎黃，月經不調，腸燥便秘",
+    "grade": "大三",
+    "image": "images/dang-gui.jpg",
+    "wrong_effects": ["活血化瘀", "行氣止痛", "利尿通淋"]
+  },
+  {
+    "id": 5,
+    "chinese_name": "黃耆",
+    "latin_name": "Astragali Radix",
+    "family": "豆科",
+    "used_part": "根",
+    "effects": ["補氣升陽", "固表止汗", "利水消腫"],
+    "indications": "氣虛乏力，中氣下陷，自汗水腫",
+    "grade": "大三",
+    "image": "images/huang-qi.jpg",
+    "wrong_effects": ["滋陰降火", "清熱涼血", "軟堅散結"]
+  }
+]
