@@ -18,18 +18,52 @@
     </nav>
 
     <main>
-        <div class="quiz-container" id="quiz-container">
-            <div class="quiz-header">
-                <h2>💊 功效測驗</h2>
-                <span id="score-display" style="background:#fff; padding:5px 15px; border-radius:20px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">分數: 0</span>
-            </div>
-            
-            <div id="quiz-card" class="quiz-card">
-                </div>
-
-            <button class="btn-primary" onclick="startQuiz()">下一題 / 換一題</button>
+    <div id="setup-panel" class="quiz-container">
+        <div class="quiz-header">
+            <h2>🛠️ 測驗設定</h2>
         </div>
-    </main>
+        
+        <div class="setup-group">
+            <h3>1. 選擇測驗範圍 (年級)</h3>
+            <div id="grade-checkboxes" class="checkbox-grid">
+                </div>
+        </div>
+
+        <div class="setup-group">
+            <h3>2. 選擇測驗重點</h3>
+            <select id="quiz-mode" class="styled-select">
+                <option value="effects">測驗「功效」(預設)</option>
+                <option value="family">測驗「科名」</option>
+                <option value="latin_name">測驗「生藥名」</option>
+                <option value="used_part">測驗「用部」</option>
+            </select>
+        </div>
+
+        <div class="setup-group">
+            <h3>3. 指定特定中藥 (選填)</h3>
+            <input type="text" id="filter-search" placeholder="搜尋中藥來加入清單..." class="mini-search">
+            <div id="manual-selection-list" class="selection-list">
+                </div>
+        </div>
+
+        <button class="btn-primary" onclick="initCustomQuiz()">開始測驗</button>
+    </div>
+
+    <div id="quiz-panel" class="quiz-container" style="display: none;">
+        <div class="quiz-header">
+            <h2 id="quiz-title">💊 測驗中</h2>
+            <span id="score-display">分數: 0</span>
+        </div>
+        
+        <div id="quiz-card" class="quiz-card">
+            </div>
+
+        <div class="quiz-controls">
+            <button class="btn-secondary" onclick="resetQuizSetup()">結束 / 重新設定</button>
+            <button class="btn-primary" onclick="nextQuestion()">下一題</button>
+        </div>
+    </div>
+</main>
 
     <script src="app.js"></script>
 </body>
