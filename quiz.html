@@ -9,61 +9,78 @@
 </head>
 <body>
     <nav>
-        <div class="logo">🌿 本草學園</div>
-        <ul class="menu">
+        <div class="nav-left">
+            <button class="back-btn" onclick="history.back()">❮</button>
+            <a href="index.html" class="logo">🌿 本草學園</a>
+        </div>
+        <div class="burger" onclick="toggleMenu()">☰</div>
+        <ul class="menu" id="nav-menu">
             <li><a href="index.html">中藥查詢</a></li>
+            <li><a href="pharmacognosy.html">生藥分類</a></li>
             <li><a href="quiz.html" class="active">自我測驗</a></li>
             <li><a href="mistakes.html">錯題複習</a></li>
         </ul>
     </nav>
 
     <main>
-    <div id="setup-panel" class="quiz-container">
-        <div class="quiz-header">
+        <div id="setup-panel">
             <h2>🛠️ 測驗設定</h2>
-        </div>
-        
-        <div class="setup-group">
-            <h3>1. 選擇測驗範圍 (年級)</h3>
-            <div id="grade-checkboxes" class="checkbox-grid">
-                </div>
-        </div>
-
-        <div class="setup-group">
-            <h3>2. 選擇測驗重點</h3>
-            <select id="quiz-mode" class="styled-select">
-                <option value="effects">測驗「功效」(預設)</option>
-                <option value="family">測驗「科名」</option>
-                <option value="latin_name">測驗「生藥名」</option>
-                <option value="used_part">測驗「用部」</option>
-            </select>
-        </div>
-
-        <div class="setup-group">
-            <h3>3. 指定特定中藥 (選填)</h3>
-            <input type="text" id="filter-search" placeholder="搜尋中藥來加入清單..." class="mini-search">
-            <div id="manual-selection-list" class="selection-list">
-                </div>
-        </div>
-
-        <button class="btn-primary" onclick="initCustomQuiz()">開始測驗</button>
-    </div>
-
-    <div id="quiz-panel" class="quiz-container" style="display: none;">
-        <div class="quiz-header">
-            <h2 id="quiz-title">💊 測驗中</h2>
-            <span id="score-display">分數: 0</span>
-        </div>
-        
-        <div id="quiz-card" class="quiz-card">
+            
+            <div class="setup-group">
+                <h3>1. 測驗範圍 (可複選)</h3>
+                <div id="grade-checkboxes" class="checkbox-grid">
+                    </div>
             </div>
 
-        <div class="quiz-controls">
-            <button class="btn-secondary" onclick="resetQuizSetup()">結束 / 重新設定</button>
-            <button class="btn-primary" onclick="nextQuestion()">下一題</button>
+            <div class="setup-group">
+                <h3>2. 測驗項目 (可複選)</h3>
+                <div class="checkbox-grid">
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="effects" checked> 功效</label>
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="family"> 科名</label>
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="latin_name"> 生藥名</label>
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="used_part"> 用部</label>
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="chemistry"> 成分</label>
+                </div>
+            </div>
+
+            <div class="setup-group">
+                <h3>3. 指定特定中藥</h3>
+                <details class="herb-accordion">
+                    <summary>點擊展開 / 選擇特定中藥</summary>
+                    <div class="accordion-content">
+                        <input type="text" id="filter-search" placeholder="在此篩選清單..." style="width:100%; margin-bottom:10px; padding:8px;">
+                        <div id="manual-selection-list" class="checkbox-grid" style="grid-template-columns: 1fr 1fr;">
+                            </div>
+                    </div>
+                </details>
+            </div>
+
+            <button class="btn-primary" onclick="initCustomQuiz()">開始測驗</button>
         </div>
-    </div>
-</main>
+
+        <div id="quiz-panel" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span id="progress-display">題目: 1/10</span>
+                <span id="score-display">得分: 0</span>
+            </div>
+            
+            <div id="quiz-card" class="herb-card" style="padding:30px; text-align:center;">
+                </div>
+            
+            <button class="btn-primary" onclick="resetQuizSetup()" style="background:#999; margin-top:20px;">結束測驗</button>
+        </div>
+
+        <div id="result-panel" style="display: none;">
+            <h2>📊 測驗結果</h2>
+            <h1 id="final-score" style="color:var(--primary); font-size:3rem; margin:20px 0;"></h1>
+            <p id="result-msg"></p>
+            
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn-primary" onclick="resetQuizSetup()">重新設定</button>
+                <button id="retry-mistakes-btn" class="btn-primary" style="background:#dc3545; display:none;" onclick="retryMistakes()">錯誤題重測</button>
+            </div>
+        </div>
+    </main>
 
     <script src="app.js"></script>
 </body>
