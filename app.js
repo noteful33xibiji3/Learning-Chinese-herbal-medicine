@@ -1,49 +1,47 @@
-// 全域變數
+// --- 1. 全域變數 ---
 let allHerbs = [];
+let quizPool = [];         // 篩選後的題目池
+let quizMode = 'effects';  // 當前測驗模式 (預設測驗功效)
 let currentQuizQuestion = null;
 let score = 0;
 
-// 當網頁載入完成後執行
+// --- 2. 初始化與資料載入 ---
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 });
 
-// 載入 JSON 資料
 async function loadData() {
     try {
         const response = await fetch('data/herbs.json');
         allHerbs = await response.json();
-        
-        // 資料載入後，判斷現在在哪一頁，執行對應功能
-        initPage(); 
+        initPage(); // 資料載入後，依照頁面執行對應功能
     } catch (error) {
         console.error('載入失敗，請確認 data/herbs.json 是否存在', error);
-        // 若在本地端直接開 HTML 可能會被 CORS 擋住，這在 GitHub 上會正常
     }
 }
 
 function initPage() {
-    // 1. 如果是首頁 (有搜尋框)
+    // A. 如果是首頁 (有搜尋框)
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
-        renderHerbs(allHerbs); // 顯示所有中藥
+        renderHerbs(allHerbs);
         searchInput.addEventListener('input', (e) => {
             filterHerbs(e.target.value.toLowerCase());
         });
     }
 
-    // 2. 如果是測驗頁 (有測驗容器)
-    if (document.getElementById('quiz-container')) {
-        startQuiz(); 
+    // B. 如果是測驗頁 (有設定面板)
+    if (document.getElementById('setup-panel')) {
+        renderQuizSetup(); // 產生勾選清單
     }
 
-    // 3. 如果是錯題頁 (有錯題列表)
+    // C. 如果是錯題頁 (有錯題列表)
     if (document.getElementById('mistakes-list')) {
-        renderMistakes(); 
+        renderMistakes();
     }
 }
 
-// --- 首頁功能：搜尋與顯示 ---
+// --- 3. 首頁功能：搜尋與顯示 ---
 function filterHerbs(keyword) {
     const filtered = allHerbs.filter(herb => {
         return herb.chinese_name.includes(keyword) || 
@@ -55,6 +53,7 @@ function filterHerbs(keyword) {
 
 function renderHerbs(herbs) {
     const grid = document.getElementById('herb-grid');
+    if (!grid) return; // 防呆
     grid.innerHTML = '';
     
     if (herbs.length === 0) {
@@ -82,42 +81,150 @@ function renderHerbs(herbs) {
     });
 }
 
-// --- 測驗功能 ---
-function startQuiz() {
-    // 隨機選一味中藥
-    const randomIndex = Math.floor(Math.random() * allHerbs.length);
-    currentQuizQuestion = allHerbs[randomIndex];
+// --- 4. 測驗功能：設定與開始 ---
+function renderQuizSetup() {
+    // 產生年級選項
+    const grades = [...new Set(allHerbs.map(h => h.grade))].filter(g => g);
+    const gradeContainer = document.getElementById('grade-checkboxes');
     
-    // 準備選項：1個正確 + 2個錯誤
-    const correctOption = currentQuizQuestion.effects.join('、');
+    if(gradeContainer) {
+        gradeContainer.innerHTML = grades.map(g => `
+            <label class="checkbox-label">
+                <input type="checkbox" value="${g}" checked> <span>${g}</span>
+            </label>
+        `).join('');
     
-    // 從資料中設定的 wrong_effects 取用，若無則用預設字串防止報錯
-    let wrongOptions = currentQuizQuestion.wrong_effects || ["功效 A", "功效 B"];
-    // 確保只取前 2 個
-    wrongOptions = wrongOptions.slice(0, 2);
+        // 產生所有中藥列表供勾選
+        const listContainer = document.getElementById('manual-selection-list');
+        listContainer.innerHTML = allHerbs.map(h => `
+            <label style="display:block; margin:5px 0;">
+                <input type="checkbox" class="herb-select" value="${h.id}" checked> 
+                ${h.chinese_name} <small style="color:#888">(${h.grade})</small>
+            </label>
+        `).join('');
 
-    // 合併並洗牌
+        // 設定選單內的搜尋功能
+        const filterSearch = document.getElementById('filter-search');
+        if(filterSearch){
+            filterSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.herb-select').forEach(cb => {
+                    const label = cb.parentElement;
+                    label.style.display = label.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+                });
+            });
+        }
+    }
+}
+
+function initCustomQuiz() {
+    // 1. 取得勾選的年級
+    const selectedGrades = Array.from(document.querySelectorAll('#grade-checkboxes input:checked')).map(cb => cb.value);
+    // 2. 取得勾選的中藥 ID
+    const selectedHerbIds = Array.from(document.querySelectorAll('.herb-select:checked')).map(cb => parseInt(cb.value));
+    // 3. 取得模式
+    quizMode = document.getElementById('quiz-mode').value;
+
+    // 4. 篩選
+    quizPool = allHerbs.filter(h => {
+        const matchGrade = selectedGrades.includes(h.grade);
+        const matchId = selectedHerbIds.includes(h.id);
+        return matchGrade && matchId;
+    });
+
+    if (quizPool.length === 0) {
+        alert('沒有符合條件的中藥，請重新選擇範圍！');
+        return;
+    }
+
+    // 切換到測驗畫面
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('quiz-panel').style.display = 'block';
+    
+    score = 0;
+    updateScore();
+    nextQuestion();
+}
+
+function resetQuizSetup() {
+    document.getElementById('setup-panel').style.display = 'block';
+    document.getElementById('quiz-panel').style.display = 'none';
+}
+
+function updateScore() {
+    const scoreDisplay = document.getElementById('score-display');
+    if(scoreDisplay) scoreDisplay.innerText = `目前分數: ${score}`;
+}
+
+// --- 5. 測驗核心：出題 ---
+function nextQuestion() {
+    const randomIndex = Math.floor(Math.random() * quizPool.length);
+    currentQuizQuestion = quizPool[randomIndex];
+    
+    let questionText = "";
+    let correctOption = "";
+    let wrongOptions = [];
+
+    // 根據模式決定題目
+    if (quizMode === 'effects') {
+        questionText = "的**功效**是？";
+        correctOption = currentQuizQuestion.effects.join('、');
+        wrongOptions = currentQuizQuestion.wrong_effects || getRandomDistractors('effects', 2);
+    } 
+    else if (quizMode === 'family') {
+        questionText = "屬於哪一**科**？";
+        correctOption = currentQuizQuestion.family;
+        wrongOptions = getRandomDistractors('family', 2);
+    }
+    else if (quizMode === 'latin_name') {
+        questionText = "的**生藥名**是？";
+        correctOption = currentQuizQuestion.latin_name;
+        wrongOptions = getRandomDistractors('latin_name', 2);
+    }
+    else if (quizMode === 'used_part') {
+        questionText = "的**用部**是？";
+        correctOption = currentQuizQuestion.used_part;
+        wrongOptions = getRandomDistractors('used_part', 2);
+    }
+
+    // 取 2 個錯誤選項並洗牌
+    wrongOptions = wrongOptions.slice(0, 2);
     let options = [correctOption, ...wrongOptions];
     options.sort(() => 0.5 - Math.random());
 
-    // 渲染題目
     const quizCard = document.getElementById('quiz-card');
     quizCard.innerHTML = `
         <h3 style="margin-bottom:10px;">${currentQuizQuestion.chinese_name}</h3>
-        <p style="color:#666; margin-bottom:20px; font-size:0.9rem;">(${currentQuizQuestion.family} / ${currentQuizQuestion.used_part})</p>
-        <p style="margin-bottom:15px; font-weight:bold;">請問此藥的功效是？</p>
+        <p style="margin-bottom:15px; font-weight:bold;">請問此藥${questionText}</p>
         <div id="options-container">
             ${options.map(opt => `<button class="option-btn" onclick="checkAnswer(this, '${opt}', '${correctOption}')">${opt}</button>`).join('')}
         </div>
         <div id="feedback" style="margin-top:15px; font-weight:bold; min-height: 24px;"></div>
     `;
-    
-    // 更新分數顯示
-    document.getElementById('score-display').innerText = `目前分數: ${score}`;
+}
+
+function getRandomDistractors(field, count) {
+    let distractors = [];
+    let maxAttempts = 50;
+    while(distractors.length < count && maxAttempts > 0) {
+        let randomHerb = allHerbs[Math.floor(Math.random() * allHerbs.length)];
+        let value = "";
+        
+        if(field === 'effects') value = randomHerb.effects.join('、');
+        else value = randomHerb[field];
+
+        if(value && value !== currentQuizQuestion[field] && !distractors.includes(value)) {
+            distractors.push(value);
+        }
+        maxAttempts--;
+    }
+    while(distractors.length < count) {
+        distractors.push("其他選項");
+    }
+    return distractors;
 }
 
 function checkAnswer(btn, selected, correct) {
-    // 鎖定所有按鈕
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(b => b.disabled = true);
     const feedback = document.getElementById('feedback');
@@ -127,25 +234,22 @@ function checkAnswer(btn, selected, correct) {
         score += 10;
         feedback.style.color = 'green';
         feedback.innerText = '答對了！ 🎉';
-        document.getElementById('score-display').innerText = `目前分數: ${score}`;
+        updateScore();
     } else {
         btn.classList.add('wrong');
         feedback.style.color = 'red';
         feedback.innerText = `答錯了... 正確答案是：${correct}`;
         saveMistake(currentQuizQuestion, selected, correct);
         
-        // 標示出正確答案
         buttons.forEach(b => {
             if(b.innerText === correct) b.classList.add('correct');
         });
     }
 }
 
-// --- 錯題本功能 (Local Storage) ---
+// --- 6. 錯題本功能 ---
 function saveMistake(herb, wrongAns, correctAns) {
     let mistakes = JSON.parse(localStorage.getItem('tcm_mistakes')) || [];
-    
-    // 避免重複加入同一味藥
     if (!mistakes.some(m => m.id === herb.id)) {
         mistakes.push({
             id: herb.id,
