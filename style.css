@@ -116,3 +116,25 @@ main { padding: 40px 5%; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.
 }
 .delete-btn { color: #999; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
 .delete-btn:hover { color: #dc3545; text-decoration: underline; }
+/* 新增樣式 (請加在 style.css 最後面) */
+.setup-group { margin-bottom: 25px; text-align: left; }
+.checkbox-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.checkbox-label { 
+    background: #f0f0f0; padding: 8px 15px; border-radius: 20px; 
+    cursor: pointer; user-select: none; transition: 0.2s;
+    display: flex; align-items: center; gap: 5px;
+}
+.checkbox-label input:checked + span { color: var(--primary); font-weight: bold; }
+.styled-select, .mini-search {
+    width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd;
+    font-size: 1rem; margin-top: 5px;
+}
+.selection-list {
+    max-height: 150px; overflow-y: auto; border: 1px solid #eee; 
+    margin-top: 10px; padding: 10px; border-radius: 10px;
+}
+.quiz-controls { display: flex; justify-content: space-between; margin-top: 20px; gap: 10px; }
+.btn-secondary {
+    background: #999; color: white; border: none; padding: 12px 20px;
+    border-radius: 50px; cursor: pointer;
+}
