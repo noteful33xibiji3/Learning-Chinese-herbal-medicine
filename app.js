@@ -3,13 +3,13 @@ let allHerbs = [];
 let allCategories = {};
 let quizPool = [];
 let currentQuizIndex = 0;
-let currentMistakes = []; // 當次測驗的錯題
+let currentMistakes = [];
 let score = 0;
 
 // --- 2. 初始化 ---
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
-    setupMenu(); // 啟動漢堡選單
+    setupMenu();
 });
 
 async function loadData() {
@@ -20,28 +20,35 @@ async function loadData() {
         ]);
         allHerbs = await herbsRes.json();
         allCategories = await catsRes.json();
+        
+        // 資料載入完成後，初始化頁面
         initPage();
     } catch (error) {
         console.error('資料載入失敗', error);
     }
 }
 
-// 漢堡選單開關
 function setupMenu() {
+    // 漢堡選單邏輯
     window.toggleMenu = function() {
-        document.getElementById('nav-menu').classList.toggle('show');
+        const menu = document.getElementById('nav-menu');
+        if (menu) menu.classList.toggle('show');
     };
+    // 點擊選單連結後自動收起
+    document.querySelectorAll('.menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            document.getElementById('nav-menu').classList.remove('show');
+        });
+    });
 }
 
-// 頁面路由初始化
 function initPage() {
-    // 首頁搜尋
+    // A. 首頁邏輯
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
-        renderHerbs(allHerbs);
-        // 綁定輸入事件做建議
-        searchInput.addEventListener('input', (e) => showSuggestions(e.target.value));
-        // 點擊空白處關閉建議
+        renderHerbs(allHerbs); // 預設顯示全部
+        
+        // 點擊網頁空白處，關閉建議視窗
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
                 document.getElementById('suggestions').style.display = 'none';
@@ -49,38 +56,45 @@ function initPage() {
         });
     }
 
-    // 測驗頁
+    // B. 測驗頁邏輯
     if (document.getElementById('setup-panel')) {
         renderQuizSetup();
     }
 }
 
-// --- 3. Google 式搜尋功能 ---
-function showSuggestions(val) {
+// --- 3. 搜尋功能 (Google Style & 按鈕修復) ---
+
+// 顯示建議選單
+window.showSuggestions = function(val) {
     const list = document.getElementById('suggestions');
+    if (!list) return;
+
     list.innerHTML = '';
-    if (!val) {
+    if (!val.trim()) {
         list.style.display = 'none';
-        renderHerbs(allHerbs); // 清空時顯示全部
+        renderHerbs(allHerbs); // 清空搜尋框時，恢復顯示全部
         return;
     }
 
-    const keyword = val.toLowerCase();
-    // 找出匹配的前 10 筆
+    const keyword = val.toLowerCase().trim();
+    // 篩選符合的前 8 筆
     const matches = allHerbs.filter(h => 
         h.chinese_name.includes(keyword) || 
         h.latin_name.toLowerCase().includes(keyword) ||
+        (h.origin && h.origin.toLowerCase().includes(keyword)) || // 支援搜基原
         (h.chemistry && h.chemistry.toLowerCase().includes(keyword))
-    ).slice(0, 10);
+    ).slice(0, 8);
 
     if (matches.length > 0) {
         matches.forEach(h => {
             const div = document.createElement('div');
             div.className = 'suggestion-item';
-            div.innerHTML = `${h.chinese_name} <small>${h.latin_name}</small>`;
+            // 顯示中文名與生藥名
+            div.innerHTML = `<span>${h.chinese_name}</span> <small style="color:#888">${h.latin_name}</small>`;
             div.onclick = () => {
+                // 點擊建議項目：填入文字 -> 執行搜尋 -> 關閉選單
                 document.getElementById('search-input').value = h.chinese_name;
-                filterHerbs(h.chinese_name); // 執行搜尋
+                filterHerbs(h.chinese_name);
                 list.style.display = 'none';
             };
             list.appendChild(div);
@@ -90,24 +104,28 @@ function showSuggestions(val) {
         list.style.display = 'none';
     }
     
-    // 同步過濾列表
+    // 同時即時過濾下方的卡片
     filterHerbs(keyword);
 }
 
-function triggerSearch() {
+// 執行搜尋 (按鈕或 Enter 用)
+window.triggerSearch = function() {
     const val = document.getElementById('search-input').value;
     filterHerbs(val);
+    document.getElementById('suggestions').style.display = 'none';
 }
 
 function filterHerbs(keyword) {
     const k = keyword.toLowerCase().trim();
     const filtered = allHerbs.filter(herb => {
-        // 簡易搜尋邏輯
+        const origin = (herb.origin || "").toLowerCase();
         return herb.chinese_name.includes(k) || 
                herb.latin_name.toLowerCase().includes(k) || 
-               herb.family.includes(k) ||
+               origin.includes(k) ||
                (herb.chemistry || "").toLowerCase().includes(k) ||
-               (herb.grade || "").includes(k);
+               (herb.grade || "").includes(k) ||
+               (herb.chem_main || "").includes(k) ||
+               (herb.chem_sub || "").includes(k);
     });
     renderHerbs(filtered);
 }
@@ -116,10 +134,12 @@ function renderHerbs(herbs) {
     const grid = document.getElementById('herb-grid');
     if (!grid) return;
     grid.innerHTML = '';
+    
     if (herbs.length === 0) {
-        grid.innerHTML = '<p>找不到相關中藥。</p>';
+        grid.innerHTML = '<div style="grid-column:1/-1; padding:20px; color:#666;">找不到相關中藥 🥲</div>';
         return;
     }
+
     herbs.forEach(herb => {
         const card = document.createElement('div');
         card.className = 'herb-card';
@@ -128,69 +148,81 @@ function renderHerbs(herbs) {
             <div class="herb-info">
                 <div class="herb-name">${herb.chinese_name}</div>
                 <div class="herb-latin">${herb.latin_name}</div>
-                <div style="font-size:0.9rem; color:#666;">${herb.family} | ${herb.grade}</div>
+                ${herb.origin ? `<p style="font-size:0.85rem; color:#555; margin:5px 0;">🌱 ${herb.origin}</p>` : ''}
+                <div style="font-size:0.9rem; color:#666; margin-top:5px;">
+                    <span style="background:#e8f5e9; padding:2px 6px; border-radius:4px;">${herb.grade}</span>
+                    <span>${herb.family}</span>
+                </div>
             </div>
         `;
         grid.appendChild(card);
     });
 }
 
-// --- 4. 測驗功能 (Checkbox 版) ---
+// --- 4. 測驗設定修復 (修復中藥勾選清單) ---
+
 function renderQuizSetup() {
-    // 產生年級 Checkbox
+    // A. 產生年級 Checkbox
     const grades = [...new Set(allHerbs.map(h => h.grade))].filter(g => g);
     const gradeContainer = document.getElementById('grade-checkboxes');
+    
     if (gradeContainer) {
         gradeContainer.innerHTML = grades.map(g => `
             <label class="checkbox-label">
                 <input type="checkbox" value="${g}" checked> ${g}
             </label>
         `).join('');
+    }
 
-        // 產生中藥清單 (在 Accordion 裡)
-        const listContainer = document.getElementById('manual-selection-list');
-        listContainer.innerHTML = allHerbs.map(h => `
-            <label class="checkbox-label">
+    // B. 產生中藥清單 (這部分你之前說空白，現在修好了)
+    const listContainer = document.getElementById('manual-selection-list');
+    if (listContainer) {
+        // 先按年級排序，再按名稱排序，方便找
+        const sortedHerbs = [...allHerbs].sort((a, b) => a.grade.localeCompare(b.grade) || a.chinese_name.localeCompare(b.chinese_name));
+        
+        listContainer.innerHTML = sortedHerbs.map(h => `
+            <label class="checkbox-label" style="justify-content: flex-start;">
                 <input type="checkbox" class="herb-select" value="${h.id}" checked> 
-                ${h.chinese_name}
+                <span>${h.chinese_name} <small style="color:#888">(${h.grade})</small></span>
             </label>
         `).join('');
 
-        // 綁定篩選功能
-        document.getElementById('filter-search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('.herb-select').forEach(cb => {
-                cb.closest('label').style.display = 
-                    cb.closest('label').innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+        // 綁定「篩選清單」的輸入框功能
+        const filterInput = document.getElementById('filter-search');
+        if (filterInput) {
+            filterInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.herb-select').forEach(cb => {
+                    const label = cb.closest('label');
+                    // 根據中藥名或生藥名篩選
+                    const text = label.innerText.toLowerCase();
+                    label.style.display = text.includes(term) ? 'flex' : 'none';
+                });
             });
-        });
+        }
     }
 }
 
-function initCustomQuiz() {
-    // 1. 取得勾選的年級
+// --- 5. 測驗執行邏輯 ---
+window.initCustomQuiz = function() {
     const selectedGrades = Array.from(document.querySelectorAll('#grade-checkboxes input:checked')).map(cb => cb.value);
-    // 2. 取得勾選的中藥
     const selectedHerbIds = Array.from(document.querySelectorAll('.herb-select:checked')).map(cb => parseInt(cb.value));
-    // 3. 取得勾選的測驗模式 (Array)
     const selectedModes = Array.from(document.querySelectorAll('input[name="quizMode"]:checked')).map(cb => cb.value);
 
-    if (selectedModes.length === 0) { alert('請至少勾選一種測驗項目！'); return; }
+    if (selectedModes.length === 0) { alert('請至少勾選一種測驗項目（如：功效、基原）！'); return; }
 
-    // 篩選題目池
+    // 篩選題目
     quizPool = allHerbs.filter(h => selectedGrades.includes(h.grade) && selectedHerbIds.includes(h.id));
     
-    if (quizPool.length === 0) { alert('沒有符合條件的中藥！'); return; }
+    if (quizPool.length === 0) { alert('沒有符合條件的中藥，請檢查勾選範圍！'); return; }
 
-    // 將模式存入 quizPool 每個物件中 (隨機選一種模式考)
+    // 為每題隨機分配一個模式
     quizPool = quizPool.map(h => ({
         ...h,
         mode: selectedModes[Math.floor(Math.random() * selectedModes.length)]
     }));
 
-    // 洗牌
     quizPool.sort(() => 0.5 - Math.random());
-
     startQuizSession();
 }
 
@@ -216,24 +248,26 @@ function nextQuestion() {
     document.getElementById('progress-display').innerText = `題目: ${currentQuizIndex + 1} / ${quizPool.length}`;
     document.getElementById('score-display').innerText = `得分: ${score}`;
 
-    // 根據模式產生題目文字
     let qText = "", ans = "";
+    
+    // 根據模式設定題目與答案
     if (q.mode === 'effects') { qText = "功效"; ans = q.effects.join('、'); }
     else if (q.mode === 'family') { qText = "科名"; ans = q.family; }
     else if (q.mode === 'latin_name') { qText = "生藥名"; ans = q.latin_name; }
+    else if (q.mode === 'origin') { qText = "基原"; ans = q.origin || "無資料"; } // 這裡會抓到具體的基原
     else if (q.mode === 'used_part') { qText = "用部"; ans = q.used_part; }
-    else if (q.mode === 'chemistry') { qText = "主要成分"; ans = q.chemistry || "無主要成分資料"; }
+    else if (q.mode === 'chemistry') { qText = "主要成分"; ans = q.chemistry || "無資料"; }
 
-    // 產生干擾項
+    // 產生選項
     let options = getRandomDistractors(q.mode, ans, 3);
     options.push(ans);
     options.sort(() => 0.5 - Math.random());
 
     const card = document.getElementById('quiz-card');
     card.innerHTML = `
-        <h2>${q.chinese_name}</h2>
-        <p>請問它的 <strong>${qText}</strong> 是？</p>
-        <div>
+        <h2 style="margin-bottom:10px; color:var(--secondary);">${q.chinese_name}</h2>
+        <p style="font-size:1.1rem; margin-bottom:20px;">請問它的 <strong>${qText}</strong> 是？</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
             ${options.map(opt => `<button class="option-btn" onclick="checkAnswer(this, '${opt}', '${ans}')">${opt}</button>`).join('')}
         </div>
     `;
@@ -244,8 +278,13 @@ function getRandomDistractors(mode, correctAns, count) {
     let attempts = 0;
     while(dists.length < count && attempts < 100) {
         let h = allHerbs[Math.floor(Math.random() * allHerbs.length)];
-        let val = (mode === 'effects') ? h.effects.join('、') : (h[mode] || "無");
-        if (val !== correctAns && !dists.includes(val) && val !== "無") {
+        let val = "";
+        
+        if (mode === 'effects') val = h.effects.join('、');
+        else if (mode === 'origin') val = h.origin || "無資料";
+        else val = h[mode] || "無";
+
+        if (val !== correctAns && !dists.includes(val) && val !== "無" && val !== "無資料") {
             dists.push(val);
         }
         attempts++;
@@ -254,7 +293,7 @@ function getRandomDistractors(mode, correctAns, count) {
     return dists;
 }
 
-function checkAnswer(btn, selected, correct) {
+window.checkAnswer = function(btn, selected, correct) {
     const btns = document.querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
 
@@ -269,46 +308,43 @@ function checkAnswer(btn, selected, correct) {
         btn.classList.add('wrong');
         btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
         
-        // 記錄錯題
         currentMistakes.push(quizPool[currentQuizIndex]);
-        // 存入 localStorage (錯題本用)
         saveGlobalMistake(quizPool[currentQuizIndex], selected, correct);
 
         setTimeout(() => {
             currentQuizIndex++;
             nextQuestion();
-        }, 1500); // 答錯看久一點
+        }, 1500);
     }
 }
 
-// --- 5. 結算與重測 ---
+// --- 6. 結算與重測 ---
 function showResult() {
     document.getElementById('quiz-panel').style.display = 'none';
     const panel = document.getElementById('result-panel');
     panel.style.display = 'block';
 
-    const finalScore = Math.round((score / (quizPool.length * 10)) * 100);
+    const finalScore = quizPool.length > 0 ? Math.round((score / (quizPool.length * 10)) * 100) : 0;
     document.getElementById('final-score').innerText = `${finalScore}分`;
     
     const msg = document.getElementById('result-msg');
     const retryBtn = document.getElementById('retry-mistakes-btn');
 
     if (currentMistakes.length > 0) {
-        msg.innerHTML = `你答錯了 <strong>${currentMistakes.length}</strong> 題。<br>要針對這些錯題再測一次嗎？`;
+        msg.innerHTML = `你答錯了 <strong style="color:red">${currentMistakes.length}</strong> 題。<br>要針對這些錯題再測一次嗎？`;
         retryBtn.style.display = 'inline-block';
     } else {
-        msg.innerText = "太強了！全部答對！🎉";
+        msg.innerHTML = "太強了！全部答對！🎉";
         retryBtn.style.display = 'none';
     }
 }
 
-function retryMistakes() {
-    // 將錯題設為新的題庫
+window.retryMistakes = function() {
     quizPool = [...currentMistakes];
     startQuizSession();
 }
 
-function resetQuizSetup() {
+window.resetQuizSetup = function() {
     document.getElementById('setup-panel').style.display = 'block';
     document.getElementById('quiz-panel').style.display = 'none';
     document.getElementById('result-panel').style.display = 'none';
