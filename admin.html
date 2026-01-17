@@ -9,17 +9,33 @@
         .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow); }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; } /* font-size 16px 防止手機縮放 */
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         textarea { height: 80px; }
         .required::after { content: " *"; color: red; }
         
-        /* API 設定區塊 */
-        .api-settings { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        /* 圖片上傳區 */
+        .img-upload-box { border: 2px dashed #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fafafa; }
+        .img-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 5px; display: none; margin-left: auto; margin-right: auto; }
+        .file-info { font-size: 0.85rem; color: #666; margin-top: 5px; }
+        .size-badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .size-badge.ok { color: green; background: #e8f5e9; }
+        .size-badge.warn { color: orange; background: #fff3e0; }
+        .size-badge.bad { color: red; background: #ffebee; }
+
+        /* 設定區與載入區 */
+        .panel { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
+        .panel h4 { margin-top: 0; margin-bottom: 10px; color: #555; }
+        .api-settings { display: none; background: #333; color: white; }
         .api-settings.show { display: block; }
         .api-settings input { background: #555; border: none; color: white; margin-bottom: 10px; }
-        .toggle-settings { text-align: right; font-size: 0.8rem; color: #666; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
+        .toggle-btn { text-align: right; font-size: 0.8rem; color: #666; cursor: pointer; margin-bottom: 5px; text-decoration: underline; }
+        
+        /* 搜尋結果 */
+        .search-results { max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; display: none; margin-top: 5px; background: white; position: absolute; width: 88%; z-index: 10; }
+        .search-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .search-item:hover { background: #f0f0f0; }
+        .search-wrapper { position: relative; }
 
-        /* 狀態訊息 */
         #status-msg { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; text-align: center; }
         .success { background: #d4edda; color: #155724; }
         .error { background: #f8d7da; color: #721c24; }
@@ -36,246 +52,354 @@
 
     <main>
         <div class="form-container">
-            <div class="toggle-settings" onclick="toggleSettings()">⚙️ 設定 GitHub 連線</div>
-            
-            <div id="settings-panel" class="api-settings">
-                <h4>GitHub 連線設定 (只存手機端)</h4>
-                <div class="form-group">
-                    <label>GitHub 用戶名 (Owner)</label>
-                    <input type="text" id="gh_owner" placeholder="例如: yourname">
-                </div>
-                <div class="form-group">
-                    <label>專案名稱 (Repo)</label>
-                    <input type="text" id="gh_repo" placeholder="例如: tcm-learning">
-                </div>
-                <div class="form-group">
-                    <label>Token (權杖)</label>
-                    <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxx">
-                </div>
+            <div class="toggle-btn" onclick="toggleSettings()">⚙️ 設定 GitHub 連線</div>
+            <div id="settings-panel" class="panel api-settings">
+                <h4>GitHub 連線設定</h4>
+                <input type="text" id="gh_owner" placeholder="Owner (e.g. yourname)">
+                <input type="text" id="gh_repo" placeholder="Repo (e.g. tcm-learning)">
+                <input type="password" id="gh_token" placeholder="Token (ghp_...)">
                 <button class="btn-secondary" onclick="saveSettings()" style="width:100%">儲存設定</button>
             </div>
 
-            <h2>📝 新增中藥</h2>
+            <div class="panel" style="border-left: 5px solid var(--primary);">
+                <h4>🔍 搜尋並修改舊資料</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" onclick="loadHerbsFromGitHub()" id="load-btn" style="white-space: nowrap;">📥 載入資料庫</button>
+                    <div class="search-wrapper" style="flex-grow: 1;">
+                        <input type="text" id="edit-search" placeholder="載入後在此搜尋..." disabled oninput="searchLocalHerbs(this.value)">
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>📝 編輯 / 新增中藥</h2>
             
             <div class="form-group">
-                <label class="required">中藥名</label>
+                <label class="required">中藥名 (檔名識別)</label>
                 <input type="text" id="cname" placeholder="例如：黃連">
+            </div>
+
+            <div class="form-group">
+                <label>📸 中藥圖片 (選填)</label>
+                <div class="img-upload-box">
+                    <input type="file" id="img-input" accept="image/*" onchange="processImage()">
+                    
+                    <div style="margin-top:10px; display:flex; gap:10px; justify-content: center;">
+                        <select id="img-quality" onchange="processImage()" style="width:auto; padding:5px;">
+                            <option value="0.7">自動壓縮 (推薦, <500KB)</option>
+                            <option value="1.0">保持原圖 (慎用)</option>
+                        </select>
+                    </div>
+
+                    <div id="file-info" class="file-info"></div>
+                    <img id="preview" class="img-preview">
+                    <input type="hidden" id="current-image-path">
+                    <input type="hidden" id="upload-base64">
+                </div>
             </div>
 
             <div class="form-group" style="background:#f9f9f9; padding:10px; border-radius:10px;">
                 <label style="color:var(--primary);">🧪 生藥學分類</label>
                 <div style="display:flex; gap:10px; flex-direction: column;">
-                    <select id="chem_main" onchange="updateSubCats()">
-                        <option value="">-- 先選大分類 --</option>
-                    </select>
-                    <select id="chem_sub">
-                        <option value="">-- 再選子分類 --</option>
-                    </select>
+                    <select id="chem_main" onchange="updateSubCats()"><option value="">-- 先選大分類 --</option></select>
+                    <select id="chem_sub"><option value="">-- 再選子分類 --</option></select>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="required">科名</label>
-                <input type="text" id="family">
-            </div>
-            <div class="form-group">
-                <label>學名 / 基原</label>
-                <input type="text" id="latin">
-            </div>
-            <div class="form-group">
-                <label>藥用部位</label>
-                <input type="text" id="part">
-            </div>
-            <div class="form-group">
-                <label>主要成分</label>
-                <input type="text" id="chemistry">
-            </div>
-            <div class="form-group">
-                <label>功效 (逗號分隔)</label>
-                <input type="text" id="effects">
-            </div>
-            <div class="form-group">
-                <label>主治 / 筆記</label>
-                <textarea id="indication"></textarea>
-            </div>
-            <div class="form-group">
-                <label>年級</label>
-                <select id="grade">
-                    <option value="大一">大一</option>
-                    <option value="大二上">大二上</option>
-                    <option value="大二下">大二下</option>
-                    <option value="大三">大三</option>
-                </select>
-            </div>
+            <div class="form-group"><label class="required">科名</label><input type="text" id="family"></div>
+            <div class="form-group"><label>學名 / 基原</label><input type="text" id="latin"></div>
+            <div class="form-group"><label>藥用部位</label><input type="text" id="part"></div>
+            <div class="form-group"><label>主要成分</label><input type="text" id="chemistry"></div>
+            <div class="form-group"><label>功效 (逗號分隔)</label><input type="text" id="effects"></div>
+            <div class="form-group"><label>主治 / 筆記</label><textarea id="indication"></textarea></div>
+            <div class="form-group"><label>年級</label><select id="grade"><option value="大一">大一</option><option value="大二">大二</option><option value="大二上">大二上</option><option value="大二下">大二下</option><option value="大三">大三</option></select></div>
 
-            <button class="btn-primary" onclick="uploadToGitHub()" style="width:100%; padding:15px; font-size:1.1rem;">🚀 上傳並儲存</button>
-            
+            <button class="btn-primary" onclick="handleSubmission()" style="width:100%; padding:15px; font-size:1.1rem;">🚀 上傳並儲存</button>
             <div id="status-msg"></div>
         </div>
     </main>
 
     <script>
-        // --- 1. 初始化資料與選單 ---
+        // --- 全域變數 ---
+        let loadedHerbs = [];
         const categories = {
-            "配糖體": { "en": "Glycosides", "subs": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"] },
-            "生物鹼": { "en": "Alkaloids", "subs": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"] },
-            "多醣類": { "en": "Carbohydrates", "subs": ["澱粉", "樹膠", "黏液質", "果膠"] },
-            "苯丙烷類": { "en": "Phenylpropanoids", "subs": ["簡單苯丙烷類", "香豆素", "木質素"] },
-            "木酚素": { "en": "Lignans", "subs": ["木酚素", "新木酚素"] },
-            "類黃酮": { "en": "Flavonoids", "subs": ["黃酮類", "黃酮醇類", "異黃酮類", "花青素"] },
-            "鞣質": { "en": "Tannins", "subs": ["水解型鞣質", "縮合型鞣質"] },
-            "萜類": { "en": "Terpenoids", "subs": ["單萜", "倍半萜", "二萜", "三萜"] },
-            "揮發油": { "en": "Volatile Oils", "subs": ["含氧單萜", "倍半萜類", "芳香族"] },
-            "樹脂": { "en": "Resins", "subs": ["油樹脂", "膠樹脂", "油膠樹脂", "香樹脂"] },
-            "脂質": { "en": "Lipids", "subs": ["脂肪油", "蠟"] }
+            "配糖體": { "en": "Glycosides", "subs": [{"zh":"強心配醣體"}, {"zh":"蔥醌類配醣體"}, {"zh":"皂素配醣體"}, {"zh":"氰苷配醣體"}, {"zh":"異硫氰配醣體"}, {"zh":"醇類配醣體"}, {"zh":"醛類配醣體"}, {"zh":"酚類配醣體"}, {"zh":"其他配醣體"}] },
+            "生物鹼": { "en": "Alkaloids", "subs": [{"zh":"吡啶-哌啶類"}, {"zh":"托烷類"}, {"zh":"喹啉類"}, {"zh":"異喹啉類"}, {"zh":"吲哚類"}, {"zh":"咪唑類"}, {"zh":"嘌呤類"}, {"zh":"甾體類"}, {"zh":"其他生物鹼"}] },
+            "多醣類": { "en": "Carbohydrates", "subs": [{"zh":"澱粉"}, {"zh":"樹膠"}, {"zh":"黏液質"}, {"zh":"果膠"}] },
+            "苯丙烷類": { "en": "Phenylpropanoids", "subs": [{"zh":"簡單苯丙烷類"}, {"zh":"香豆素"}, {"zh":"木質素"}] },
+            "木酚素": { "en": "Lignans", "subs": [{"zh":"木酚素"}, {"zh":"新木酚素"}] },
+            "類黃酮": { "en": "Flavonoids", "subs": [{"zh":"黃酮類"}, {"zh":"黃酮醇類"}, {"zh":"異黃酮類"}, {"zh":"花青素"}] },
+            "鞣質": { "en": "Tannins", "subs": [{"zh":"水解型鞣質"}, {"zh":"縮合型鞣質"}] },
+            "萜類": { "en": "Terpenoids", "subs": [{"zh":"單萜"}, {"zh":"倍半萜"}, {"zh":"二萜"}, {"zh":"三萜"}] },
+            "揮發油": { "en": "Volatile Oils", "subs": [{"zh":"含氧單萜"}, {"zh":"倍半萜類"}, {"zh":"芳香族"}] },
+            "樹脂": { "en": "Resins", "subs": [{"zh":"油樹脂"}, {"zh":"膠樹脂"}, {"zh":"油膠樹脂"}, {"zh":"香樹脂"}] },
+            "脂質": { "en": "Lipids", "subs": [{"zh":"脂肪油"}, {"zh":"蠟"}] }
         };
 
         const mainSelect = document.getElementById('chem_main');
         const subSelect = document.getElementById('chem_sub');
 
-        // 填充選單
+        // 初始化選單
         for (let key in categories) {
             let option = document.createElement("option");
-            option.text = key;
-            option.value = key;
+            option.text = key; option.value = key;
             mainSelect.add(option);
+        }
+
+        // 初始化設定
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('gh_owner').value = localStorage.getItem('tcm_owner') || '';
+            document.getElementById('gh_repo').value = localStorage.getItem('tcm_repo') || '';
+            document.getElementById('gh_token').value = localStorage.getItem('tcm_token') || '';
+            if(!localStorage.getItem('tcm_token')) toggleSettings();
+        });
+
+        // --- 功能函式 ---
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('show'); }
+        function saveSettings() {
+            localStorage.setItem('tcm_owner', document.getElementById('gh_owner').value.trim());
+            localStorage.setItem('tcm_repo', document.getElementById('gh_repo').value.trim());
+            localStorage.setItem('tcm_token', document.getElementById('gh_token').value.trim());
+            alert('設定已儲存！'); toggleSettings();
         }
 
         function updateSubCats() {
             const selectedMain = mainSelect.value;
             subSelect.innerHTML = '<option value="">-- 請選擇子分類 --</option>';
             if (selectedMain && categories[selectedMain]) {
-                categories[selectedMain].subs.forEach(sub => {
+                const subList = categories[selectedMain].subs || [];
+                subList.forEach(subObj => {
                     let option = document.createElement("option");
-                    option.text = sub;
-                    option.value = sub;
+                    option.text = subObj.zh || subObj; option.value = subObj.zh || subObj;
                     subSelect.add(option);
                 });
             }
         }
 
-        // --- 2. 設定儲存功能 (Local Storage) ---
-        // 載入頁面時讀取設定
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('gh_owner').value = localStorage.getItem('tcm_owner') || '';
-            document.getElementById('gh_repo').value = localStorage.getItem('tcm_repo') || '';
-            document.getElementById('gh_token').value = localStorage.getItem('tcm_token') || '';
-            
-            // 如果沒設定過，自動打開設定面板
-            if(!localStorage.getItem('tcm_token')) toggleSettings();
-        });
-
-        function toggleSettings() {
-            document.getElementById('settings-panel').classList.toggle('show');
-        }
-
-        function saveSettings() {
-            localStorage.setItem('tcm_owner', document.getElementById('gh_owner').value.trim());
-            localStorage.setItem('tcm_repo', document.getElementById('gh_repo').value.trim());
-            localStorage.setItem('tcm_token', document.getElementById('gh_token').value.trim());
-            alert('設定已儲存！下次不用再填了。');
-            toggleSettings();
-        }
-
-        // --- 3. 核心：上傳到 GitHub ---
-        async function uploadToGitHub() {
+        // --- 1. 載入與搜尋功能 ---
+        async function loadHerbsFromGitHub() {
             const owner = localStorage.getItem('tcm_owner');
             const repo = localStorage.getItem('tcm_repo');
             const token = localStorage.getItem('tcm_token');
-            const path = 'data/herbs.json'; // 目標檔案路徑
-            
-            const msg = document.getElementById('status-msg');
-            
-            if (!owner || !repo || !token) {
-                alert('請先點擊上方「⚙️ 設定」填寫 GitHub 連線資訊！');
-                toggleSettings();
-                return;
+            const btn = document.getElementById('load-btn');
+            const searchInput = document.getElementById('edit-search');
+
+            if (!owner || !repo || !token) { alert('請先設定 GitHub 連線！'); return; }
+
+            btn.innerText = '⏳ 載入中...'; btn.disabled = true;
+            try {
+                const url = `https://api.github.com/repos/${owner}/${repo}/contents/data/herbs.json`;
+                const res = await fetch(url, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
+                const data = await res.json();
+                const content = decodeURIComponent(escape(window.atob(data.content)));
+                loadedHerbs = JSON.parse(content);
+
+                btn.innerText = '✅ 載入成功'; searchInput.disabled = false; searchInput.placeholder = `已載入 ${loadedHerbs.length} 筆資料...`;
+            } catch (err) { alert('載入失敗'); btn.disabled = false; }
+        }
+
+        function searchLocalHerbs(keyword) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            if (!keyword) { resultsDiv.style.display = 'none'; return; }
+            const matches = loadedHerbs.filter(h => h.chinese_name.includes(keyword));
+            if (matches.length > 0) {
+                resultsDiv.style.display = 'block';
+                matches.forEach(h => {
+                    const div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.innerText = `${h.chinese_name} (${h.grade})`;
+                    div.onclick = () => fillForm(h);
+                    resultsDiv.appendChild(div);
+                });
+            } else resultsDiv.style.display = 'none';
+        }
+
+        function fillForm(herb) {
+            // 填寫文字欄位
+            document.getElementById('cname').value = herb.chinese_name;
+            document.getElementById('family').value = herb.family || '';
+            document.getElementById('latin').value = herb.latin_name || '';
+            document.getElementById('part').value = herb.used_part || '';
+            document.getElementById('chemistry').value = herb.chemistry || '';
+            document.getElementById('effects').value = (herb.effects || []).join(', ');
+            document.getElementById('indication').value = herb.indications || '';
+            document.getElementById('grade').value = herb.grade || '大二';
+
+            // 處理分類選單
+            if (herb.chem_main) {
+                mainSelect.value = herb.chem_main;
+                updateSubCats();
+                if (herb.chem_sub) subSelect.value = herb.chem_sub;
             }
 
-            // 檢查必填
-            const cname = document.getElementById('cname').value;
-            const family = document.getElementById('family').value;
-            if(!cname || !family) { alert('中藥名和科名是必填的！'); return; }
+            // 處理現有圖片 (顯示但不重新上傳，除非使用者選新圖)
+            if (herb.image) {
+                document.getElementById('current-image-path').value = herb.image;
+                document.getElementById('file-info').innerText = `目前使用圖片：${herb.image}`;
+                // 若是相對路徑，這裡可能預覽不到，但功能是正常的
+                document.getElementById('preview').src = herb.image; 
+                document.getElementById('preview').style.display = 'block';
+            } else {
+                document.getElementById('current-image-path').value = "";
+                document.getElementById('preview').style.display = 'none';
+            }
 
-            // 顯示載入中
-            msg.style.display = 'block';
-            msg.className = 'loading';
-            msg.innerText = '⏳ 正在讀取 GitHub 資料庫...';
+            // 清空上傳暫存
+            document.getElementById('img-input').value = '';
+            document.getElementById('upload-base64').value = '';
+
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('edit-search').value = '';
+        }
+
+        // --- 2. 圖片壓縮功能 ---
+        function processImage() {
+            const fileInput = document.getElementById('img-input');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const quality = parseFloat(document.getElementById('img-quality').value);
+            const preview = document.getElementById('preview');
+            const info = document.getElementById('file-info');
+            const hiddenBase64 = document.getElementById('upload-base64');
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function (event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_WIDTH = 1024; // 限制最大寬度
+                    if (width > MAX_WIDTH && quality < 1.0) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    
+                    preview.src = dataUrl; preview.style.display = 'block';
+                    
+                    const compressedSize = (Math.round((dataUrl.length - 22) * 3 / 4) / 1024).toFixed(1);
+                    let badgeClass = compressedSize > 500 ? (compressedSize > 1000 ? 'bad' : 'warn') : 'ok';
+                    info.innerHTML = `<span class="size-badge ${badgeClass}">上傳大小: ${compressedSize} KB</span>`;
+                    hiddenBase64.value = dataUrl.split(',')[1];
+                };
+            };
+        }
+
+        // --- 3. 提交與上傳 ---
+        async function handleSubmission() {
+            const msg = document.getElementById('status-msg');
+            const cname = document.getElementById('cname').value.trim();
+            const token = localStorage.getItem('tcm_token');
+            const owner = localStorage.getItem('tcm_owner');
+            const repo = localStorage.getItem('tcm_repo');
+
+            if(!cname) { alert('中藥名必填'); return; }
+            msg.style.display = 'block'; msg.className = 'loading'; msg.innerText = '⏳ 處理中...';
 
             try {
-                // (1) 取得目前的 herbs.json (需要 SHA 才能更新)
-                const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-                const getRes = await fetch(getUrl, {
-                    headers: { 
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
+                // 1. 檢查是否需要上傳新圖片
+                let imagePath = document.getElementById('current-image-path').value || "images/placeholder.jpg";
+                const base64Image = document.getElementById('upload-base64').value;
 
-                if (!getRes.ok) throw new Error('讀取失敗，請檢查用戶名/專案名/Token 是否正確');
-                const fileData = await getRes.json();
-                
-                // GitHub 的內容是 Base64 編碼的，需要解碼 (支援中文)
-                const content = decodeURIComponent(escape(window.atob(fileData.content)));
-                const currentHerbs = JSON.parse(content);
-                const fileSha = fileData.sha;
-
-                // (2) 準備新資料
-                const effectsArr = document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s);
-                const newHerb = {
-                    id: Date.now(),
-                    chinese_name: cname,
-                    latin_name: document.getElementById('latin').value || "",
-                    family: family,
-                    chem_main: document.getElementById('chem_main').value || "",
-                    chem_sub: document.getElementById('chem_sub').value || "",
-                    used_part: document.getElementById('part').value || "",
-                    chemistry: document.getElementById('chemistry').value || "",
-                    effects: effectsArr,
-                    indications: document.getElementById('indication').value || "",
-                    grade: document.getElementById('grade').value,
-                    image: "images/placeholder.jpg",
-                    wrong_effects: []
-                };
-
-                // (3) 加入陣列
-                currentHerbs.push(newHerb);
-
-                // (4) 編碼回 Base64 (支援中文)
-                const newContent = JSON.stringify(currentHerbs, null, 2);
-                const encodedContent = window.btoa(unescape(encodeURIComponent(newContent)));
-
-                // (5) 上傳更新 (PUT)
-                msg.innerText = '🚀 正在上傳新資料...';
-                const putRes = await fetch(getUrl, {
-                    method: 'PUT',
-                    headers: { 
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Add ${cname} via Mobile Admin`, // Commit 訊息
-                        content: encodedContent,
-                        sha: fileSha // 必須附上原本的 SHA
-                    })
-                });
-
-                if (putRes.ok) {
-                    msg.className = 'success';
-                    msg.innerText = `✅ 成功新增「${cname}」！請等待幾秒鐘網站更新。`;
-                    // 清空表單，保留年級
-                    const savedGrade = document.getElementById('grade').value;
-                    document.querySelectorAll('input:not(#grade), textarea').forEach(el => el.value = '');
-                    document.getElementById('grade').value = savedGrade;
-                } else {
-                    throw new Error('上傳失敗');
+                if (base64Image) {
+                    msg.innerText = '📸 正在上傳圖片...';
+                    const fileName = `${Date.now()}_${cname}.jpg`; 
+                    const imgUrl = `https://api.github.com/repos/${owner}/${repo}/contents/images/${fileName}`;
+                    
+                    const imgRes = await fetch(imgUrl, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: `Upload image for ${cname}`, content: base64Image })
+                    });
+                    if (!imgRes.ok) throw new Error('圖片上傳失敗');
+                    imagePath = `images/${fileName}`;
                 }
+
+                // 2. 更新 JSON
+                msg.innerText = '📄 正在更新資料庫...';
+                await uploadJsonToGitHub(imagePath);
 
             } catch (error) {
                 console.error(error);
-                msg.className = 'error';
-                msg.innerText = `❌ 錯誤：${error.message}`;
+                msg.className = 'error'; msg.innerText = `❌ 失敗：${error.message}`;
             }
+        }
+
+        async function uploadJsonToGitHub(finalImagePath) {
+            const owner = localStorage.getItem('tcm_owner');
+            const repo = localStorage.getItem('tcm_repo');
+            const token = localStorage.getItem('tcm_token');
+            const path = 'data/herbs.json'; 
+            const msg = document.getElementById('status-msg');
+            const cname = document.getElementById('cname').value.trim();
+
+            // 讀取遠端最新 JSON
+            const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${token}` } });
+            const fileData = await getRes.json();
+            const content = decodeURIComponent(escape(window.atob(fileData.content)));
+            let currentHerbs = JSON.parse(content);
+            const fileSha = fileData.sha;
+
+            // 判斷新增或更新
+            const existingIndex = currentHerbs.findIndex(h => h.chinese_name === cname);
+            const inputEffects = document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+
+            const newHerbData = {
+                id: existingIndex !== -1 ? currentHerbs[existingIndex].id : Date.now(),
+                chinese_name: cname,
+                latin_name: document.getElementById('latin').value,
+                family: document.getElementById('family').value,
+                used_part: document.getElementById('part').value,
+                chemistry: document.getElementById('chemistry').value,
+                chem_main: document.getElementById('chem_main').value,
+                chem_sub: document.getElementById('chem_sub').value,
+                effects: inputEffects,
+                indications: document.getElementById('indication').value,
+                grade: document.getElementById('grade').value,
+                image: finalImagePath, // 使用新的或舊的圖片路徑
+                wrong_effects: existingIndex !== -1 ? currentHerbs[existingIndex].wrong_effects : []
+            };
+
+            let actionType = existingIndex !== -1 ? "更新" : "新增";
+            if (existingIndex !== -1) currentHerbs[existingIndex] = newHerbData;
+            else currentHerbs.push(newHerbData);
+
+            // 上傳 JSON
+            const newContent = JSON.stringify(currentHerbs, null, 2);
+            const encodedContent = window.btoa(unescape(encodeURIComponent(newContent)));
+
+            const putRes = await fetch(getUrl, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `${actionType} ${cname} via Mobile Admin`,
+                    content: encodedContent,
+                    sha: fileSha
+                })
+            });
+
+            if (putRes.ok) {
+                msg.className = 'success';
+                msg.innerText = `✅ 成功${actionType}「${cname}」！`;
+                // 更新暫存
+                loadedHerbs = currentHerbs;
+                
+                // 如果是新增完，清空表單；如果是更新完，保留畫面讓使用者知道
+                if(actionType === "新增") {
+                    document.querySelectorAll('input:not(#grade), textarea').forEach(el => el.value = '');
+                    document.getElementById('preview').style.display = 'none';
+                    document.getElementById('file-info').innerText = '';
+                }
+            } else throw new Error('資料庫更新失敗');
         }
     </script>
 </body>
