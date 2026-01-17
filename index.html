@@ -3,9 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中藥查詢 | 本草學園</title>
+    <title>中藥智慧查詢 | 本草學園</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 這裡加入你剛才提供的智慧搜尋專屬 CSS */
+        .search-container { position: relative; width: 100%; max-width: 600px; margin: 30px auto; }
+        .search-box { 
+            width: 100%; padding: 15px 20px; font-size: 1.2rem; 
+            border: 2px solid #ddd; border-radius: 30px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); outline: none; transition: 0.3s;
+        }
+        .search-box:focus { border-color: #2c5e40; }
+
+        .suggestions-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: white; border: 1px solid #ddd; border-radius: 0 0 15px 15px;
+            z-index: 999; max-height: 300px; overflow-y: auto;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none;
+        }
+        .suggestion-item {
+            padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .suggestion-item:hover { background-color: #f1f8e9; }
+        .s-main { font-weight: bold; color: #333; }
+        .s-sub { font-size: 0.85rem; color: #888; }
+
+        .result-card { 
+            background: white; padding: 25px; border-radius: 12px; 
+            margin-bottom: 15px; border-left: 6px solid #2c5e40; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left;
+        }
+        .r-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        .r-name { font-size: 1.5rem; font-weight: bold; color: #2c5e40; }
+        .label { font-weight: bold; color: #555; width: 80px; display: inline-block; }
+    </style>
 </head>
 <body>
     <nav>
@@ -23,150 +56,17 @@
     </nav>
 
     <main>
-        <div class="hero">
-            <h1>中藥資料庫</h1>
-            <p>輸入中藥名、英文名、成分或科名</p>
-            
-            <div class="search-container">
-                <div class="search-box">
-                    <input type="text" id="search-input" 
-                           placeholder="例如：黃連, Berberine..." 
-                           autocomplete="off"
-                           oninput="showSuggestions(this.value)"
-                           onkeydown="if(event.key === 'Enter') triggerSearch()">
-                    <button onclick="triggerSearch()">搜尋</button>
-                </div>
-                <div id="suggestions" class="suggestions-list"></div>
-            </div>
+        <h1>🔍 藥材資料庫</h1>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-box" 
+                   placeholder="輸入藥名、科名、基原或成分..." autocomplete="off">
+            <div id="suggestions" class="suggestions-list"></div>
         </div>
 
-        <div id="herb-grid" class="herb-grid">
-            </div>
+        <div id="results-area"></div>
     </main>
 
-   <script>
-    // 1. 定義全域變數
-    let db = []; 
-    const input = document.getElementById('searchInput');
-    const suggestionsBox = document.getElementById('suggestions');
-    const resultsArea = document.getElementById('results-area');
-
-    // 2. 網頁載入時，抓取 GitHub 裡的資料 (data/herbs.json)
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const response = await fetch('data/herbs.json'); // 確保路徑正確
-            if (!response.ok) throw new Error("資料讀取失敗");
-            db = await response.json();
-            console.log("資料庫載入成功，共 " + db.length + " 筆資料");
-        } catch (error) {
-            console.error(error);
-            resultsArea.innerHTML = `<p style="text-align:center; color:red;">❌ 資料庫載入失敗，請檢查 data/herbs.json 是否存在。</p>`;
-        }
-    });
-
-    // 3. 監聽輸入事件：產生建議詞 (Google Style)
-    input.addEventListener('input', function() {
-        const val = this.value.toLowerCase().trim();
-        suggestionsBox.innerHTML = '';
-        
-        if (!val || db.length === 0) {
-            suggestionsBox.style.display = 'none';
-            // 如果清空搜尋框，同時清空下方結果
-            if (!val) resultsArea.innerHTML = ''; 
-            return;
-        }
-
-        // 過濾邏輯 (比對 JSON 裡的正確欄位名稱)
-        const matches = db.filter(item => {
-            // 這裡要用你 JSON 裡真正的欄位名稱 (chinese_name, latin_name...)
-            const origin = item.origin || ""; // 預防 origin 是空的
-            const chemistry = item.chemistry || "";
-            
-            return item.chinese_name.includes(val) || 
-                   item.latin_name.toLowerCase().includes(val) ||
-                   item.family.toLowerCase().includes(val) ||
-                   origin.toLowerCase().includes(val) || // 搜尋基原
-                   chemistry.toLowerCase().includes(val); // 搜尋成分
-        }).slice(0, 8); // 只顯示前 8 筆建議，避免太長
-
-        if (matches.length > 0) {
-            suggestionsBox.style.display = 'block';
-            matches.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                // 建議選單顯示：中文名 (生藥名)
-                div.innerHTML = `<span class="s-main">${item.chinese_name}</span><span class="s-sub">${item.latin_name}</span>`;
-                
-                // 點擊建議詞後的動作
-                div.onclick = function() {
-                    input.value = item.chinese_name; // 填入輸入框
-                    suggestionsBox.style.display = 'none'; // 隱藏建議
-                    displayResult(item); // 顯示詳細卡片
-                };
-                suggestionsBox.appendChild(div);
-            });
-        } else {
-            suggestionsBox.style.display = 'none';
-        }
-    });
-
-    // 4. 點擊頁面其他地方時，關閉建議選單
-    document.addEventListener('click', function(e) {
-        if (e.target !== input && e.target !== suggestionsBox) {
-            suggestionsBox.style.display = 'none';
-        }
-    });
-
-    // 5. 支援按 Enter 搜尋 (顯示所有符合項目)
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const val = this.value.toLowerCase().trim();
-            suggestionsBox.style.display = 'none';
-            
-            // 重新過濾一次，這次不限制數量
-            const matches = db.filter(item => {
-                const origin = item.origin || "";
-                const chemistry = item.chemistry || "";
-                return item.chinese_name.includes(val) || 
-                       item.latin_name.toLowerCase().includes(val) ||
-                       item.family.toLowerCase().includes(val) ||
-                       origin.toLowerCase().includes(val) ||
-                       chemistry.toLowerCase().includes(val);
-            });
-            
-            resultsArea.innerHTML = "";
-            if(matches.length === 0) {
-                resultsArea.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>找不到符合的藥材...</p>";
-            } else {
-                matches.forEach(item => displayResult(item, true)); // true 代表是列表模式(多張卡片)
-            }
-        }
-    });
-
-    // 6. 顯示詳細資料卡片 (這裡要對應你 JSON 的欄位)
-    function displayResult(item, append = false) {
-        if (!append) resultsArea.innerHTML = ""; // 如果不是列表模式，先清空舊的
-
-        // 處理空值顯示
-        const originText = item.origin ? item.origin : "暫無資料";
-        const chemText = item.chemistry ? item.chemistry : "暫無資料";
-        const noteText = item.indications ? item.indications : "";
-
-        const div = document.createElement("div");
-        div.className = "result-card";
-        div.innerHTML = `
-            <div class="r-header">
-                <span class="r-name">${item.chinese_name}</span>
-                <span class="r-family">${item.family}</span>
-            </div>
-            <div class="r-detail-row"><span class="label">生藥名:</span> ${item.latin_name}</div>
-            <div class="r-detail-row"><span class="label">基原:</span> ${originText}</div>
-            <div class="r-detail-row"><span class="label">成分:</span> ${chemText}</div>
-            <div class="r-detail-row"><span class="label">功效:</span> ${item.effects.join('、')}</div>
-            <div class="r-detail-row"><span class="label">備註:</span> ${noteText}</div>
-        `;
-        resultsArea.appendChild(div);
-    }
-</script>
+    <script src="app.js"></script>
 </body>
 </html>
