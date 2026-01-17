@@ -138,3 +138,36 @@ main { padding: 40px 5%; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.
     background: #999; color: white; border: none; padding: 12px 20px;
     border-radius: 50px; cursor: pointer;
 }
+/* 生藥頁面佈局 */
+.pharma-layout { display: flex; gap: 30px; align-items: flex-start; }
+.category-sidebar { width: 250px; background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow); flex-shrink: 0; }
+.content-area { flex-grow: 1; }
+
+/* 分類按鈕 */
+.category-buttons button {
+    display: block; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px;
+    background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer; color: #555;
+    transition: 0.2s;
+}
+.category-buttons button:hover { background: #f0f0f0; color: var(--primary); }
+.category-buttons button.active { background: var(--primary); color: white; font-weight: bold; }
+
+/* 子分類 Chips */
+.subcategory-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.chip {
+    padding: 8px 16px; background: white; border: 1px solid #ddd; border-radius: 20px;
+    cursor: pointer; transition: 0.2s; color: #666;
+}
+.chip:hover { border-color: var(--primary); color: var(--primary); }
+.chip.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+/* 簡介卡片 */
+.intro-card { background: #e8f5e9; padding: 25px; border-radius: 15px; border-left: 5px solid var(--primary); margin-bottom: 20px; }
+.intro-card h2 { margin-top: 0; color: var(--secondary); }
+.breadcrumb { font-size: 0.9rem; color: #888; margin-bottom: 15px; }
+
+/* 手機版 RWD */
+@media (max-width: 768px) {
+    .pharma-layout { flex-direction: column; }
+    .category-sidebar { width: 100%; box-sizing: border-box; }
+}
