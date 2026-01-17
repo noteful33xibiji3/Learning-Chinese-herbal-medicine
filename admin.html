@@ -3,21 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增中藥助手 | 本草學園</title>
+    <title>手機版後台 | 本草學園</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow); }
+        .form-container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow); }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; } /* font-size 16px 防止手機縮放 */
         textarea { height: 80px; }
-        .output-area { background: #333; color: #fff; padding: 15px; border-radius: 10px; font-family: monospace; margin-top: 20px; white-space: pre-wrap; word-break: break-all; }
         .required::after { content: " *"; color: red; }
+        
+        /* API 設定區塊 */
+        .api-settings { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        .api-settings.show { display: block; }
+        .api-settings input { background: #555; border: none; color: white; margin-bottom: 10px; }
+        .toggle-settings { text-align: right; font-size: 0.8rem; color: #666; cursor: pointer; margin-bottom: 10px; text-decoration: underline; }
+
+        /* 狀態訊息 */
+        #status-msg { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; text-align: center; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #cce5ff; color: #004085; }
     </style>
 </head>
 <body>
     <nav>
-        <div class="logo">🌿 本草後台</div>
+        <div class="logo">📱 手機後台</div>
         <ul class="menu">
             <li><a href="index.html">回前台</a></li>
         </ul>
@@ -25,85 +36,246 @@
 
     <main>
         <div class="form-container">
-            <h2>📝 新增中藥資料</h2>
-            <p>填寫完畢後，複製下方的 JSON 代碼貼到 GitHub 的 herbs.json 中。</p>
+            <div class="toggle-settings" onclick="toggleSettings()">⚙️ 設定 GitHub 連線</div>
+            
+            <div id="settings-panel" class="api-settings">
+                <h4>GitHub 連線設定 (只存手機端)</h4>
+                <div class="form-group">
+                    <label>GitHub 用戶名 (Owner)</label>
+                    <input type="text" id="gh_owner" placeholder="例如: yourname">
+                </div>
+                <div class="form-group">
+                    <label>專案名稱 (Repo)</label>
+                    <input type="text" id="gh_repo" placeholder="例如: tcm-learning">
+                </div>
+                <div class="form-group">
+                    <label>Token (權杖)</label>
+                    <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxx">
+                </div>
+                <button class="btn-secondary" onclick="saveSettings()" style="width:100%">儲存設定</button>
+            </div>
+
+            <h2>📝 新增中藥</h2>
             
             <div class="form-group">
-                <label class="required">中藥名 (Chinese Name)</label>
-                <input type="text" id="cname" placeholder="例如：人參">
+                <label class="required">中藥名</label>
+                <input type="text" id="cname" placeholder="例如：黃連">
+            </div>
+
+            <div class="form-group" style="background:#f9f9f9; padding:10px; border-radius:10px;">
+                <label style="color:var(--primary);">🧪 生藥學分類</label>
+                <div style="display:flex; gap:10px; flex-direction: column;">
+                    <select id="chem_main" onchange="updateSubCats()">
+                        <option value="">-- 先選大分類 --</option>
+                    </select>
+                    <select id="chem_sub">
+                        <option value="">-- 再選子分類 --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="required">科名</label>
+                <input type="text" id="family">
             </div>
             <div class="form-group">
-                <label class="required">科名 (Family)</label>
-                <input type="text" id="family" placeholder="例如：五加科 (Araliaceae)">
+                <label>學名 / 基原</label>
+                <input type="text" id="latin">
             </div>
             <div class="form-group">
-                <label>生藥名 (Latin Name)</label>
-                <input type="text" id="latin" placeholder="例如：Ginseng Radix">
+                <label>藥用部位</label>
+                <input type="text" id="part">
             </div>
             <div class="form-group">
-                <label>用部 (Used Part)</label>
-                <input type="text" id="part" placeholder="例如：根">
+                <label>主要成分</label>
+                <input type="text" id="chemistry">
             </div>
             <div class="form-group">
-                <label>功效 (用逗號分隔)</label>
-                <input type="text" id="effects" placeholder="例如：大補元氣, 復脈固脫">
+                <label>功效 (逗號分隔)</label>
+                <input type="text" id="effects">
             </div>
             <div class="form-group">
-                <label>主治/備註</label>
-                <textarea id="indication" placeholder="相關筆記..."></textarea>
+                <label>主治 / 筆記</label>
+                <textarea id="indication"></textarea>
             </div>
             <div class="form-group">
                 <label>年級</label>
                 <select id="grade">
                     <option value="大一">大一</option>
-                    <option value="大二">大二</option>
+                    <option value="大二上">大二上</option>
+                    <option value="大二下">大二下</option>
                     <option value="大三">大三</option>
                 </select>
             </div>
 
-            <button class="btn-primary" onclick="generateJSON()">生成 JSON 代碼</button>
-
-            <h3>複製以下代碼：</h3>
-            <div class="output-area" id="output">...尚未生成...</div>
-            <button class="btn-secondary" onclick="copyToClipboard()" style="margin-top:10px;">一鍵複製</button>
+            <button class="btn-primary" onclick="uploadToGitHub()" style="width:100%; padding:15px; font-size:1.1rem;">🚀 上傳並儲存</button>
+            
+            <div id="status-msg"></div>
         </div>
     </main>
 
     <script>
-        function generateJSON() {
-            // 取得當前時間戳當作 ID，避免重複
-            const id = Date.now(); 
-            const cname = document.getElementById('cname').value;
-            const family = document.getElementById('family').value;
+        // --- 1. 初始化資料與選單 ---
+        const categories = {
+            "配糖體": { "en": "Glycosides", "subs": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"] },
+            "生物鹼": { "en": "Alkaloids", "subs": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"] },
+            "多醣類": { "en": "Carbohydrates", "subs": ["澱粉", "樹膠", "黏液質", "果膠"] },
+            "苯丙烷類": { "en": "Phenylpropanoids", "subs": ["簡單苯丙烷類", "香豆素", "木質素"] },
+            "木酚素": { "en": "Lignans", "subs": ["木酚素", "新木酚素"] },
+            "類黃酮": { "en": "Flavonoids", "subs": ["黃酮類", "黃酮醇類", "異黃酮類", "花青素"] },
+            "鞣質": { "en": "Tannins", "subs": ["水解型鞣質", "縮合型鞣質"] },
+            "萜類": { "en": "Terpenoids", "subs": ["單萜", "倍半萜", "二萜", "三萜"] },
+            "揮發油": { "en": "Volatile Oils", "subs": ["含氧單萜", "倍半萜類", "芳香族"] },
+            "樹脂": { "en": "Resins", "subs": ["油樹脂", "膠樹脂", "油膠樹脂", "香樹脂"] },
+            "脂質": { "en": "Lipids", "subs": ["脂肪油", "蠟"] }
+        };
+
+        const mainSelect = document.getElementById('chem_main');
+        const subSelect = document.getElementById('chem_sub');
+
+        // 填充選單
+        for (let key in categories) {
+            let option = document.createElement("option");
+            option.text = key;
+            option.value = key;
+            mainSelect.add(option);
+        }
+
+        function updateSubCats() {
+            const selectedMain = mainSelect.value;
+            subSelect.innerHTML = '<option value="">-- 請選擇子分類 --</option>';
+            if (selectedMain && categories[selectedMain]) {
+                categories[selectedMain].subs.forEach(sub => {
+                    let option = document.createElement("option");
+                    option.text = sub;
+                    option.value = sub;
+                    subSelect.add(option);
+                });
+            }
+        }
+
+        // --- 2. 設定儲存功能 (Local Storage) ---
+        // 載入頁面時讀取設定
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('gh_owner').value = localStorage.getItem('tcm_owner') || '';
+            document.getElementById('gh_repo').value = localStorage.getItem('tcm_repo') || '';
+            document.getElementById('gh_token').value = localStorage.getItem('tcm_token') || '';
             
-            if(!cname || !family) {
-                alert('中藥名和科名是必填的喔！');
+            // 如果沒設定過，自動打開設定面板
+            if(!localStorage.getItem('tcm_token')) toggleSettings();
+        });
+
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('show');
+        }
+
+        function saveSettings() {
+            localStorage.setItem('tcm_owner', document.getElementById('gh_owner').value.trim());
+            localStorage.setItem('tcm_repo', document.getElementById('gh_repo').value.trim());
+            localStorage.setItem('tcm_token', document.getElementById('gh_token').value.trim());
+            alert('設定已儲存！下次不用再填了。');
+            toggleSettings();
+        }
+
+        // --- 3. 核心：上傳到 GitHub ---
+        async function uploadToGitHub() {
+            const owner = localStorage.getItem('tcm_owner');
+            const repo = localStorage.getItem('tcm_repo');
+            const token = localStorage.getItem('tcm_token');
+            const path = 'data/herbs.json'; // 目標檔案路徑
+            
+            const msg = document.getElementById('status-msg');
+            
+            if (!owner || !repo || !token) {
+                alert('請先點擊上方「⚙️ 設定」填寫 GitHub 連線資訊！');
+                toggleSettings();
                 return;
             }
 
-            const effectsArr = document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+            // 檢查必填
+            const cname = document.getElementById('cname').value;
+            const family = document.getElementById('family').value;
+            if(!cname || !family) { alert('中藥名和科名是必填的！'); return; }
 
-            const newHerb = {
-                id: id,
-                chinese_name: cname,
-                latin_name: document.getElementById('latin').value || "",
-                family: family,
-                used_part: document.getElementById('part').value || "",
-                effects: effectsArr,
-                indications: document.getElementById('indication').value || "",
-                grade: document.getElementById('grade').value,
-                image: "images/placeholder.jpg", // 預設圖片
-                wrong_effects: [] // 留空，讓程式自動隨機抓
-            };
+            // 顯示載入中
+            msg.style.display = 'block';
+            msg.className = 'loading';
+            msg.innerText = '⏳ 正在讀取 GitHub 資料庫...';
 
-            // 加上逗號，方便直接貼
-            const jsonString = "," + JSON.stringify(newHerb, null, 2);
-            document.getElementById('output').innerText = jsonString;
-        }
+            try {
+                // (1) 取得目前的 herbs.json (需要 SHA 才能更新)
+                const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+                const getRes = await fetch(getUrl, {
+                    headers: { 
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
 
-        function copyToClipboard() {
-            const text = document.getElementById('output').innerText;
-            navigator.clipboard.writeText(text).then(() => alert('複製成功！請去 GitHub 貼上。'));
+                if (!getRes.ok) throw new Error('讀取失敗，請檢查用戶名/專案名/Token 是否正確');
+                const fileData = await getRes.json();
+                
+                // GitHub 的內容是 Base64 編碼的，需要解碼 (支援中文)
+                const content = decodeURIComponent(escape(window.atob(fileData.content)));
+                const currentHerbs = JSON.parse(content);
+                const fileSha = fileData.sha;
+
+                // (2) 準備新資料
+                const effectsArr = document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+                const newHerb = {
+                    id: Date.now(),
+                    chinese_name: cname,
+                    latin_name: document.getElementById('latin').value || "",
+                    family: family,
+                    chem_main: document.getElementById('chem_main').value || "",
+                    chem_sub: document.getElementById('chem_sub').value || "",
+                    used_part: document.getElementById('part').value || "",
+                    chemistry: document.getElementById('chemistry').value || "",
+                    effects: effectsArr,
+                    indications: document.getElementById('indication').value || "",
+                    grade: document.getElementById('grade').value,
+                    image: "images/placeholder.jpg",
+                    wrong_effects: []
+                };
+
+                // (3) 加入陣列
+                currentHerbs.push(newHerb);
+
+                // (4) 編碼回 Base64 (支援中文)
+                const newContent = JSON.stringify(currentHerbs, null, 2);
+                const encodedContent = window.btoa(unescape(encodeURIComponent(newContent)));
+
+                // (5) 上傳更新 (PUT)
+                msg.innerText = '🚀 正在上傳新資料...';
+                const putRes = await fetch(getUrl, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Add ${cname} via Mobile Admin`, // Commit 訊息
+                        content: encodedContent,
+                        sha: fileSha // 必須附上原本的 SHA
+                    })
+                });
+
+                if (putRes.ok) {
+                    msg.className = 'success';
+                    msg.innerText = `✅ 成功新增「${cname}」！請等待幾秒鐘網站更新。`;
+                    // 清空表單，保留年級
+                    const savedGrade = document.getElementById('grade').value;
+                    document.querySelectorAll('input:not(#grade), textarea').forEach(el => el.value = '');
+                    document.getElementById('grade').value = savedGrade;
+                } else {
+                    throw new Error('上傳失敗');
+                }
+
+            } catch (error) {
+                console.error(error);
+                msg.className = 'error';
+                msg.innerText = `❌ 錯誤：${error.message}`;
+            }
         }
     </script>
 </body>
