@@ -389,6 +389,72 @@
                 tbody.appendChild(tr);
             });
         }
+        // --- 搜尋功能 (升級版：支援搜尋基原學名) ---
+        function handleSearchInput() {
+            const term = document.getElementById('admin-search').value.trim().toLowerCase();
+            const suggestionsDiv = document.getElementById('suggestions');
+            const resultDiv = document.getElementById('search-results'); // 3D 卡片區
+            const noResultMsg = document.getElementById('no-result-msg');
+            
+            // 隱藏表單
+            document.getElementById('edit-form-area').style.display = "none";
+            noResultMsg.style.display = "none";
+            resultDiv.innerHTML = ""; // 清空卡片區
+
+            if (!term) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            // ★ 核心搜尋邏輯升級 ★
+            const matches = allHerbs.filter(h => {
+                // 1. 搜中文名
+                if (h.chinese_name && h.chinese_name.includes(term)) return true;
+                
+                // 2. 搜生藥名 (轉小寫比對)
+                if (h.latin_name && h.latin_name.toLowerCase().includes(term)) return true;
+                
+                // 3. 搜基原 (支援新舊格式)
+                if (h.origin) {
+                    // 如果是新版物件陣列 (例如: [{lat:"Ephedra...", ch:"麻黃"}])
+                    if (Array.isArray(h.origin)) {
+                        // 只要陣列裡有任何一個學名符合，就算選中
+                        return h.origin.some(o => (o.lat && o.lat.toLowerCase().includes(term)));
+                    } 
+                    // 如果是舊版純字串
+                    else if (typeof h.origin === 'string') {
+                        return h.origin.toLowerCase().includes(term);
+                    }
+                }
+                return false;
+            });
+
+            if (matches.length > 0) {
+                // A. 顯示下拉選單 (條列式)
+                suggestionsDiv.innerHTML = matches.map(h => `
+                    <div class="suggestion-item" onclick="loadHerbToFormByID(${h.id})">
+                        <span>${h.chinese_name}</span>
+                        <span style="color:#888; font-size:0.85rem;">${h.latin_name || '無生藥名'}</span>
+                    </div>
+                `).join('');
+                suggestionsDiv.style.display = 'block';
+
+                // B. 顯示 3D 卡片 (結果區)
+                // 如果你希望在輸入時下方也出現卡片，可以加這段；如果不希望太亂，可以只留下拉選單。
+                // 這裡保留卡片顯示，方便快速瀏覽。
+                matches.forEach(h => {
+                    const div = document.createElement('div');
+                    div.className = 'mini-card'; // 引用你的 3D CSS
+                    div.innerHTML = `<h4>${h.chinese_name}</h4><p>${h.latin_name || ''}</p>`;
+                    div.onclick = () => loadHerbToFormByID(h.id);
+                    resultDiv.appendChild(div);
+                });
+
+            } else {
+                suggestionsDiv.style.display = 'none';
+                noResultMsg.style.display = 'block'; // 顯示「新增按鈕」
+            }
+        }
 
         // === 5. 編輯與圖片處理邏輯 ===
 
