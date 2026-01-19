@@ -199,12 +199,12 @@
             </div>
 
             <label>生藥名 (Latin Name)</label>
-            <input type="text" id="latin_name">
+          <input type="text" id="latin_name" placeholder="例如：Ephedrae Herba">
 
             <label>科名 (Family)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="family_ch" placeholder="中文 (麻黃科)">
-                <input type="text" id="family_en" placeholder="英文 (Ephedraceae)">
+               <input type="text" id="family_ch" placeholder="中文 (例如：麻黃科)">
+<input type="text" id="family_en" placeholder="英文 (例如：Ephedraceae)">
             </div>
 
             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:10px;">
@@ -222,8 +222,8 @@
             </div>
 
             <label style="margin-top:15px;">功效 (Effects)</label>
-            <input type="text" id="effects" placeholder="用逗號分隔">
-
+          <input type="text" id="effects" placeholder="請用逗號分隔 (例如：發汗, 平喘)">
+            
             <label style="color:#d32f2f;">⚠️ 易混淆 (Confusing Drugs)</label>
             <div class="dynamic-list-container" style="border-color:#ffcdd2; background:#ffebee;">
                 <div id="confusing-rows-wrapper"></div>
@@ -596,11 +596,11 @@
             div.innerHTML = `
                 <div style="flex:1;">
                     <div style="display:flex; gap:5px; margin-bottom:5px;">
-                        <input type="text" class="conf-ch" value="${valCh}" placeholder="中文名">
-                        <input type="text" class="conf-en" value="${valEn}" placeholder="學名">
-                    </div>
-                    <input type="text" class="conf-note" value="${valNote}" placeholder="備註...">
-                </div>
+                        <input type="text" class="conf-ch" ... placeholder="中文名 (廣防己)">
+            <input type="text" class="conf-en" ... placeholder="學名 (Aristolochia fangchi)">
+        </div>
+        <input type="text" class="conf-note" ... placeholder="備註 (例如：含馬兜鈴酸，具腎毒性)">
+    </div>
                 <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
             `;
             wrapper.appendChild(div);
@@ -619,8 +619,9 @@
             div.innerHTML = `
                 <div class="chem-header">
                     <span>🧪 成分</span>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">移除</button>
-                </div>
+                   <input type="text" class="chem-en" ... placeholder="英文 (Ephedrine)">
+        <input type="text" class="chem-ch" ... placeholder="中文 (麻黃鹼)">
+    </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="text" class="chem-en" placeholder="英文名" value="${nameEn}">
                     <input type="text" class="chem-ch" placeholder="中文名" value="${nameCh}">
