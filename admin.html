@@ -122,7 +122,8 @@
         
         <div class="glass-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0; color:#2C5E4F;">藥材資料庫管理</h2>
+                <h2 style="margin:0; color:#2C5E4F;">藥材資料庫管理</h2><span id="herb-total-count" style="background:#2C5E4F; color:white; padding:2px 12px; border-radius:20px; font-size:0.9rem; margin-left:10px; vertical-align:middle;">載入中...</span>
+</h2>
                 <div class="search-box-wrapper" style="flex:1; max-width: 300px; margin-left: 20px;">
                     <input type="text" id="admin-search" placeholder="🔍 搜尋中藥 / 學名..." oninput="handleSearchInput()" style="margin-bottom:0;">
                     <div id="suggestions" class="suggestions-list"></div>
@@ -252,8 +253,7 @@
         let newImageBase64 = null; 
         
         // ★ 新增：追蹤是否有未儲存的變更
-        let hasUnsavedChanges = false;
-
+        
         const categories = {
             "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"],
             "生物鹼": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"],
@@ -281,12 +281,13 @@
         });
 
         // ★ 防止誤關網頁
-        window.addEventListener('beforeunload', function (e) {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
+      let hasUnsavedChanges = false;
+window.addEventListener('beforeunload', (e) => {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = ''; // 瀏覽器會跳出預設警告
+    }
+});
 
         function initCategories() {
             const mainSel = document.getElementById('chem_main');
@@ -296,6 +297,13 @@
                 mainSel.add(opt);
             }
         }
+        // ★ 新增這個函式，用來同步更新畫面上的數量
+function updateDisplayCount() {
+    const countLabel = document.getElementById('herb-total-count');
+    const statusText = document.getElementById('status-text');
+    if (countLabel) countLabel.innerText = `目前總計: ${allHerbs.length} 筆`;
+    if (statusText) statusText.innerText = `✅ 已連線: ${config.repo} (${allHerbs.length}筆)`;
+}
         function updateSubCats() {
             const mainVal = document.getElementById('chem_main').value;
             const subSel = document.getElementById('chem_sub');
@@ -505,19 +513,23 @@
                 input.oninput = () => { hasUnsavedChanges = true; };
                 input.onchange = () => { hasUnsavedChanges = true; };
             });
-        }
+            hasUnsavedChanges = false; // 開啟時重置狀態
+    const inputs = document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select');
+    inputs.forEach(input => {
+        input.oninput = () => { hasUnsavedChanges = true; };
+        input.onchange = () => { hasUnsavedChanges = true; };
+    });
+}
 
         // ★ 修改後的關閉函式
         function closeEditModal() {
-            // 如果有變更，且使用者按了「取消」(confirm 回傳 false)，則不關閉視窗
-            if (hasUnsavedChanges) {
-                const confirmDiscard = confirm("⚠️ 您有未儲存的資料！\n確定要捨棄變更並關閉嗎？");
-                if (!confirmDiscard) return;
-            }
-            
-            document.getElementById('edit-modal').style.display = 'none';
-            hasUnsavedChanges = false; // 重置狀態
-        }
+    // ★ 修改為這段邏輯
+    if (hasUnsavedChanges && !confirm("⚠️ 您有未儲存的資料！確定要捨棄變更嗎？")) {
+        return; // 使用者按取消，就不關視窗
+    }
+    document.getElementById('edit-modal').style.display = 'none';
+    hasUnsavedChanges = false; 
+}
 
         // --- 動態列表產生器 ---
         function addOriginRow(data = null) {
