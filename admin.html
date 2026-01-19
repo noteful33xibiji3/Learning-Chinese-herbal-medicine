@@ -147,9 +147,12 @@
                 <input type="text" id="latin_name" placeholder="例如：Ephedrae Herba">
             </div>
 
-            <div class="form-group">
-                <label>科名 (Family)</label>
-                <input type="text" id="family" placeholder="例如：麻黃科 (Ephedraceae)">
+           <div class="form-group">
+                <label>科名 (Family) *</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" id="family_ch" placeholder="中文 (如: 麻黃科)">
+                    <input type="text" id="family_en" placeholder="英文 (如: Ephedraceae)">
+                </div>
             </div>
 
             <div class="form-group" style="background:#f9f9f9; padding:15px; border-radius:10px;">
@@ -371,7 +374,21 @@ if (Array.isArray(herb.origin)) {
     addOriginRow(); // 空的
 }
             document.getElementById('latin_name').value = herb.latin_name || "";
-            document.getElementById('family').value = herb.family || "";
+            // ... (前面的代碼)
+            document.getElementById('latin_name').value = herb.latin_name || "";
+            
+            // ★ 修改這裡：讀取分開的科名
+            document.getElementById('family_ch').value = herb.family_ch || ""; 
+            document.getElementById('family_en').value = herb.family_en || "";
+            
+            // 如果是舊資料只有 family 欄位，嘗試自動填入英文欄位(或手動補)
+            if(herb.family) {
+                 // 簡單判斷：如果舊欄位有值但新欄位沒值，暫時填到中文那格提醒你改
+                 if(!herb.family_ch && !herb.family_en) document.getElementById('family_ch').value = herb.family;
+            }
+
+            document.getElementById('effects').value = (herb.effects || []).join(', ');
+            // ... (後面的代碼)
             document.getElementById('effects').value = (herb.effects || []).join(', ');
             document.getElementById('indications').value = herb.indications || "";
             document.getElementById('grade').value = herb.grade || "大二";
@@ -463,6 +480,7 @@ if (Array.isArray(herb.origin)) {
         }
 
         // --- 動態成分處理邏輯 (只有這一份，不會打架了) ---
+        // --- 修改後的 addChemRow (支援中英文成分名) ---
         function addChemRow(data = null) {
             const wrapper = document.getElementById('chem-rows-wrapper');
             const idx = Date.now() + Math.floor(Math.random() * 1000);
@@ -471,23 +489,34 @@ if (Array.isArray(herb.origin)) {
             div.className = 'chem-row';
             div.id = `row-${idx}`;
             
-            let nameVal = "";
+            // 初始化變數
+            let nameEn = "";
+            let nameCh = "";
             let imgVal = "";
+
             if (data) {
                 if (typeof data === 'string') {
-                    nameVal = data; 
+                    // 舊資料相容 (如果只有字串，預設當作英文)
+                    nameEn = data; 
                 } else {
-                    nameVal = data.name || "";
+                    // 新資料結構
+                    nameEn = data.name_en || data.name || ""; // 相容舊的 name
+                    nameCh = data.name_ch || "";
                     imgVal = data.image || "";
                 }
             }
 
             div.innerHTML = `
                 <div class="chem-header">
-                    <h5>成分 #${wrapper.children.length + 1}</h5>
+                    <h5>🧪 成分 #${wrapper.children.length + 1}</h5>
                     <button type="button" class="btn-del" onclick="removeChemRow('row-${idx}')">移除</button>
                 </div>
-                <input type="text" class="chem-name" placeholder="成分名稱 (如: Ephedrine)" value="${nameVal}" style="margin-bottom:10px;">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <input type="text" class="chem-en" placeholder="英文名 (Ephedrine)" value="${nameEn}">
+                    <input type="text" class="chem-ch" placeholder="中文名 (麻黃鹼)" value="${nameCh}">
+                </div>
+
                 <div style="font-size:0.9rem;">
                     <label style="display:inline-block; cursor:pointer; background:#eee; padding:5px 10px; border-radius:5px;">
                         📸 上傳結構圖
@@ -554,21 +583,31 @@ if (Array.isArray(herb.origin)) {
                     mainImagePath = await uploadImageToGitHub(owner, repo, token, newImageBase64, 'herbs');
                 }
 
-                // 2. 處理成分列表
+                2. 處理成分列表 (抓取中英文)
                 const chemRows = document.querySelectorAll('.chem-row');
                 const chemistryData = [];
                 for (let i = 0; i < chemRows.length; i++) {
                     const row = chemRows[i];
-                    const name = row.querySelector('.chem-name').value.trim();
-                    if (!name) continue; 
+                    const nameEn = row.querySelector('.chem-en').value.trim(); // 抓英文
+                    const nameCh = row.querySelector('.chem-ch').value.trim(); // 抓中文
+                    
+                    if (!nameEn && !nameCh) continue; // 兩格都空才跳過
+
                     const oldImg = row.querySelector('.chem-old-img').value;
                     const newBase64 = row.querySelector('.chem-new-base64').value;
                     let finalChemImg = oldImg; 
+                    
                     if (newBase64) {
                         statusText.innerText = `正在上傳成分圖片 (${i+1}/${chemRows.length})...`;
                         finalChemImg = await uploadImageToGitHub(owner, repo, token, newBase64, 'structures');
                     }
-                    chemistryData.push({ name: name, image: finalChemImg });
+                    
+                    // ★ 存成新格式物件
+                    chemistryData.push({ 
+                        name_en: nameEn, 
+                        name_ch: nameCh, 
+                        image: finalChemImg 
+                    });
                 }
                 const originRows = document.querySelectorAll('.origin-input');
 const originData = [];
@@ -583,7 +622,8 @@ originRows.forEach(input => {
                     chinese_name: document.getElementById('chinese_name').value.trim(),
                     origin: originData,
                     latin_name: document.getElementById('latin_name').value.trim(),
-                    family: document.getElementById('family').value.trim(),
+                    family_ch: document.getElementById('family_ch').value.trim(),
+                    family_en: document.getElementById('family_en').value.trim(),
                     chem_main: document.getElementById('chem_main').value,
                     chem_sub: document.getElementById('chem_sub').value,
                     chemistry: chemistryData, 
