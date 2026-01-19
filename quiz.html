@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* =========================================
-           ✨ 全域與導覽列樣式
+           ✨ 全域與導覽列樣式 (強制修復選單消失問題)
            ========================================= */
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -27,10 +27,11 @@
         .back-btn { font-size: 1.2rem; cursor: pointer; border: none; background: none; color: #666; }
         .logo { font-weight: 700; font-size: 1.5rem; color: #4A7C59; text-decoration: none; }
 
-        /* 選單 */
+        /* 選單與漢堡按鈕 */
         .menu { list-style: none; display: flex; gap: 20px; padding: 0; margin: 0; }
         .menu li a { text-decoration: none; color: #666; font-weight: 500; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
         .menu li a.active, .menu li a:hover { color: #4A7C59; background: #e8f5e9; }
+        
         .burger { display: none; font-size: 1.5rem; cursor: pointer; color: #4A7C59; }
 
         @media (max-width: 768px) {
@@ -67,34 +68,33 @@
         .grade-check { cursor: pointer; }
         .grade-check input { display: none; }
         .grade-box {
-            display: block; text-align: center; padding: 10px 5px;
-            border: 1px solid #ddd; border-radius: 12px; color: #666; background: white; transition: 0.2s;
-            font-size: 0.95rem;
+            display: block; text-align: center; padding: 8px;
+            border: 1px solid #ddd; border-radius: 8px; color: #666; background: white; transition: 0.2s;
         }
         .grade-check input:checked ~ .grade-box {
             background: #e8f5e9; border-color: #4A7C59; color: #2C5E4F; font-weight: bold;
-            box-shadow: 0 2px 5px rgba(74, 124, 89, 0.2);
         }
 
         /* --- 2. 藥材小按鈕 (Chips) --- */
         .herb-chip-container {
             display: flex; flex-wrap: wrap; gap: 8px;
             max-height: 250px; overflow-y: auto;
-            padding: 10px; border: 1px solid #f0f0f0; border-radius: 10px; background: #fafafa;
+            padding: 5px; border: 1px solid #f0f0f0; border-radius: 10px; background: #fafafa;
         }
         
         .herb-chip { cursor: pointer; user-select: none; }
-        .herb-chip input { display: none; } 
+        .herb-chip input { display: none; } /* 隱藏原本的 checkbox */
         
         .chip-content {
             display: inline-block;
             padding: 6px 14px;
             border: 1px solid #ddd;
-            border-radius: 20px;
+            border-radius: 20px; /* 圓角膠囊狀 */
             background: white;
             color: #555;
             font-size: 0.9rem;
             transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         /* 選中時的樣式 (變綠色) */
@@ -111,9 +111,7 @@
             display: flex; gap: 10px; align-items: center; justify-content: center;
             background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2;
         }
-        .mode-select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; min-width: 120px; }
-        /* 當選項被隱藏時的樣式 (雖然 hidden 屬性會直接不顯示) */
-        option[disabled] { color: #ccc; }
+        .mode-select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; }
 
         /* --- 4. 測驗按鈕與進度條 --- */
         .progress-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
@@ -172,20 +170,20 @@
             <div style="margin-bottom:20px;">
                 <div class="section-title">1. 快速選擇範圍</div>
                 <div class="checkbox-grid">
-                    <label class="grade-check"><input type="checkbox" value="大一" onchange="window.batchSelectByGrade(this)"><span class="grade-box">大一</span></label>
-                    <label class="grade-check"><input type="checkbox" value="大二上" onchange="window.batchSelectByGrade(this)"><span class="grade-box">大二上</span></label>
-                    <label class="grade-check"><input type="checkbox" value="大二下" onchange="window.batchSelectByGrade(this)"><span class="grade-box">大二下</span></label>
-                    <label class="grade-check"><input type="checkbox" value="大三" onchange="window.batchSelectByGrade(this)"><span class="grade-box">大三</span></label>
+                    <label class="grade-check"><input type="checkbox" name="grade" value="大一" onchange="batchSelectByGrade()"><span class="grade-box">大一</span></label>
+                    <label class="grade-check"><input type="checkbox" name="grade" value="大二上" onchange="batchSelectByGrade()"><span class="grade-box">大二上</span></label>
+                    <label class="grade-check"><input type="checkbox" name="grade" value="大二下" onchange="batchSelectByGrade()"><span class="grade-box">大二下</span></label>
+                    <label class="grade-check"><input type="checkbox" name="grade" value="大三" onchange="batchSelectByGrade()"><span class="grade-box">大三</span></label>
                 </div>
             </div>
 
             <div style="margin-bottom:20px;">
                 <div class="section-title">2. 微調藥材清單</div>
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="filter-search" placeholder="搜尋藥材..." oninput="window.renderHerbList()" 
+                    <input type="text" id="filter-search" placeholder="搜尋藥材..." oninput="renderHerbList()" 
                            style="flex:1; padding:8px 15px; border:1px solid #ddd; border-radius:20px; outline:none;">
-                    <button class="btn-sm" onclick="window.toggleSelectAll(true)">全選</button>
-                    <button class="btn-sm" onclick="window.toggleSelectAll(false)">清空</button>
+                    <button class="btn-sm" onclick="toggleSelectAll(true)">全選</button>
+                    <button class="btn-sm" onclick="toggleSelectAll(false)">清空</button>
                 </div>
                 
                 <div id="herb-chip-container" class="herb-chip-container">
@@ -198,14 +196,12 @@
                 <div class="mode-selector">
                     <div style="text-align:center;">
                         <small>題目顯示 (Q)</small><br>
-                        <select id="mode-question" class="mode-select" onchange="window.preventSameMode()">
+                        <select id="mode-question" class="mode-select">
                             <option value="chinese_name">中藥名</option>
                             <option value="origin">基原(學名)</option>
                             <option value="chemistry" selected>成分/圖片</option>
                             <option value="image">中藥外觀圖</option>
                             <option value="effects">功效</option>
-                            <option value="family">科名</option>
-                            <option value="latin_name">生藥名</option>
                         </select>
                     </div>
                     <div style="font-size:1.5rem; color:#f57c00;">➡</div>
@@ -216,15 +212,12 @@
                             <option value="latin_name">生藥名</option>
                             <option value="family">科名</option>
                             <option value="origin">基原</option>
-                            <option value="effects">功效</option>
-                            <option value="chemistry">成分</option>
                         </select>
                     </div>
                 </div>
-                <p style="text-align:center; color:#888; font-size:0.8rem; margin-top:5px;">系統會自動隱藏重複的選項，避免「中藥名考中藥名」</p>
             </div>
 
-            <button class="btn-primary" onclick="window.startQuiz()">🚀 開始測驗</button>
+            <button class="btn-primary" onclick="startQuiz()">🚀 開始測驗</button>
         </div>
 
         <div id="quiz-panel" class="glass-panel" style="display: none;">
@@ -253,9 +246,11 @@
 
     </main>
 
-    <script>
+    <script src="app.js"></script> <script>
+        // --- 漢堡選單邏輯 (確保選單能開關) ---
         function toggleMenu() {
-            document.getElementById('nav-menu').classList.toggle('show');
+            const menu = document.getElementById('nav-menu');
+            menu.classList.toggle('show');
         }
 
         // --- 全域變數 ---
@@ -263,7 +258,7 @@
         window.quizList = [];   
         window.currentIdx = 0;
         window.score = 0;
-        window.selectedHerbIds = new Set(); 
+        window.selectedHerbIds = new Set(); // 記錄使用者勾選的 ID
 
         // --- 1. 初始化與資料載入 ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -272,10 +267,38 @@
                 if (!res.ok) throw new Error("Load failed");
                 window.allHerbs = await res.json();
                 
-                // 載入完成後，渲染所有藥材小按鈕
+                // 載入完成後，直接渲染所有藥材的「小按鈕」
                 window.renderHerbList();
-                // 初始化下拉選單防呆
-                window.preventSameMode();
+                // ... (在 window.renderHerbList(); 之後加入以下程式碼) ...
+
+    // === 新增功能：防止題目與答案選到一樣的 ===
+    const qSelect = document.getElementById('mode-question');
+    const aSelect = document.getElementById('mode-answer');
+
+    function updateAnswerOptions() {
+        const qVal = qSelect.value;
+        
+        // 遍歷答案選單的所有選項
+        Array.from(aSelect.options).forEach(opt => {
+            // 如果選項值跟題目一樣，就設為 disabled (不可選)
+            if (opt.value === qVal) {
+                opt.disabled = true;
+                // 如果目前剛好選到這個被禁用的，就自動跳到下一個可用的選項
+                if (aSelect.value === qVal) {
+                    const firstAvailable = Array.from(aSelect.options).find(o => o.value !== qVal);
+                    if (firstAvailable) aSelect.value = firstAvailable.value;
+                }
+            } else {
+                opt.disabled = false; // 其他的恢復可選
+            }
+        });
+    }
+
+    // 綁定事件：當題目改變時，更新答案選項
+    qSelect.addEventListener('change', updateAnswerOptions);
+    
+    // 初始化時先執行一次
+    updateAnswerOptions();
             } catch (err) {
                 console.error(err);
                 alert('資料庫載入失敗，請檢查 data/herbs.json');
@@ -287,8 +310,9 @@
             const container = document.getElementById('herb-chip-container');
             const term = document.getElementById('filter-search').value.trim().toLowerCase();
             
-            container.innerHTML = ""; 
+            container.innerHTML = ""; // 清空
             
+            // 過濾邏輯：如果有搜尋詞就過濾，沒有就顯示全部
             const filtered = window.allHerbs.filter(h => !term || h.chinese_name.includes(term));
             
             if (filtered.length === 0) {
@@ -299,6 +323,8 @@
             filtered.forEach(herb => {
                 const label = document.createElement('label');
                 label.className = 'herb-chip';
+                
+                // 檢查 Set 裡有沒有這個 ID
                 const isChecked = window.selectedHerbIds.has(herb.id) ? 'checked' : '';
 
                 label.innerHTML = `
@@ -310,6 +336,7 @@
             window.updateCount();
         };
 
+        // 處理小按鈕點擊
         window.handleChipChange = function(checkbox) {
             const id = parseInt(checkbox.value);
             if (checkbox.checked) window.selectedHerbIds.add(id);
@@ -321,23 +348,32 @@
             document.getElementById('selected-count').innerText = `已選: ${window.selectedHerbIds.size}`;
         };
 
-        // --- 3. 批次選取功能 (修正版：即時變色) ---
-        window.batchSelectByGrade = function(checkbox) {
-            const grade = checkbox.value;     // 例如 "大二上"
-            const isChecked = checkbox.checked; // true 或 false
+        // --- 3. 批次功能 ---
+        // 年級勾選
+       // === 修改後的 JS：年級批次勾選 (即時連動) ===
+window.batchSelectByGrade = function() {
+    // 1. 找出目前「被勾選」的年級
+    const checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(cb => cb.value);
+    
+    // 2. 找出目前「沒被勾選」的年級 (用來執行取消選取)
+    const uncheckedGrades = Array.from(document.querySelectorAll('input[name="grade"]:not(:checked)')).map(cb => cb.value);
 
-            // 遍歷所有藥材，如果年級符合，就同步設定到 Set 裡
-            window.allHerbs.forEach(herb => {
-                if(herb.grade === grade) {
-                    if(isChecked) window.selectedHerbIds.add(herb.id);
-                    else window.selectedHerbIds.delete(herb.id);
-                }
-            });
+    // 3. 遍歷所有藥材，根據年級決定是 加入 還是 移除
+    window.allHerbs.forEach(herb => {
+        if (checkedGrades.includes(herb.grade)) {
+            // 如果這味藥的年級是被勾選的 -> 加入選取
+            window.selectedHerbIds.add(herb.id);
+        } else if (uncheckedGrades.includes(herb.grade)) {
+            // 如果這味藥的年級是沒被勾選的 -> 移除選取 (這樣才能實現按掉就變白)
+            window.selectedHerbIds.delete(herb.id);
+        }
+    });
 
-            // ★ 關鍵：資料改完後，立刻重新畫畫面，這樣才會變綠色
-            window.renderHerbList();
-        };
+    // 4. 立刻重新渲染畫面，讓你看到變綠/變白
+    window.renderHerbList();
+};
 
+        // 全選 / 清空 (只針對目前顯示的)
         window.toggleSelectAll = function(selectAll) {
             const visibleInputs = document.querySelectorAll('#herb-chip-container input');
             visibleInputs.forEach(input => {
@@ -347,46 +383,20 @@
                 else window.selectedHerbIds.delete(id);
             });
             window.updateCount();
-            window.renderHerbList(); // 記得重畫確保 UI 同步
         };
 
-        // --- 4. 防呆機制：題目與答案不能相同 ---
-        window.preventSameMode = function() {
-            const qVal = document.getElementById('mode-question').value;
-            const aSelect = document.getElementById('mode-answer');
-            const options = aSelect.options;
-
-            // 1. 先把所有選項打開
-            for(let i=0; i<options.length; i++) {
-                options[i].hidden = false;
-                options[i].disabled = false;
-            }
-
-            // 2. 找到跟題目一樣的選項，隱藏它
-            for(let i=0; i<options.length; i++) {
-                if(options[i].value === qVal) {
-                    options[i].hidden = true;
-                    options[i].disabled = true;
-                    // 如果剛好目前選的就是它，幫使用者換一個預設值
-                    if(aSelect.value === qVal) {
-                        // 找一個沒被 disable 的切換過去
-                        for(let j=0; j<options.length; j++) {
-                            if(!options[j].disabled) {
-                                aSelect.value = options[j].value;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        // --- 5. 測驗核心 ---
+        // --- 4. 測驗核心 ---
         window.startQuiz = function() {
+            // 轉換 Set 為 Array
             window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
 
             if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
 
+            const qMode = document.getElementById('mode-question').value;
+            const aMode = document.getElementById('mode-answer').value;
+            if (qMode === aMode) return alert("題目跟答案不能一樣啦！");
+
+            // 初始化
             window.currentIdx = 0;
             window.score = 0;
             window.quizList.sort(() => Math.random() - 0.5);
@@ -405,7 +415,7 @@
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
 
-            // 更新 UI
+            // UI 更新
             document.getElementById('q-current').innerText = window.currentIdx + 1;
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
@@ -414,7 +424,7 @@
             let qHtml = "";
             let qData = window.getFieldData(herb, qMode);
             
-            // 隨機抽取 (針對多基原/多成分)
+            // 處理隨機抽取
             let qShow = "";
             if (Array.isArray(qData)) {
                 const rnd = qData[Math.floor(Math.random() * qData.length)];
@@ -444,8 +454,7 @@
                 </div>
             `;
 
-            // 產生選項 (Answer)
-            // 正確答案
+            // 產生選項
             let correctData = window.getFieldData(herb, aMode);
             let correctLabel = "";
             if (Array.isArray(correctData)) {
@@ -457,7 +466,7 @@
 
             let options = [{ label: correctLabel, isCorrect: true }];
 
-            // 錯誤選項 (3個)
+            // 錯誤選項
             let attempts = 0;
             while(options.length < 4 && attempts < 200) {
                 attempts++;
@@ -472,13 +481,8 @@
                 } else {
                     wrongLabel = wrongVal;
                 }
-                
                 if (!wrongLabel) wrongLabel = "無資料";
-                
-                // 避免重複選項
-                if (!options.some(o => o.label === wrongLabel)) {
-                    options.push({ label: wrongLabel, isCorrect: false, herbName: rndHerb.chinese_name });
-                }
+                if (!options.some(o => o.label === wrongLabel)) options.push({ label: wrongLabel, isCorrect: false, herbName: rndHerb.chinese_name });
             }
             options.sort(() => Math.random() - 0.5);
 
@@ -507,6 +511,7 @@
                 window.score += 10;
             } else {
                 btn.classList.add('wrong');
+                // 錯題本儲存
                 window.saveDetailedMistake(herb, qMode, btnLabel);
             }
 
