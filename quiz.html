@@ -194,28 +194,28 @@
 
             <div style="margin-bottom:10px;">
                 <div class="section-title">3. 自由配對模式</div>
-                <div class="mode-selector">
-                    <div style="text-align:center;">
-                        <small>題目顯示 (Q)</small><br>
-                        <select id="mode-question" class="mode-select">
-                            <option value="chinese_name">中藥名</option>
-                            <option value="origin">基原(學名)</option>
-                            <option value="chemistry" selected>成分/圖片</option>
-                            <option value="image">中藥外觀圖</option>
-                            <option value="effects">功效</option>
-                        </select>
-                    </div>
-                    <div style="font-size:1.5rem; color:#f57c00;">➡</div>
-                    <div style="text-align:center;">
-                        <small>選項答案 (A)</small><br>
-                        <select id="mode-answer" class="mode-select">
-                            <option value="chinese_name" selected>中藥名</option>
-                            <option value="latin_name">生藥名</option>
-                            <option value="family">科名</option>
-                            <option value="origin">基原</option>
-                        </select>
-                    </div>
-                </div>
+              <div class="mode-selector">
+    <div style="text-align:center;">
+        <small>題目顯示 (Q)</small><br>
+        <select id="mode-question" class="mode-select">
+            <option value="chinese_name">中藥名</option>
+            <option value="latin_name">生藥名</option> <option value="family">科名</option>     <option value="origin">基原(學名)</option>
+            <option value="chemistry" selected>成分/圖片</option>
+            <option value="image">中藥外觀圖</option>
+            <option value="effects">功效</option>
+        </select>
+    </div>
+    <div style="font-size:1.5rem; color:#f57c00;">➡</div>
+    <div style="text-align:center;">
+        <small>選項答案 (A)</small><br>
+        <select id="mode-answer" class="mode-select">
+            <option value="chinese_name" selected>中藥名</option>
+            <option value="latin_name">生藥名</option>
+            <option value="family">科名</option>
+            <option value="origin">基原</option>
+            <option value="chemistry">成分/結構圖</option> <option value="effects">功效</option>         <option value="image">中藥外觀圖</option>     </select>
+    </div>
+</div>
             </div>
 
             <button class="btn-primary" onclick="startQuiz()">🚀 開始測驗</button>
@@ -409,88 +409,157 @@ window.batchSelectByGrade = function() {
             window.nextQuestion();
         };
 
+      // === 修改後的 nextQuestion (含完整防撞邏輯) ===
         window.nextQuestion = function() {
-            if (window.currentIdx >= window.quizList.length) return window.endQuiz();
+            if (window.currentIdx >= window.quizList.length) {
+                return window.endQuiz();
+            }
 
             const herb = window.quizList[window.currentIdx];
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
 
-            // UI 更新
+            // 更新 UI 進度
             document.getElementById('q-current').innerText = window.currentIdx + 1;
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
 
-            // 產生題目
+            // -----------------------------------------
+            // 1. 產生題目 (Question)
+            // -----------------------------------------
             let qHtml = "";
-            let qData = window.getFieldData(herb, qMode);
+            let qRaw = window.getFieldData(herb, qMode);
+            let qText = ""; 
             
-            // 處理隨機抽取
-            let qShow = "";
-            if (Array.isArray(qData)) {
-                const rnd = qData[Math.floor(Math.random() * qData.length)];
+            // 處理題目內容 (如果是陣列，隨機抽一個)
+            if (Array.isArray(qRaw)) {
+                const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
                 if (typeof rnd === 'object' && rnd.image) {
-                    qShow = rnd.name; 
+                    qText = rnd.name; 
                     qHtml = `<img src="${rnd.image}" class="question-img">`; 
                 } else {
-                    qShow = rnd;
+                    qText = rnd;
                 }
             } else {
-                qShow = qData;
+                qText = qRaw;
             }
 
+            // 特殊模式處理
             if (qMode === 'image') {
                 qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
             } else if (!qHtml) {
-                qHtml = `<div class="question-text">${qShow}</div>`;
+                qHtml = `<div class="question-text">${qText}</div>`;
             }
 
-            const modeMap = {'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'};
+            const modeMap = {
+                'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 
+                'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'
+            };
             
             const content = `
-                <div style="text-align:center;">
-                    <span style="background:#2C5E4F; color:white; padding:3px 10px; border-radius:20px; font-size:0.8rem;">題目：${modeMap[qMode]}</span>
+                <div class="question-area">
+                    <div class="question-tag">題目：${modeMap[qMode]}</div>
                     ${qHtml}
-                    <p style="color:#666; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></p>
+                    <div style="color:#666; font-size:0.9rem; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></div>
                 </div>
             `;
 
-            // 產生選項
-            let correctData = window.getFieldData(herb, aMode);
-            let correctLabel = "";
-            if (Array.isArray(correctData)) {
-                let rnd = correctData[Math.floor(Math.random() * correctData.length)];
-                correctLabel = (typeof rnd === 'object') ? rnd.name : rnd;
-            } else {
-                correctLabel = correctData;
+            // -----------------------------------------
+            // 2. 產生選項 (Answer) - 支援圖文並茂 + 防撞
+            // -----------------------------------------
+            
+            // 內部小函式：解析資料並回傳 {label, image}
+            function parseOptionData(rawData, mode) {
+                let label = "";
+                let image = null;
+
+                if (Array.isArray(rawData)) {
+                    let rnd = rawData[Math.floor(Math.random() * rawData.length)];
+                    if (typeof rnd === 'object') {
+                        label = rnd.name;
+                        image = rnd.image;
+                    } else {
+                        label = rnd;
+                    }
+                } else {
+                    label = rawData;
+                }
+
+                // 如果考的是外觀圖，資料本身就是網址
+                if (mode === 'image') {
+                    image = label; 
+                    label = ""; 
+                }
+
+                return { label, image };
             }
 
-            let options = [{ label: correctLabel, isCorrect: true }];
+            // A. 正確選項
+            // ★重點：保留原始完整資料 correctRaw 用來做防撞比對
+            let correctRaw = window.getFieldData(herb, aMode);
+            let correctObj = parseOptionData(correctRaw, aMode);
+            let options = [{ ...correctObj, isCorrect: true }];
 
-            // 錯誤選項
+            // B. 錯誤選項 (3個)
             let attempts = 0;
             while(options.length < 4 && attempts < 200) {
                 attempts++;
                 const rndHerb = window.allHerbs[Math.floor(Math.random() * window.allHerbs.length)];
+                
+                // 1. 基本避開：不能選到同一味藥
                 if (rndHerb.id === herb.id) continue;
 
-                let wrongVal = window.getFieldData(rndHerb, aMode);
-                let wrongLabel = "";
-                if (Array.isArray(wrongVal)) {
-                    let rnd = wrongVal[0];
-                    wrongLabel = (typeof rnd === 'object') ? rnd.name : rnd;
+                let wrongRaw = window.getFieldData(rndHerb, aMode);
+                let wrongObj = parseOptionData(wrongRaw, aMode);
+                
+                if (!wrongObj.label && !wrongObj.image) wrongObj.label = "無資料";
+
+                // ★★★ 2. 進階防撞機制 (關鍵修改) ★★★
+                // 檢查這個錯誤選項，是否剛好包含在「正確答案的所有可能列表」裡？
+                let isCollision = false;
+                if (Array.isArray(correctRaw)) {
+                    // 如果正確答案是多基原/多成分，要把裡面每一個都拿出來比對
+                    // 例如 correctRaw = ["A", "B", "C"]，我們選了 A 當答案
+                    // 如果 wrongObj.label 剛好是 "B"，那也不行！
+                    const correctStrings = correctRaw.map(d => (typeof d === 'object') ? d.name : d);
+                    if (correctStrings.includes(wrongObj.label)) isCollision = true;
                 } else {
-                    wrongLabel = wrongVal;
+                    // 單一答案比對
+                    if (correctRaw === wrongObj.label) isCollision = true;
                 }
-                if (!wrongLabel) wrongLabel = "無資料";
-                if (!options.some(o => o.label === wrongLabel)) options.push({ label: wrongLabel, isCorrect: false, herbName: rndHerb.chinese_name });
+                
+                if (isCollision) continue; // 撞到了，重抽！
+
+                // 3. 避免選項重複 (自己跟自己比)
+                const isDuplicate = options.some(o => 
+                    (o.label && o.label === wrongObj.label) || 
+                    (o.image && o.image === wrongObj.image)
+                );
+                
+                if (!isDuplicate) {
+                    options.push({ ...wrongObj, isCorrect: false, herbName: rndHerb.chinese_name });
+                }
             }
             options.sort(() => Math.random() - 0.5);
 
+            // C. 渲染按鈕
             let btnsHtml = "";
             options.forEach(opt => {
-                const safeLabel = opt.label.replace(/'/g, "\\'");
-                btnsHtml += `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeLabel}')">${opt.label}</button>`;
+                let innerContent = "";
+                if (opt.image) {
+                    innerContent += `<img src="${opt.image}" style="max-height:100px; object-fit:contain; margin-bottom:5px;">`;
+                }
+                if (opt.label) {
+                    const safeLabel = opt.label.replace(/'/g, "&#39;");
+                    innerContent += `<span>${safeLabel}</span>`;
+                }
+
+                const recordText = opt.label || "圖片選項"; 
+                const safeRecord = recordText.replace(/'/g, "\\'"); 
+
+                btnsHtml += `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeRecord}')">
+                                ${innerContent}
+                             </button>`;
             });
 
             document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
