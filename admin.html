@@ -621,23 +621,20 @@
                 else { nameEn=data.name_en||""; nameCh=data.name_ch||""; imgVal=data.image||""; }
             }
             div.innerHTML = `
-                <div class="chem-header">
-                    <span>🧪 成分</span>
-                   <input type="text" class="chem-en" ... placeholder="英文 (Ephedrine)">
-        <input type="text" class="chem-ch" ... placeholder="中文 (麻黃鹼)">
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.chem-row').remove()">X</button>
-    </div>
-              
-                <label style="cursor:pointer; background:#eee; padding:5px; border-radius:5px; display:inline-block; font-size:0.8rem;">
-                    📸 上傳結構圖 <input type="file" style="display:none" onchange="handleChemImg(this, 'c-img-${idx}')">
-                </label>
-                <img id="c-img-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal?'block':'none'}">
-                <input type="hidden" class="chem-old-img" value="${imgVal}">
-                <input type="hidden" class="chem-new-base64">
-            `;
-            wrapper.appendChild(div);
-        }
-
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+            <input type="text" class="chem-en" placeholder="英文 (Ephedrine)" value="${d?.name_en||(typeof d==='string'?d:'')}" style="margin:0; flex:1;">
+            <input type="text" class="chem-ch" placeholder="中文 (麻黃鹼)" value="${d?.name_ch||''}" style="margin:0; flex:1;">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.chem-row').remove()">X</button>
+        </div>
+        <label style="cursor:pointer; background:#eee; padding:5px; border-radius:5px; font-size:0.8rem; display:block; text-align:center;">
+            📸 上傳結構圖 <input type="file" style="display:none" onchange="handleChemImg(this, 'c-img-${idx}')">
+        </label>
+        <img id="c-img-${idx}" src="${d?.image||''}" class="chem-img-preview" style="display:${d?.image?'block':'none'}">
+        <input type="hidden" class="chem-old-img" value="${d?.image||''}">
+        <input type="hidden" class="chem-new-base64">
+    `; 
+    w.appendChild(v); 
+}
         // --- 圖片處理 (保持不變) ---
         function handleImagePreview() {
             const file = document.getElementById('img-input').files[0];
