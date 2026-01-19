@@ -1,0 +1,92 @@
+import os
+import csv
+import time
+import tkinter as tk
+from tkinter import messagebox
+
+# ... (你的其他 import 和 __init__ 程式碼) ...
+
+    def save_all_data(self):
+        """
+        這就是你要的核心功能：
+        1. 建立 img_data 資料夾
+        2. 遍歷所有成分，把圖片存進去
+        3. 產生一個總表 (CSV)
+        """
+        
+        # --- 設定資料夾名稱 ---
+        # 這裡就是你說的 img_deta (建議用 img_data 比較通用，但我設變數讓你方便改)
+        IMG_DIR = "img_data"
+        
+        # 1. 如果資料夾不存在，自動建立
+        if not os.path.exists(IMG_DIR):
+            os.makedirs(IMG_DIR)
+            print(f"已建立資料夾: {IMG_DIR}")
+
+        # 準備一個 List 來存放要寫入 CSV 的資料
+        data_to_save = []
+        
+        # 取得當前時間，用來當作檔名的一部分，避免重複
+        timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+
+        print("--- 開始儲存程序 ---")
+
+        # 2. 遍歷 (Loop) 目前介面上所有的成分格子
+        for index, component in enumerate(self.components_data):
+            # 取得輸入框裡的成分名稱
+            name = component["entry_name"].get().strip()
+            img_obj = component["processed_image_obj"] # 這是我們之前壓縮好的圖片物件
+            
+            # 如果使用者沒填名稱，給個預設值
+            if not name:
+                name = f"未命名成分_{index+1}"
+
+            saved_img_path = "無圖片" # 預設值
+
+            # 如果這個成分有上傳圖片，就執行存檔
+            if img_obj:
+                try:
+                    # 處理檔名：移除可能導致錯誤的符號 (如 / \ : 等)
+                    safe_name = "".join([c for c in name if c.isalnum() or c in (' ', '_')]).strip()
+                    
+                    # 組合檔名：成分名_時間戳記.jpg (例如: Acetaminophen_20250119.jpg)
+                    filename = f"{safe_name}_{index}_{timestamp_str}.jpg"
+                    
+                    # 組合完整路徑
+                    full_path = os.path.join(IMG_DIR, filename)
+                    
+                    # 真正的存檔動作！ (存成 JPEG，品質 85)
+                    img_obj.save(full_path, "JPEG", quality=85)
+                    
+                    # 記錄相對路徑，方便之後資料庫讀取
+                    saved_img_path = full_path
+                    print(f"圖片已儲存: {full_path}")
+                    
+                except Exception as e:
+                    print(f"圖片儲存失敗: {e}")
+                    saved_img_path = "儲存失敗"
+
+            # 將這筆資料加入清單
+            data_to_save.append({
+                "ID": index + 1,
+                "成分名稱": name,
+                "圖片路徑": saved_img_path
+            })
+
+        # 3. 將資料寫入 CSV 檔案 (Excel 可開)
+        csv_filename = "drug_database.csv"
+        try:
+            # 使用 'a' (append) 模式可以續寫，使用 'w' (write) 模式會覆蓋舊檔
+            # 這裡示範 'w' 覆蓋模式，確保資料是最新的
+            with open(csv_filename, mode='w', newline='', encoding='utf-8-sig') as csvfile:
+                fieldnames = ["ID", "成分名稱", "圖片路徑"]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                writer.writeheader() # 寫入標題列
+                for row in data_to_save:
+                    writer.writerow(row)
+            
+            messagebox.showinfo("成功", f"儲存完成！\n圖片已存入 '{IMG_DIR}'\n資料表已更新至 '{csv_filename}'")
+            
+        except Exception as e:
+            messagebox.showerror("錯誤", f"存檔失敗: {e}")
