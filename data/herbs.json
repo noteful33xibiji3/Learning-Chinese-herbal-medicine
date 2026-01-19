@@ -1,11 +1,24 @@
 [
-  {
-    "id": 1,
+  {"id": 1,
     "chinese_name": "麻黃",
     "latin_name": "Ephedrae Herba",
-    "origin": "Ephedra sinica",
     "family_ch": "麻黃科",
     "family_en": "Ephedraceae",
+    "chem_main": "生物鹼",
+    "chem_sub": "生物鹼胺Alkloidal amine",
+    "origin": [
+      {
+        "lat": "Ephedra sinica",
+        "ch": "草麻黃"
+      }
+    ],
+    "confusing_drugs": [
+      {
+        "name_ch": "中麻黃",
+        "name_en": "Ephedra intermedia Schrenk et C.A. Mey",
+        "note": ""
+      }
+    ],
     "chemistry": [
       {
         "name_en": "Ephedrine",
@@ -18,8 +31,57 @@
         "image": ""
       }
     ],
+    "effects": [
+      "發汗解表","宣肺平喘"
+    ],
+    "indications": "",
     "image": "",
-    "effects": "發汗解表，宣肺平喘...",
+     "grade": "大二上"
+  },
+  {
+    "id": 2,
+    "chinese_name": "粉防己",
+    "latin_name": "Stephaniae Tetrandrae Radix",
+    "family_ch": "防己科",
+    "family_en": "Menispermaceae",
+    "chem_main": "生物鹼",
+    "chem_sub": "異喹啉類",
+    "origin": [
+      {
+        "lat": "Stephania tetrandra S. Moore",
+        "ch": "粉防己"
+      }
+    ],
+    "confusing_drugs": [
+      {
+        "name_ch": "廣防己",
+        "name_en": "Aristolochia fangchi",
+        "note": "因為他是馬兜鈴科，含馬兜鈴酸 (Aristolochic acid)，具腎毒性，目前禁用。"
+      },
+      {
+        "name_ch": "漢中防己",
+        "name_en": "Aristolochia heterophylla",
+        "note": "馬兜鈴科，又稱異葉馬兜鈴。"
+      }
+    ],
+    "chemistry": [
+      {
+        "name_en": "Tetrandrine",
+        "name_ch": "粉防己鹼",
+        "image": ""
+      },
+      {
+        "name_en": "Fangchinoline",
+        "name_ch": "防己諾林鹼",
+        "image": ""
+      }
+    ],
+    "effects": [
+      "利水消腫",
+      "祛風止痛"
+    ],
+    "indications": "用於水腫腳氣，風濕痺痛，濕疹瘡毒。",
+    "image": "",
     "grade": "大二上"
   }
 ]
