@@ -9,6 +9,7 @@ let isMistakeReview = false;
 
 // --- 2. 初始化 ---
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("App initialized."); // Debug
     loadData();
     setupMenu();
 });
@@ -21,9 +22,11 @@ async function loadData() {
         ]);
         allHerbs = await herbsRes.json();
         allCategories = await catsRes.json();
+        console.log(`Loaded ${allHerbs.length} herbs.`); // Debug
         initPage();
     } catch (error) {
         console.error('資料載入失敗', error);
+        alert("資料庫讀取失敗，請檢查 data 資料夾設定。");
     }
 }
 
@@ -41,41 +44,33 @@ function setupMenu() {
 }
 
 function initPage() {
-    if (document.getElementById('setup-panel')) {
-        renderQuizSetup();
-    }
-    if (document.getElementById('mistakes-list')) {
-        renderMistakes();
-    }
-    if (document.getElementById('category-buttons')) {
-        initPharmaPage();
-    }
+    if (document.getElementById('setup-panel')) renderQuizSetup();
+    if (document.getElementById('mistakes-list')) renderMistakes();
+    if (document.getElementById('category-buttons')) initPharmaPage();
 }
 
-// --- 3. 測驗設定區 (新版連動邏輯) ---
+// --- 3. 測驗設定區 (核心修復部分) ---
 
 function renderQuizSetup() {
-    // A. 產生年級選項 (作為批次控制器)
+    // A. 產生年級選項 (遙控器)
     const grades = [...new Set(allHerbs.map(h => h.grade))].filter(g => g);
     const gradeContainer = document.getElementById('grade-checkboxes');
     
     if (gradeContainer) {
-        // 注意：這裡加入了 onchange 事件，連結到 toggleGradeSelection
         gradeContainer.innerHTML = grades.map(g => `
             <label class="checkbox-label" style="background:#e8f5e9; border:1px solid #c8e6c9;">
-                <input type="checkbox" value="${g}" onchange="toggleGradeSelection('${g}', this.checked)"> 
+                <input type="checkbox" class="grade-control" value="${g}" onchange="toggleGradeSelection('${g}', this.checked)"> 
                 ${g}
             </label>
         `).join('');
     }
 
-    // B. 產生完整中藥清單 (預設顯示)
+    // B. 產生中藥清單
     const listContainer = document.getElementById('manual-selection-list');
     if (listContainer) {
-        // 排序：年級 -> 筆劃
         const sortedHerbs = [...allHerbs].sort((a, b) => a.grade.localeCompare(b.grade) || a.chinese_name.localeCompare(b.chinese_name));
         
-        // 注意：每個 checkbox 加上了 data-grade 屬性，方便批次操作
+        // 這裡加上了 data-grade 屬性，這對批次勾選非常重要
         listContainer.innerHTML = sortedHerbs.map(h => `
             <label class="checkbox-label" style="justify-content: flex-start;">
                 <input type="checkbox" class="herb-select" value="${h.id}" data-grade="${h.grade}" onchange="updateSelectedCount()"> 
@@ -86,45 +81,65 @@ function renderQuizSetup() {
         updateSelectedCount(); // 初始化計數
 
         // 綁定搜尋過濾
-        document.getElementById('filter-search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('.herb-select').forEach(cb => {
-                const label = cb.closest('label');
-                // 搜尋藥名或年級
-                if (label.innerText.toLowerCase().includes(term)) {
-                    label.style.display = 'flex';
-                } else {
-                    label.style.display = 'none';
-                }
+        const searchBox = document.getElementById('filter-search');
+        if (searchBox) {
+            searchBox.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.herb-select').forEach(cb => {
+                    const label = cb.closest('label');
+                    const text = label.innerText.toLowerCase();
+                    // 只要包含關鍵字，就顯示 (display: flex)，否則隱藏 (display: none)
+                    if (text.includes(term)) {
+                        label.style.display = 'flex';
+                    } else {
+                        label.style.display = 'none';
+                    }
+                });
             });
-        });
+        }
     }
 }
 
-// 核心功能：勾選年級 -> 自動勾選下方對應的中藥
+// ★ 強制綁定到 window，修復按鈕無反應的問題 ★
+
+// 功能 1: 勾選年級 -> 全選該年級中藥
 window.toggleGradeSelection = function(grade, isChecked) {
+    console.log(`Toggle grade: ${grade}, checked: ${isChecked}`); // Debug
+    
     // 找到所有屬於該年級的中藥 checkbox
     const targets = document.querySelectorAll(`.herb-select[data-grade="${grade}"]`);
+    
     targets.forEach(cb => {
-        // 只有在顯示狀態下才操作 (或者你希望隱藏的也一起選，通常是全部一起選比較直覺)
+        // 檢查該中藥是否處於「顯示狀態」（避免勾選到被搜尋過濾掉的藥，或者你希望全部都勾，這裡設定為全部都勾比較直覺）
+        // 這裡我們設定：不管有沒有被搜尋隱藏，只要年級對了就勾選
         cb.checked = isChecked;
     });
+    
     updateSelectedCount();
 }
 
-// 全選 / 全不選功能 (只針對目前篩選後「看得到」的項目)
+// 功能 2: 全選 / 全不選 (只針對當前顯示項目)
 window.selectAllHerbs = function(selectAll) {
+    console.log(`Select All: ${selectAll}`); // Debug
+    
     document.querySelectorAll('.herb-select').forEach(cb => {
         const label = cb.closest('label');
-        // 只有當它是顯示狀態時，才受全選控制 (這樣可以配合搜尋使用)
-        if (label.style.display !== 'none') {
+        
+        // 關鍵邏輯：只勾選「眼睛看得到」的項目
+        // 如果使用者搜尋「黃連」，那全選只會勾黃連
+        // 判斷方式：檢查 label 的 display 樣式
+        // 注意：元素預設 display 為空字串，這也視為顯示
+        const isVisible = (label.style.display !== 'none');
+        
+        if (isVisible) {
             cb.checked = selectAll;
         }
     });
+    
     updateSelectedCount();
 }
 
-// 更新已選數量顯示
+// 功能 3: 更新計數器
 window.updateSelectedCount = function() {
     const count = document.querySelectorAll('.herb-select:checked').length;
     const display = document.getElementById('selected-count');
@@ -134,25 +149,20 @@ window.updateSelectedCount = function() {
 // --- 4. 測驗執行邏輯 ---
 
 window.initCustomQuiz = function() {
-    // 1. 直接從清單中取得所有被勾選的 ID (這是最準確的)
     const selectedHerbIds = Array.from(document.querySelectorAll('.herb-select:checked')).map(cb => parseInt(cb.value));
-    
-    // 2. 取得測驗模式
     const selectedModes = Array.from(document.querySelectorAll('input[name="quizMode"]:checked')).map(cb => cb.value);
 
     if (selectedModes.length === 0) { alert('請至少勾選一種測驗項目！'); return; }
     if (selectedHerbIds.length === 0) { alert('請至少選擇一味中藥！(可勾選年級快速選取)'); return; }
 
-    // 3. 建立題庫
     quizPool = allHerbs.filter(h => selectedHerbIds.includes(h.id));
     
-    // 4. 分配題目模式
     quizPool = quizPool.map(h => ({
         ...h,
         mode: selectedModes[Math.floor(Math.random() * selectedModes.length)]
     }));
 
-    quizPool.sort(() => 0.5 - Math.random()); // 洗牌
+    quizPool.sort(() => 0.5 - Math.random());
     startQuizSession();
 }
 
@@ -177,7 +187,6 @@ function renderQuestion() {
 
     const q = quizPool[currentQuizIndex];
     
-    // UI 更新
     document.getElementById('progress-display').innerText = `題目: ${currentQuizIndex + 1} / ${quizPool.length}`;
     document.getElementById('score-display').innerText = `得分: ${score}`;
 
@@ -186,7 +195,6 @@ function renderQuestion() {
     if(prevBtn) prevBtn.disabled = (currentQuizIndex === 0);
     if(nextBtn) nextBtn.innerText = (currentQuizIndex === quizPool.length - 1) ? "查看結果" : "下一題 ➡";
 
-    // 準備內容
     const modeMap = {
         'effects': '功效', 'family': '科名', 'latin_name': '生藥名',
         'origin': '基原 (學名)', 'used_part': '用部', 'chemistry': '主要成分'
@@ -200,7 +208,6 @@ function renderQuestion() {
     else if (q.mode === 'chemistry') ans = q.chemistry || "無資料";
     else ans = q[q.mode] || "無";
 
-    // 產生選項
     if (!q.options) {
         let opts = getRandomDistractors(q.mode, ans, 3);
         opts.push(ans);
@@ -324,7 +331,8 @@ window.resetQuizSetup = function() {
     document.getElementById('setup-panel').style.display = 'block';
     document.getElementById('quiz-panel').style.display = 'none';
     document.getElementById('result-panel').style.display = 'none';
-    // 不用重置勾選，保留使用者的設定習慣，或者你可以手動清空
+    // 重新渲染清單，確保狀態重置
+    renderQuizSetup();
 }
 
 // 錯題本邏輯
@@ -382,7 +390,6 @@ window.selectMainCategory = function(mainCat, btnElement) {
     const subContainer = document.getElementById('subcategory-container');
     subContainer.innerHTML = '';
     
-    // 總論按鈕
     const introChip = document.createElement('div');
     introChip.className = 'chip active';
     introChip.innerText = '📝 總論/簡介';
@@ -419,7 +426,6 @@ function filterPharmaHerbs(mainCat, subZh, chipEl) {
     document.getElementById('herb-list-title').style.display = 'block';
     document.getElementById('herb-list-title').innerText = `${subZh} - 相關中藥`;
     
-    // 修正：使用 chem_main 和 chem_sub 進行精確篩選
     const filtered = allHerbs.filter(h => h.chem_main === mainCat && h.chem_sub === subZh);
     renderPharmaHerbs(filtered);
 }
