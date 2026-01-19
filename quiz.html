@@ -7,435 +7,83 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* =========================================
-           ✨ 全域與導覽列樣式 (強制修復選單消失問題)
-           ========================================= */
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Noto Sans TC', sans-serif;
-            margin: 0; padding: 0;
-        }
-
-        /* 導覽列 Nav */
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1rem 5%; background: rgba(255,255,255,0.98);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
-        }
+        /* === 全域樣式 === */
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; margin: 0; }
+        
+        /* 導覽列 */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: rgba(255,255,255,0.98); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .nav-left { display: flex; align-items: center; gap: 10px; }
         .back-btn { font-size: 1.2rem; cursor: pointer; border: none; background: none; color: #666; }
         .logo { font-weight: 700; font-size: 1.5rem; color: #4A7C59; text-decoration: none; }
-
-        /* 選單與漢堡按鈕 */
         .menu { list-style: none; display: flex; gap: 20px; padding: 0; margin: 0; }
         .menu li a { text-decoration: none; color: #666; font-weight: 500; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
         .menu li a.active, .menu li a:hover { color: #4A7C59; background: #e8f5e9; }
-        
         .burger { display: none; font-size: 1.5rem; cursor: pointer; color: #4A7C59; }
-
         @media (max-width: 768px) {
             .burger { display: block; }
-            .menu {
-                display: none; flex-direction: column; position: absolute;
-                top: 60px; left: 0; width: 100%; background: white;
-                box-shadow: 0 5px 10px rgba(0,0,0,0.1); padding: 20px 0; text-align: center;
-            }
+            .menu { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; width: 100%; background: white; box-shadow: 0 5px 10px rgba(0,0,0,0.1); padding: 20px 0; text-align: center; }
             .menu.show { display: flex; }
         }
 
-        /* =========================================
-           🧪 測驗專屬樣式
-           ========================================= */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            margin-bottom: 20px;
-            max-width: 800px; margin: 20px auto;
-        }
+        /* === 玻璃擬態面板 === */
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); border: 1px solid rgba(255, 255, 255, 0.18); margin-bottom: 20px; max-width: 800px; margin: 20px auto; }
+        .section-title { font-size: 1.1rem; color: #2C5E4F; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #4A7C59; padding-left: 10px; }
 
-        .section-title {
-            font-size: 1.1rem; color: #2C5E4F; font-weight: bold;
-            margin-bottom: 15px; border-left: 4px solid #4A7C59; padding-left: 10px;
-        }
-
-        /* --- 1. 年級 Checkbox --- */
-        .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .grade-check { cursor: pointer; }
-        .grade-check input { display: none; }
-        .grade-box {
-            display: block; text-align: center; padding: 8px;
-            border: 1px solid #ddd; border-radius: 8px; color: #666; background: white; transition: 0.2s;
-        }
-        .grade-check input:checked ~ .grade-box {
-            background: #e8f5e9; border-color: #4A7C59; color: #2C5E4F; font-weight: bold;
-        }
-
-        /* --- 2. 藥材小按鈕 (Chips) --- */
-       /* === 修正後的 CSS：固定高度容器 === */
-        .herb-chip-container {
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 8px;
-            /* 關鍵：設定固定高度範圍，超過就捲動，不會撐開版面 */
-            height: 250px; 
-            overflow-y: auto;
-            align-content: flex-start; /* 讓內容靠上對齊 */
-            
-            padding: 10px; 
-            border: 2px solid #e0e0e0; 
-            border-radius: 12px; 
-            background: #fafafa;
-        }
-
-        /* 讓捲軸漂亮一點 */
-        .herb-chip-container::-webkit-scrollbar { width: 8px; }
-        .herb-chip-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .herb-chip-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-        .herb-chip-container::-webkit-scrollbar-thumb:hover { background: #bbb; }
-        
-
-        /* 選中時的樣式 (變綠色) */
-        .herb-chip input:checked ~ .chip-content {
-            background: #4A7C59;
-            color: white;
-            border-color: #4A7C59;
-            box-shadow: 0 4px 8px rgba(74, 124, 89, 0.3);
-            transform: translateY(-1px);
-        }
-
-        /* --- 3. 自由配對模式 --- */
-        .mode-selector {
-            display: flex; gap: 10px; align-items: center; justify-content: center;
-            background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2;
-        }
-        .mode-select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; }
-
-        /* --- 4. 測驗按鈕與進度條 --- */
-        .progress-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #4A7C59, #81c784); width: 0%; transition: width 0.3s; }
-
-        .question-text { font-size: 1.8rem; font-weight: bold; color: #333; margin: 15px 0; text-align: center; }
-        .question-img { max-height: 180px; max-width: 100%; display: block; margin: 10px auto; border-radius: 8px; }
-
-        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 600px) { .option-grid { grid-template-columns: 1fr; } }
-
-        .option-btn {
-            background: white; border: 2px solid #eee; border-radius: 15px;
-            padding: 15px; min-height: 60px; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 1.1rem; color: #444; transition: 0.2s; position: relative;
-        }
-        .option-btn:hover { border-color: #4A7C59; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .option-btn img { max-height: 80px; object-fit: contain; margin-bottom: 5px; }
-        
-        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
-        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; animation: shake 0.4s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%);
-            color: white; border: none; padding: 12px; border-radius: 50px;
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(44, 94, 79, 0.3); transition: 0.3s;
-        }
-        .btn-primary:hover { transform: scale(1.02); }
-        .btn-sm { padding: 4px 10px; border: 1px solid #ddd; background: white; border-radius: 15px; cursor: pointer; font-size: 0.85rem; }
-
-    </style>
-</head>
-<body>
-    <nav>
-        <div class="nav-left">
-            <button class="back-btn" onclick="location.href='index.html'">❮</button>
-            <a href="index.html" class="logo">🌿 本草學園</a>
-        </div>
-        <div class="burger" onclick="toggleMenu()">☰</div>
-        <ul class="menu" id="nav-menu">
-            <li><a href="index.html">中藥查詢</a></li>
-            <li><a href="pharmacognosy.html">生藥分類</a></li>
-            <li><a href="quiz.html" class="active">自我測驗</a></li>
-            <li><a href="mistakes.html">錯題複習</a></li>
-        </ul>
-    </nav>
-
-    <main>
-        
-        <div id="setup-panel" class="glass-panel">
-            <h2 style="text-align:center; color:#2C5E4F; margin-bottom:20px;">🛠️ 建立測驗</h2>
-            
-            <div style="margin-bottom:20px;">
-                <div class="section-title">1. 快速選擇範圍</div>
-                <div class="checkbox-grid">
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大一" onchange="batchSelectByGrade()"><span class="grade-box">大一</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二" onchange="batchSelectByGrade()"><span class="grade-box">大二</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二上" onchange="batchSelectByGrade()"><span class="grade-box">大二上</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二下" onchange="batchSelectByGrade()"><span class="grade-box">大二下</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大三" onchange="batchSelectByGrade()"><span class="grade-box">大三</span></label>
-                </div>
-            </div>
-
-           <div style="margin-bottom:20px;">
-                <div class="section-title">2. 微調藥材清單</div>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="filter-search" placeholder="輸入關鍵字搜尋..." onkeyup="window.renderHerbList()" 
-                           style="flex:1; padding:10px 15px; border:1px solid #ddd; border-radius:20px; outline:none;">
-                    
-                    <button class="btn-sm" onclick="window.toggleSelectAll(true)">全選</button>
-                    <button class="btn-sm" onclick="window.toggleSelectAll(false)">清空</button>
-                </div>
-                
-                <div id="herb-chip-container" class="herb-chip-container">
-                    <p style="color:#999; width:100%; text-align:center;">載入中...</p>
-                </div>
-                <div style="text-align:right; font-size:0.9rem; color:#4A7C59; margin-top:5px; font-weight:bold;" id="selected-count">已選: 0</div>
-            </div>
-            <div style="margin-bottom:10px;">
-               <div class="control-group">
-    <div class="section-title">3. 自由配對模式</div>
-    <div class="mode-selector">
-        <div style="text-align:center;">
-            <small>題目顯示 (Q)</small><br>
-            <select id="mode-question" class="mode-select">
-                <option value="chinese_name">中藥名</option>
-                <option value="latin_name">生藥名</option> 
-                <option value="family">科名</option>     
-                <option value="origin">基原(學名)</option>
-                <option value="chemistry" selected>成分/圖片</option>
-                <option value="image">中藥外觀圖</option>
-                <option value="effects">功效</option>
-            </select>
-        </div>
-        <div style="font-size:1.5rem; color:#f57c00;">➡</div>
-        <div style="text-align:center;">
-            <small>選項答案 (A)</small><br>
-            <select id="mode-answer" class="mode-select">
-                <option value="chinese_name" selected>中藥名</option>
-                <option value="latin_name">生藥名</option>
-                <option value="family">科名</option>
-                <option value="origin">基原</option>
-                <option value="chemistry">成分/結構圖</option> 
-                <option value="effects">功效</option>         
-                <option value="image">中藥外觀圖</option>     
-            </select>
-        </div>
-    </div>
-</div> <div class="control-group">
-    <div class="section-title">4. 選擇測驗機制</div>
-    <div style="display:flex; gap:15px; justify-content:center;">
-        <label class="custom-check" style="flex:1;">
-            <input type="radio" name="quizLogic" value="standard" checked>
-            <span class="check-content" style="padding:15px;">
-                <strong>🏁 標準模式</strong><br>
-                <small style="color:#888;">隨機考完一輪即結束</small>
-            </span>
-        </label>
-
-        <label class="custom-check" style="flex:1;">
-            <input type="radio" name="quizLogic" value="reinforce">
-            <span class="check-content" style="padding:15px;">
-                <strong>💪 鞏固學習</strong><br>
-                <small style="color:#888;">答錯會再次出現 (約3題後)</small>
-            </span>
-        </label>
-    </div>
-</div>
-            </div>
-
-            <button class="btn-primary" onclick="startQuiz()">🚀 開始測驗</button>
-        </div>
-
-       <div id="quiz-panel" class="glass-panel" style="display: none;">
-            <div style="display:flex; justify-content:space-between; color:#666; font-weight:bold; font-size:0.9rem; margin-bottom:10px;">
-                <span>進度 <span id="q-current">1</span> / <span id="q-total">10</span></span>
-                <span style="color:#4A7C59;">得分: <span id="q-score">0</span></span>
-            </div>
-            
-            <div class="progress-container">
-                <div id="progress-bar" class="progress-bar"></div>
-            </div>
-
-            <div id="quiz-content">
-                </div>
-
-            <div class="quiz-nav-buttons" style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
-                <button id="btn-prev" class="btn-sm" onclick="window.prevQuestion()" style="padding: 10px 20px; font-size: 1rem; border-radius: 50px;">⬅ 上一題</button>
-                <button id="btn-next" class="btn-primary" onclick="window.nextQuestion(true)" style="display:none; width:auto; padding: 10px 30px;">下一題 ➡</button>
-            </div>
-        </div>
-
-            <div id="quiz-content">
-                </div>
-        </div>
-
-        <div id="result-panel" class="glass-panel" style="display: none; text-align:center;">
-            <h2 style="color:#333;">📊 測驗結果</h2>
-            <h1 id="final-score" style="font-size:4rem; color:#4A7C59; margin:20px 0;">100</h1>
-            <p id="result-msg" style="color:#666; font-size:1.1rem;">恭喜完成！</p>
-            <div style="display:flex; gap:10px; margin-top:30px;">
-                <button class="btn-primary" onclick="location.reload()" style="flex:1; background:#666;">🔄 再測一次</button>
-                <button class="btn-primary" onclick="location.href='mistakes.html'" style="flex:1;">查看錯題本</button>
-            </div>
-        </div>
-
-    </main>
-
-    <script src="app.js"></script> 
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自我測驗 | 本草學園</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* =========================================
-           ✨ 全域與導覽列樣式
-           ========================================= */
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Noto Sans TC', sans-serif;
-            margin: 0; padding: 0;
-        }
-
-        /* 導覽列 Nav (強制樣式) */
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1rem 5%; background: rgba(255,255,255,0.98);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
-        }
-        .nav-left { display: flex; align-items: center; gap: 10px; }
-        .back-btn { font-size: 1.2rem; cursor: pointer; border: none; background: none; color: #666; }
-        .logo { font-weight: 700; font-size: 1.5rem; color: #4A7C59; text-decoration: none; }
-
-        .menu { list-style: none; display: flex; gap: 20px; padding: 0; margin: 0; }
-        .menu li a { text-decoration: none; color: #666; font-weight: 500; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
-        .menu li a.active, .menu li a:hover { color: #4A7C59; background: #e8f5e9; }
-        
-        .burger { display: none; font-size: 1.5rem; cursor: pointer; color: #4A7C59; }
-
-        @media (max-width: 768px) {
-            .burger { display: block; }
-            .menu {
-                display: none; flex-direction: column; position: absolute;
-                top: 60px; left: 0; width: 100%; background: white;
-                box-shadow: 0 5px 10px rgba(0,0,0,0.1); padding: 20px 0; text-align: center;
-            }
-            .menu.show { display: flex; }
-        }
-
-        /* =========================================
-           🧪 測驗專屬樣式
-           ========================================= */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            margin-bottom: 20px;
-            max-width: 800px; margin: 20px auto;
-        }
-
-        .section-title {
-            font-size: 1.1rem; color: #2C5E4F; font-weight: bold;
-            margin-bottom: 15px; border-left: 4px solid #4A7C59; padding-left: 10px;
-        }
-
-        /* --- 1. 年級 Checkbox --- */
+        /* === 1. 年級方塊 === */
         .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; }
         .grade-check { cursor: pointer; }
         .grade-check input { display: none; }
-        .grade-box {
-            display: block; text-align: center; padding: 8px;
-            border: 1px solid #ddd; border-radius: 8px; color: #666; background: white; transition: 0.2s;
-        }
-        .grade-check input:checked ~ .grade-box {
-            background: #e8f5e9; border-color: #4A7C59; color: #2C5E4F; font-weight: bold;
-        }
+        .grade-box { display: block; text-align: center; padding: 8px; border: 1px solid #ddd; border-radius: 8px; color: #666; background: white; transition: 0.2s; }
+        .grade-check input:checked ~ .grade-box { background: #e8f5e9; border-color: #4A7C59; color: #2C5E4F; font-weight: bold; box-shadow: 0 2px 5px rgba(74, 124, 89, 0.2); }
 
-        /* --- 2. 藥材小按鈕 (Chips) 容器設定 --- */
-        .herb-chip-container {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            height: 250px; /* 固定高度 */
-            overflow-y: auto; /* 超出捲動 */
-            align-content: flex-start;
-            padding: 10px; border: 2px solid #e0e0e0; 
-            border-radius: 12px; background: #fafafa;
-        }
+        /* === 2. 藥材膠囊按鈕 (重點修改區) === */
+        .herb-chip-container { display: flex; flex-wrap: wrap; gap: 8px; height: 250px; overflow-y: auto; align-content: flex-start; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; }
         
-        .herb-chip { cursor: pointer; user-select: none; }
-        .herb-chip input { display: none; } 
+        .herb-chip { cursor: pointer; user-select: none; display: inline-block; }
+        .herb-chip input { display: none; } /* 隱藏 checkbox */
         
         .chip-content {
-            display: inline-block; padding: 6px 14px;
-            border: 1px solid #ddd; border-radius: 20px;
-            background: white; color: #555; font-size: 0.9rem;
-            transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: inline-block; padding: 8px 16px; border: 1px solid #ccc; border-radius: 50px; /* 圓角 */
+            background: white; color: #666; font-size: 0.95rem; font-weight: 500; transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .herb-chip input:checked ~ .chip-content {
-            background: #4A7C59; color: white; border-color: #4A7C59;
-            box-shadow: 0 4px 8px rgba(74, 124, 89, 0.3); transform: translateY(-1px);
+        .herb-chip:hover .chip-content { background: #f1f1f1; transform: translateY(-2px); }
+        
+        /* 選中時變綠色 */
+        .herb-chip input:checked + .chip-content {
+            background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%);
+            color: white; border-color: #2C5E4F;
+            box-shadow: 0 4px 10px rgba(74, 124, 89, 0.4); transform: translateY(-1px);
         }
 
-        /* --- 3. 自由配對模式 --- */
-        .mode-selector {
-            display: flex; gap: 10px; align-items: center; justify-content: center;
-            background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2;
-        }
+        /* === 其他介面 === */
+        .mode-selector { display: flex; gap: 10px; align-items: center; justify-content: center; background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2; }
         .mode-select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; }
-
-        /* --- 4. 測驗機制 (Radio) --- */
+        
         .custom-check { cursor: pointer; display: block; }
         .custom-check input { display: none; }
-        .check-content {
-            display: block; border: 2px solid #eee; border-radius: 10px; background: white;
-            transition: 0.2s; text-align: center;
-        }
-        .custom-check input:checked ~ .check-content {
-            border-color: #4A7C59; background: #e8f5e9; color: #2C5E4F;
-        }
+        .check-content { display: block; border: 2px solid #eee; border-radius: 10px; background: white; transition: 0.2s; text-align: center; }
+        .custom-check input:checked ~ .check-content { border-color: #4A7C59; background: #e8f5e9; color: #2C5E4F; }
 
-        /* --- 5. 測驗按鈕與進度條 --- */
         .progress-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #4A7C59, #81c784); width: 0%; transition: width 0.3s; }
-
         .question-text { font-size: 1.8rem; font-weight: bold; color: #333; margin: 15px 0; text-align: center; }
         .question-img { max-height: 180px; max-width: 100%; display: block; margin: 10px auto; border-radius: 8px; }
-
+        
         .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .option-grid { grid-template-columns: 1fr; } }
-
-        .option-btn {
-            background: white; border: 2px solid #eee; border-radius: 15px;
-            padding: 15px; min-height: 60px; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 1.1rem; color: #444; transition: 0.2s; position: relative;
-        }
+        
+        .option-btn { background: white; border: 2px solid #eee; border-radius: 15px; padding: 15px; min-height: 60px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1.1rem; color: #444; transition: 0.2s; position: relative; }
         .option-btn:hover { border-color: #4A7C59; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .option-btn img { max-height: 80px; object-fit: contain; margin-bottom: 5px; }
-        
         .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
         .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; animation: shake 0.4s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%);
-            color: white; border: none; padding: 12px; border-radius: 50px;
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(44, 94, 79, 0.3); transition: 0.3s;
-        }
+        
+        .btn-primary { background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%); color: white; border: none; padding: 12px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 15px rgba(44, 94, 79, 0.3); transition: 0.3s; }
         .btn-primary:hover { transform: scale(1.02); }
-        .btn-sm { padding: 4px 10px; border: 1px solid #ddd; background: white; border-radius: 15px; cursor: pointer; font-size: 0.85rem; }
-
+        .btn-sm { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 15px; cursor: pointer; font-size: 0.85rem; transition:0.2s; }
+        .btn-sm:hover { background: #eee; }
     </style>
 </head>
 <body>
@@ -444,7 +92,7 @@
             <button class="back-btn" onclick="location.href='index.html'">❮</button>
             <a href="index.html" class="logo">🌿 本草學園</a>
         </div>
-        <div class="burger" onclick="toggleMenu()">☰</div>
+        <div class="burger" onclick="window.toggleMenu()">☰</div>
         <ul class="menu" id="nav-menu">
             <li><a href="index.html">中藥查詢</a></li>
             <li><a href="pharmacognosy.html">生藥分類</a></li>
@@ -454,7 +102,6 @@
     </nav>
 
     <main>
-        
         <div id="setup-panel" class="glass-panel">
             <h2 style="text-align:center; color:#2C5E4F; margin-bottom:20px;">🛠️ 建立測驗</h2>
             
@@ -474,7 +121,6 @@
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <input type="text" id="filter-search" placeholder="輸入關鍵字搜尋..." onkeyup="window.renderHerbList()" 
                            style="flex:1; padding:10px 15px; border:1px solid #ddd; border-radius:20px; outline:none;">
-                    
                     <button class="btn-sm" onclick="window.toggleSelectAll(true)">全選</button>
                     <button class="btn-sm" onclick="window.toggleSelectAll(false)">清空</button>
                 </div>
@@ -526,7 +172,6 @@
                             <small style="color:#888;">考完即結束</small>
                         </span>
                     </label>
-
                     <label class="custom-check" style="flex:1;">
                         <input type="radio" name="quizLogic" value="reinforce">
                         <span class="check-content" style="padding:15px;">
@@ -546,12 +191,8 @@
                 <span style="color:#4A7C59;">得分: <span id="q-score">0</span></span>
             </div>
             
-            <div class="progress-container">
-                <div id="progress-bar" class="progress-bar"></div>
-            </div>
-
-            <div id="quiz-content">
-                </div>
+            <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+            <div id="quiz-content"></div>
 
             <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
                 <button id="btn-prev" class="btn-sm" onclick="window.prevQuestion()" style="padding: 10px 20px; font-size: 1rem; border-radius: 50px;">⬅ 上一題</button>
@@ -568,7 +209,6 @@
                 <button class="btn-primary" onclick="location.href='mistakes.html'" style="flex:1;">查看錯題本</button>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -587,17 +227,15 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // 請確認你的檔案路徑是 data/herbs.json
                 const res = await fetch('data/herbs.json');
                 if (!res.ok) throw new Error("HTTP error " + res.status);
                 
                 window.allHerbs = await res.json();
                 console.log(`✅ 資料庫載入成功，共 ${window.allHerbs.length} 筆`);
                 
-                // 1. 渲染藥材清單
                 window.renderHerbList();
                 
-                // 2. 防止題目答案選一樣 (監聽器)
+                // 防止重複選
                 const qSelect = document.getElementById('mode-question');
                 const aSelect = document.getElementById('mode-answer');
                 function updateAnswerOptions() {
@@ -616,24 +254,22 @@
             } catch (err) {
                 console.error(err);
                 const container = document.getElementById('herb-chip-container');
-                if(container) container.innerHTML = `<p style="color:red; text-align:center;">❌ 無法載入 data/herbs.json，請檢查檔案是否存在。</p>`;
+                if(container) container.innerHTML = `<p style="color:red; text-align:center;">❌ 資料載入失敗</p>`;
             }
         });
 
-        // --- 漢堡選單 ---
+        // 漢堡選單
         window.toggleMenu = function() {
             document.getElementById('nav-menu').classList.toggle('show');
         }
 
         // ============================================
-        //  2. 列表渲染 (Chip 小按鈕)
+        //  2. 列表渲染 (Chip 膠囊)
         // ============================================
         window.renderHerbList = function() {
             const container = document.getElementById('herb-chip-container');
-            const searchInput = document.getElementById('filter-search');
-            if(!container) return;
-
-            const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+            const term = document.getElementById('filter-search').value.trim().toLowerCase();
+            
             container.innerHTML = "";
             
             const filtered = window.allHerbs.filter(h => !term || h.chinese_name.includes(term));
@@ -648,6 +284,7 @@
                 label.className = 'herb-chip';
                 const isChecked = window.selectedHerbIds.has(herb.id) ? 'checked' : '';
 
+                // ★ 這裡產生隱藏 Checkbox + 顯示的 Span
                 label.innerHTML = `
                     <input type="checkbox" value="${herb.id}" onchange="window.handleChipChange(this)" ${isChecked}>
                     <span class="chip-content">${herb.chinese_name}</span>
@@ -669,7 +306,7 @@
         };
 
         // ============================================
-        //  3. 批次選取功能
+        //  3. 批次選取
         // ============================================
         window.batchSelectByGrade = function() {
             const checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(cb => cb.value);
@@ -697,29 +334,23 @@
         };
 
         // ============================================
-        //  4. 測驗核心 (終極整合版)
+        //  4. 測驗核心 (整合版)
         // ============================================
-
-        // --- 啟動測驗 ---
         window.startQuiz = function() {
-            // 1. 收集名單
             window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
             if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
 
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
-            if (qMode === aMode) return alert("題目和答案不能選一樣的！");
+            if (qMode === aMode) return alert("題目和答案不能一樣！");
 
-            // 2. 讀取測驗機制
             const logicRadios = document.querySelector('input[name="quizLogic"]:checked');
             window.quizLogic = logicRadios ? logicRadios.value : "standard";
 
-            // 3. 初始化
             window.currentIdx = 0;
             window.score = 0;
             window.quizList.sort(() => Math.random() - 0.5);
 
-            // 4. 切換介面
             document.getElementById('setup-panel').style.display = 'none';
             document.getElementById('quiz-panel').style.display = 'block';
             document.getElementById('q-total').innerText = window.quizList.length;
@@ -727,13 +358,10 @@
             window.nextQuestion();
         };
 
-        // --- 產生題目與選項 ---
         window.nextQuestion = function(isManualNext = false) {
             if (isManualNext) window.currentIdx++;
-
             if (window.currentIdx >= window.quizList.length) return window.endQuiz();
 
-            // UI 控制
             document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-prev').style.visibility = (window.currentIdx === 0) ? 'hidden' : 'visible';
 
@@ -741,21 +369,18 @@
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
 
-            // 更新 UI
             document.getElementById('q-current').innerText = window.currentIdx + 1;
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
 
-            // --- A. 產生題目 (Question) ---
+            // --- 產生題目 ---
             let qHtml = "";
             let qRaw = window.getFieldData(herb, qMode);
             let qShow = "";
-            
             if (Array.isArray(qRaw)) {
                 const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
-                if (typeof rnd === 'object' && rnd.image) {
-                    qShow = rnd.name; qHtml = `<img src="${rnd.image}" class="question-img">`; 
-                } else { qShow = rnd; }
+                if (typeof rnd === 'object' && rnd.image) { qShow = rnd.name; qHtml = `<img src="${rnd.image}" class="question-img">`; } 
+                else { qShow = rnd; }
             } else { qShow = qRaw; }
 
             if (qMode === 'image') qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
@@ -769,7 +394,7 @@
                     <p style="color:#666; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></p>
                 </div>`;
 
-            // --- B. 產生選項 (Answer) ---
+            // --- 產生選項 (防撞) ---
             function parseOptionData(data, mode) {
                 let label = ""; let image = null;
                 if (Array.isArray(data)) {
@@ -795,7 +420,6 @@
                 let wrongObj = parseOptionData(wrongRaw, aMode);
                 if (!wrongObj.label && !wrongObj.image) wrongObj.label = "無資料";
 
-                // ★ 防撞機制
                 let isCollision = false;
                 const correctPool = Array.isArray(correctRaw) ? correctRaw.map(d => (typeof d === 'object' ? d.name : d)) : [correctRaw];
                 if (correctPool.includes(wrongObj.label)) isCollision = true;
@@ -818,14 +442,11 @@
             document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
         };
 
-        // --- 上一題 ---
         window.prevQuestion = function() {
             if (window.currentIdx > 0) { window.currentIdx--; window.nextQuestion(false); }
         };
 
-        // --- 檢查答案 ---
         window.checkAnswer = function(btn, isCorrect, btnLabel) {
-            // 1. 鎖定按鈕
             const allBtns = document.querySelectorAll('.option-btn');
             allBtns.forEach(b => b.disabled = true);
             const herb = window.quizList[window.currentIdx];
@@ -835,30 +456,22 @@
                 window.score += 10;
             } else {
                 btn.classList.add('wrong');
-                
-                // 2. 顯示正確答案 (綠色)
                 const correctBtn = document.querySelector('.option-btn[data-is-correct="true"]');
                 if (correctBtn) correctBtn.classList.add('correct');
 
-                // 3. 記錄錯題
                 window.saveDetailedMistake(herb, document.getElementById('mode-question').value, btnLabel);
 
-                // 4. 鞏固模式插隊
                 if (window.quizLogic === "reinforce") {
                     let pos = window.currentIdx + 3;
                     if (pos > window.quizList.length) pos = window.quizList.length;
                     window.quizList.splice(pos, 0, herb);
                     document.getElementById('q-total').innerText = window.quizList.length;
-                    console.log(`[鞏固複習] ${herb.chinese_name} 插隊至第 ${pos} 題`);
                 }
             }
-            
-            // 5. 顯示分數與下一題按鈕
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('btn-next').style.display = 'block';
         };
 
-        // --- 結束測驗 ---
         window.endQuiz = function() {
             document.getElementById('quiz-panel').style.display = 'none';
             document.getElementById('result-panel').style.display = 'block';
@@ -868,7 +481,6 @@
             document.getElementById('result-msg').innerText = msg;
         };
 
-        // --- 輔助函式 ---
         window.getFieldData = function(herb, mode) {
             if (mode === 'image') return herb.image;
             return herb[mode] || "無資料";
@@ -890,6 +502,5 @@
             localStorage.setItem('tcm_mistakes_v2', JSON.stringify(mistakes));
         };
     </script>
-
 </body>
 </html>
