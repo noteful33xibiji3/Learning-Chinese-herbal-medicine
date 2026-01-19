@@ -1,24 +1,28 @@
 [
-  {"id": 1,
+  {
+    "id": 1,
+    "grade": "大二上",
     "chinese_name": "麻黃",
     "latin_name": "Ephedrae Herba",
     "family_ch": "麻黃科",
     "family_en": "Ephedraceae",
     "chem_main": "生物鹼",
-    "chem_sub": "生物鹼胺Alkloidal amine",
+    "chem_sub": "生物鹼胺",
     "origin": [
       {
         "lat": "Ephedra sinica",
         "ch": "草麻黃"
-      }
-    ],
-    "confusing_drugs": [
+      },
       {
-        "name_ch": "中麻黃",
-        "name_en": "Ephedra intermedia Schrenk et C.A. Mey",
-        "note": ""
+        "lat": "Ephedra equisetina",
+        "ch": "木賊麻黃"
+      },
+      {
+        "lat": "Ephedra intermedia",
+        "ch": "中麻黃"
       }
     ],
+    "confusing_drugs": [],
     "chemistry": [
       {
         "name_en": "Ephedrine",
@@ -32,14 +36,16 @@
       }
     ],
     "effects": [
-      "發汗解表","宣肺平喘"
+      "發汗解表",
+      "宣肺平喘",
+      "利水消腫"
     ],
-    "indications": "",
-    "image": "",
-     "grade": "大二上"
+    "indications": "用於風寒感冒，胸悶喘咳，風水浮腫。",
+    "image": ""
   },
   {
     "id": 2,
+    "grade": "大二上",
     "chinese_name": "粉防己",
     "latin_name": "Stephaniae Tetrandrae Radix",
     "family_ch": "防己科",
@@ -81,7 +87,6 @@
       "祛風止痛"
     ],
     "indications": "用於水腫腳氣，風濕痺痛，濕疹瘡毒。",
-    "image": "",
-    "grade": "大二上"
+    "image": ""
   }
 ]
