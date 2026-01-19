@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* 這裡加入你剛才提供的智慧搜尋專屬 CSS */
+        /* 智慧搜尋專屬 CSS */
         .search-container { position: relative; width: 100%; max-width: 600px; margin: 30px auto; }
         .search-box { 
             width: 100%; padding: 15px 20px; font-size: 1.2rem; 
@@ -34,10 +34,19 @@
             background: white; padding: 25px; border-radius: 12px; 
             margin-bottom: 15px; border-left: 6px solid #2c5e40; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left;
+            animation: fadeIn 0.3s ease;
         }
-        .r-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        .r-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; margin-bottom: 10px; padding-bottom: 5px; }
         .r-name { font-size: 1.5rem; font-weight: bold; color: #2c5e40; }
+        .r-family { color: #666; font-style: italic; }
+        .r-detail-row { margin-bottom: 8px; font-size: 1.05rem; }
         .label { font-weight: bold; color: #555; width: 80px; display: inline-block; }
+        
+        /* 圖片樣式 */
+        .r-img-container { width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 15px; }
+        .r-img { width: 100%; height: 100%; object-fit: cover; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -68,5 +77,131 @@
     </main>
 
     <script src="app.js"></script>
+
+    <script>
+        // 1. 定義變數
+        let db = []; 
+        const input = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('suggestions');
+        const resultsArea = document.getElementById('results-area');
+
+        // 2. 網頁載入時，抓取 GitHub 裡的資料 (data/herbs.json)
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 這裡一定要確認你的 json 檔名路徑正確
+                const response = await fetch('data/herbs.json');
+                if (!response.ok) throw new Error("資料讀取失敗");
+                db = await response.json();
+                console.log("資料庫載入成功，共 " + db.length + " 筆資料");
+            } catch (error) {
+                console.error(error);
+                resultsArea.innerHTML = `<p style="text-align:center; color:red;">❌ 無法讀取資料庫，請檢查 data/herbs.json 檔案格式是否正確 (例如逗號問題)。</p>`;
+            }
+        });
+
+        // 3. 監聽輸入事件：產生建議詞
+        input.addEventListener('input', function() {
+            const val = this.value.toLowerCase().trim();
+            suggestionsBox.innerHTML = '';
+            
+            if (!val || db.length === 0) {
+                suggestionsBox.style.display = 'none';
+                if (!val) resultsArea.innerHTML = ''; 
+                return;
+            }
+
+            // 過濾邏輯 (對應你的 JSON 欄位)
+            const matches = db.filter(item => {
+                const origin = item.origin || "";
+                const chemistry = item.chemistry || "";
+                const grade = item.grade || "";
+
+                return item.chinese_name.includes(val) || 
+                       item.latin_name.toLowerCase().includes(val) ||
+                       item.family.toLowerCase().includes(val) ||
+                       origin.toLowerCase().includes(val) ||
+                       chemistry.toLowerCase().includes(val) ||
+                       grade.includes(val);
+            }).slice(0, 8); // 只顯示前 8 筆
+
+            if (matches.length > 0) {
+                suggestionsBox.style.display = 'block';
+                matches.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerHTML = `<span class="s-main">${item.chinese_name}</span><span class="s-sub">${item.latin_name}</span>`;
+                    
+                    div.onclick = function() {
+                        input.value = item.chinese_name;
+                        suggestionsBox.style.display = 'none';
+                        displayResult(item);
+                    };
+                    suggestionsBox.appendChild(div);
+                });
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // 4. 點擊空白處關閉選單
+        document.addEventListener('click', function(e) {
+            if (e.target !== input && e.target !== suggestionsBox) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // 5. 按下 Enter 搜尋
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const val = this.value.toLowerCase().trim();
+                suggestionsBox.style.display = 'none';
+                
+                const matches = db.filter(item => {
+                    const origin = item.origin || "";
+                    const chemistry = item.chemistry || "";
+                    return item.chinese_name.includes(val) || 
+                           item.latin_name.toLowerCase().includes(val) ||
+                           item.family.toLowerCase().includes(val) ||
+                           origin.toLowerCase().includes(val) ||
+                           chemistry.toLowerCase().includes(val);
+                });
+                
+                resultsArea.innerHTML = "";
+                if(matches.length === 0) {
+                    resultsArea.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>找不到符合的藥材...</p>";
+                } else {
+                    matches.forEach(item => displayResult(item, true));
+                }
+            }
+        });
+
+        // 6. 顯示卡片功能
+        function displayResult(item, append = false) {
+            if (!append) resultsArea.innerHTML = "";
+
+            const originText = item.origin ? item.origin : "暫無資料";
+            const chemText = item.chemistry ? item.chemistry : "暫無資料";
+            const noteText = item.indications ? item.indications : "";
+            const effectsText = item.effects ? item.effects.join('、') : "";
+            const imgSrc = item.image ? item.image : "images/placeholder.jpg";
+
+            const div = document.createElement("div");
+            div.className = "result-card";
+            div.innerHTML = `
+                ${item.image ? `<div class="r-img-container"><img src="${imgSrc}" class="r-img" onerror="this.src='images/placeholder.jpg'"></div>` : ''}
+                <div class="r-header">
+                    <span class="r-name">${item.chinese_name}</span>
+                    <span class="r-family">${item.family}</span>
+                </div>
+                <div class="r-detail-row"><span class="label">生藥名:</span> ${item.latin_name}</div>
+                <div class="r-detail-row"><span class="label">基原:</span> ${originText}</div>
+                <div class="r-detail-row"><span class="label">成分:</span> ${chemText}</div>
+                <div class="r-detail-row"><span class="label">功效:</span> ${effectsText}</div>
+                <div class="r-detail-row"><span class="label">備註:</span> ${noteText}</div>
+                <div class="r-detail-row"><span class="label">年級:</span> ${item.grade}</div>
+            `;
+            resultsArea.appendChild(div);
+        }
+    </script>
 </body>
 </html>
