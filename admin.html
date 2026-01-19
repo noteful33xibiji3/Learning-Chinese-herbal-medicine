@@ -688,8 +688,17 @@
             });
 
             // 5. 整理物件
+            let finalId;
+            if (idVal) {
+                // 如果是編輯舊資料，沿用舊 ID
+                finalId = parseInt(idVal);
+            } else {
+                // ★如果是新增資料，找出目前最大 ID 並 +1
+                const maxId = allHerbs.reduce((max, item) => Math.max(max, item.id || 0), 0);
+                finalId = maxId + 1;
+            }
             const newHerb = {
-                id: idVal ? parseInt(idVal) : Date.now(),
+                id: finalId, // 使用剛剛算好的 ID
                 grade: document.getElementById('edit-grade').value,
                 chinese_name: name,
                 origin: originData,
