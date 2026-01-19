@@ -60,25 +60,24 @@
         }
 
         /* 編輯視窗 (Modal) */
-       /* 編輯視窗 (Modal) - 增加底部空間版 */
         #edit-modal {
             display: none; 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); 
             z-index: 1000; 
-            overflow-y: auto; /* 允許垂直捲動 */
+            overflow-y: auto;
             align-items: flex-start; 
             justify-content: center; 
             padding-top: 50px; 
-            padding-bottom: 100px; /* ★★★ 這裡改成了 100px，底部空間變大 */
+            padding-bottom: 100px;
         }
         .modal-content {
             background: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;
-            margin-bottom: 50px; /* ★★★ 多加這個，確保手機版有額外緩衝 */
+            margin-bottom: 50px;
         }
 
-        /* ★★★ 新增：動態列表樣式 ★★★ */
+        /* 動態列表樣式 */
         .dynamic-list-container { border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px; background: #fafafa; margin-bottom: 15px; }
         .dynamic-row { 
             display: flex; gap: 10px; align-items: center; margin-bottom: 10px; 
@@ -95,11 +94,16 @@
         /* 圖片預覽 */
         #preview-img { max-height: 200px; border-radius: 8px; display: none; margin: 10px auto; border: 1px solid #ddd; }
 
-        .spinner {
-            border: 4px solid #f3f3f3; border-top: 4px solid #4A7C59; border-radius: 50%;
-            width: 30px; height: 30px; animation: spin 1s linear infinite; display: inline-block;
+        /* 搜尋建議 */
+        .search-box-wrapper { position: relative; }
+        .suggestions-list {
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
+            max-height: 200px; overflow-y: auto; display: none;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .suggestion-item:hover { background: #f5f5f5; }
     </style>
 </head>
 <body>
@@ -119,7 +123,11 @@
         <div class="glass-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="margin:0; color:#2C5E4F;">藥材資料庫管理</h2>
-                <button onclick="openEditModal()" class="btn btn-primary">➕ 新增藥材</button>
+                <div class="search-box-wrapper" style="flex:1; max-width: 300px; margin-left: 20px;">
+                    <input type="text" id="admin-search" placeholder="🔍 搜尋中藥 / 學名..." oninput="handleSearchInput()" style="margin-bottom:0;">
+                    <div id="suggestions" class="suggestions-list"></div>
+                </div>
+                <button onclick="openEditModal()" class="btn btn-primary" style="margin-left: 10px;">➕ 新增藥材</button>
             </div>
             
             <div style="overflow-x: auto;">
@@ -241,10 +249,10 @@
         let allHerbs = [];
         let sha = ""; 
         let config = {};
-        let newImageBase64 = null; // 暫存圖片 Base64
+        let newImageBase64 = null; 
 
         const categories = {
-            "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "酚類配醣體", "其他配醣體"],
+            "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"],
             "生物鹼": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"],
             "多醣類": ["澱粉", "樹膠", "黏液質", "果膠"],
             "苯丙烷類": ["簡單苯丙烷類", "香豆素", "木質素"],
@@ -269,7 +277,6 @@
             }
         });
 
-        // 分類選單初始化
         function initCategories() {
             const mainSel = document.getElementById('chem_main');
             for(let key in categories) {
@@ -322,10 +329,9 @@
                 sha = data.sha;
                 const content = decodeURIComponent(escape(window.atob(data.content)));
                 
-                // 防呆：如果 JSON 壞了
                 try {
                     allHerbs = JSON.parse(content);
-                } catch(e) { throw new Error("JSON 格式錯誤，請檢查 GitHub 檔案"); }
+                } catch(e) { throw new Error("JSON 格式錯誤"); }
 
                 if (isLoginCheck) {
                     localStorage.setItem('tcm_admin_config', JSON.stringify(config));
@@ -340,38 +346,31 @@
             }
         }
 
-        // === 4. 表格渲染 (含易混淆預覽) ===
-        // === 修改處：更新列表渲染邏輯 (支援新版物件格式) ===
-        function renderTable() {
+        // === 4. 表格與搜尋 ===
+        function renderTable(filterList = null) {
+            const list = filterList || allHerbs;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
             
             // 排序 (ID 大到小)
-            [...allHerbs].sort((a,b) => b.id - a.id).forEach(herb => {
+            [...list].sort((a,b) => b.id - a.id).forEach(herb => {
                 const tr = document.createElement('tr');
                 
-                // --- 1. 處理基原顯示 (Origin) ---
+                // 基原顯示
                 let originPrev = '-';
                 if (herb.origin) {
                     if (Array.isArray(herb.origin) && herb.origin.length > 0) {
                         const first = herb.origin[0];
-                        // 判斷是新版物件 {lat, ch} 還是舊版字串
-                        if (typeof first === 'object') {
-                            originPrev = `${first.lat || ''} ${first.ch || ''}`;
-                        } else {
-                            originPrev = first; // 舊版純字串
-                        }
-                        // 如果不只一個，加個驚嘆號或點點點提示
+                        originPrev = (typeof first === 'object') ? `${first.lat||''} ${first.ch||''}` : first;
                         if (herb.origin.length > 1) originPrev += ' ...';
                     } else if (typeof herb.origin === 'string') {
                         originPrev = herb.origin;
                     }
                 }
 
-                // --- 2. 處理易混淆顯示 (Confusing) ---
+                // 易混淆顯示
                 let confusingPrev = '-';
                 if (herb.confusing_drugs && Array.isArray(herb.confusing_drugs) && herb.confusing_drugs.length > 0) {
-                     // 顯示數量就好，例如 "⚠️ 2"
                     confusingPrev = `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>`;
                 }
 
@@ -389,83 +388,56 @@
                 tbody.appendChild(tr);
             });
         }
-        // --- 搜尋功能 (升級版：支援搜尋基原學名) ---
+
         function handleSearchInput() {
             const term = document.getElementById('admin-search').value.trim().toLowerCase();
             const suggestionsDiv = document.getElementById('suggestions');
-            const resultDiv = document.getElementById('search-results'); // 3D 卡片區
-            const noResultMsg = document.getElementById('no-result-msg');
             
-            // 隱藏表單
-            document.getElementById('edit-form-area').style.display = "none";
-            noResultMsg.style.display = "none";
-            resultDiv.innerHTML = ""; // 清空卡片區
-
             if (!term) {
                 suggestionsDiv.style.display = 'none';
+                renderTable(); // 恢復顯示全部
                 return;
             }
 
-            // ★ 核心搜尋邏輯升級 ★
             const matches = allHerbs.filter(h => {
-                // 1. 搜中文名
                 if (h.chinese_name && h.chinese_name.includes(term)) return true;
-                
-                // 2. 搜生藥名 (轉小寫比對)
                 if (h.latin_name && h.latin_name.toLowerCase().includes(term)) return true;
-                
-                // 3. 搜基原 (支援新舊格式)
                 if (h.origin) {
-                    // 如果是新版物件陣列 (例如: [{lat:"Ephedra...", ch:"麻黃"}])
                     if (Array.isArray(h.origin)) {
-                        // 只要陣列裡有任何一個學名符合，就算選中
                         return h.origin.some(o => (o.lat && o.lat.toLowerCase().includes(term)));
-                    } 
-                    // 如果是舊版純字串
-                    else if (typeof h.origin === 'string') {
+                    } else if (typeof h.origin === 'string') {
                         return h.origin.toLowerCase().includes(term);
                     }
                 }
                 return false;
             });
 
+            // 更新表格顯示結果
+            renderTable(matches);
+            
+            // 下拉建議 (選用)
             if (matches.length > 0) {
-                // A. 顯示下拉選單 (條列式)
-                suggestionsDiv.innerHTML = matches.map(h => `
-                    <div class="suggestion-item" onclick="loadHerbToFormByID(${h.id})">
-                        <span>${h.chinese_name}</span>
-                        <span style="color:#888; font-size:0.85rem;">${h.latin_name || '無生藥名'}</span>
+                suggestionsDiv.innerHTML = matches.slice(0,5).map(h => `
+                    <div class="suggestion-item" onclick="openEditModal(${h.id})">
+                        <span>${h.chinese_name}</span> <small style="color:#888;">${h.latin_name||''}</small>
                     </div>
                 `).join('');
                 suggestionsDiv.style.display = 'block';
-
-                // B. 顯示 3D 卡片 (結果區)
-                // 如果你希望在輸入時下方也出現卡片，可以加這段；如果不希望太亂，可以只留下拉選單。
-                // 這裡保留卡片顯示，方便快速瀏覽。
-                matches.forEach(h => {
-                    const div = document.createElement('div');
-                    div.className = 'mini-card'; // 引用你的 3D CSS
-                    div.innerHTML = `<h4>${h.chinese_name}</h4><p>${h.latin_name || ''}</p>`;
-                    div.onclick = () => loadHerbToFormByID(h.id);
-                    resultDiv.appendChild(div);
-                });
-
             } else {
                 suggestionsDiv.style.display = 'none';
-                noResultMsg.style.display = 'block'; // 顯示「新增按鈕」
             }
         }
 
-        // === 5. 編輯與圖片處理邏輯 ===
-
+        // === 5. 編輯視窗邏輯 ===
         function openEditModal(id = null) {
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'flex';
             document.getElementById('edit-id').value = id || "";
             document.getElementById('img-input').value = "";
+            document.getElementById('suggestions').style.display = 'none'; // 關閉搜尋建議
             newImageBase64 = null;
 
-            // 清空列表容器
+            // 清空列表
             document.getElementById('origin-rows-wrapper').innerHTML = "";
             document.getElementById('confusing-rows-wrapper').innerHTML = "";
             document.getElementById('chem-rows-wrapper').innerHTML = "";
@@ -476,15 +448,15 @@
                 document.getElementById('edit-grade').value = h.grade;
                 document.getElementById('chinese_name').value = h.chinese_name;
                 
-                // 載入基原 (相容舊字串格式)
+                // 基原
                 if(Array.isArray(h.origin)) h.origin.forEach(o => addOriginRow(o));
                 else if(h.origin) addOriginRow(h.origin);
                 else addOriginRow();
 
-                // 載入易混淆
+                // 易混淆
                 if(h.confusing_drugs && Array.isArray(h.confusing_drugs)) {
                     h.confusing_drugs.forEach(c => addConfusingRow(c));
-                } // 易混淆預設不新增空白欄位，保持乾淨
+                }
 
                 document.getElementById('latin_name').value = h.latin_name || "";
                 document.getElementById('family_ch').value = h.family_ch || h.family || "";
@@ -505,91 +477,64 @@
                     list.forEach(c => addChemRow(c));
                 }
             } else {
-                // 新增模式
+                // 新增
                 document.getElementById('modal-title').innerText = "新增藥材";
-                document.querySelectorAll('#edit-modal input, #edit-modal textarea').forEach(e => e.value="");
-                addOriginRow(); // 預設一筆基原
-                addChemRow();   // 預設一筆成分
+                document.querySelectorAll('#edit-modal input[type=text], #edit-modal textarea').forEach(e => e.value="");
+                addOriginRow();
+                addChemRow();
                 document.getElementById('preview-img').style.display = 'none';
             }
         }
 
         function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
-        // --- 動態列表 Helper Functions ---
-        
-        // 1. 基原
-       // === 修改處 1：產生基原輸入框 (分中英文) ===
-function addOriginRow(data = null) {
-    const wrapper = document.getElementById('origin-rows-wrapper');
-    const div = document.createElement('div');
-    div.className = 'dynamic-row origin-row'; // 多加一個 origin-row class 方便抓取
-
-    let valLat = "";
-    let valCh = "";
-
-    // 判斷資料格式 (相容舊字串格式與新物件格式)
-    if (data) {
-        if (typeof data === 'string') {
-            valLat = data; // 舊資料只有一行，暫時填入學名欄
-        } else {
-            valLat = data.lat || "";
-            valCh = data.ch || "";
+        // --- 動態列表產生器 ---
+        function addOriginRow(data = null) {
+            const wrapper = document.getElementById('origin-rows-wrapper');
+            const div = document.createElement('div');
+            div.className = 'dynamic-row origin-row';
+            let valLat = "", valCh = "";
+            if (data) {
+                if (typeof data === 'string') valLat = data;
+                else { valLat = data.lat || ""; valCh = data.ch || ""; }
+            }
+            div.innerHTML = `
+                <input type="text" class="origin-lat" value="${valLat}" placeholder="學名 (Ephedra sinica)">
+                <input type="text" class="origin-ch" value="${valCh}" placeholder="中文 (草麻黃)">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            wrapper.appendChild(div);
         }
-    }
-      div.innerHTML = `
-        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; flex:1;">
-            <input type="text" class="origin-lat" value="${valLat}" placeholder="學名 (Ephedra sinica)" style="margin:0;">
-            <input type="text" class="origin-ch" value="${valCh}" placeholder="中文 (草麻黃)" style="margin:0;">
-        </div>
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-    `;
-    wrapper.appendChild(div);
-}
 
-        // 2. 易混淆 (邏輯一樣，只是容器不同)
-// === 修改處 1：產生易混淆輸入框 (中藥名 / 學名 / 備註) ===
-function addConfusingRow(data = null) {
-    const wrapper = document.getElementById('confusing-rows-wrapper');
-    const div = document.createElement('div');
-    div.className = 'dynamic-row confusing-row'; 
-
-    let valCh = "";
-    let valEn = "";
-    let valNote = "";
-
-    if (data) {
-        if (typeof data === 'string') {
-            valCh = data; // 舊資料只有一行，暫時填入中文名
-        } else {
-            // 相容舊的 name/diff 欄位，自動對應過來
-            valCh = data.name_ch || data.name || ""; 
-            valEn = data.name_en || "";
-            valNote = data.note || data.diff || ""; 
+        function addConfusingRow(data = null) {
+            const wrapper = document.getElementById('confusing-rows-wrapper');
+            const div = document.createElement('div');
+            div.className = 'dynamic-row confusing-row';
+            let valCh="", valEn="", valNote="";
+            if(data) { valCh=data.name_ch||""; valEn=data.name_en||""; valNote=data.note||""; }
+            
+            div.innerHTML = `
+                <div style="flex:1;">
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <input type="text" class="conf-ch" value="${valCh}" placeholder="中文名">
+                        <input type="text" class="conf-en" value="${valEn}" placeholder="學名">
+                    </div>
+                    <input type="text" class="conf-note" value="${valNote}" placeholder="備註...">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+            `;
+            wrapper.appendChild(div);
         }
-    }
 
-    div.innerHTML = `
-        <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:10px; flex:1;">
-            <input type="text" class="conf-ch" value="${valCh}" placeholder="中文名 (廣防己)" style="margin:0;">
-            <input type="text" class="conf-en" value="${valEn}" placeholder="學名 (Aristolochia fangchi)" style="margin:0;">
-            <input type="text" class="conf-note" value="${valNote}" placeholder="備註 (馬兜鈴科...)" style="margin:0;">
-        </div>
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-    `;
-    wrapper.appendChild(div);
-}
-
-        // 3. 成分
         function addChemRow(data = null) {
             const wrapper = document.getElementById('chem-rows-wrapper');
             const idx = Date.now() + Math.random();
             const div = document.createElement('div');
             div.className = 'chem-row';
-            let nameEn = "", nameCh = "", imgVal = "";
+            let nameEn="", nameCh="", imgVal="";
             if(data) {
-                if(typeof data === 'string') nameEn = data;
-                else { nameEn = data.name_en||""; nameCh = data.name_ch||""; imgVal = data.image||""; }
+                if(typeof data==='string') nameEn=data;
+                else { nameEn=data.name_en||""; nameCh=data.name_ch||""; imgVal=data.image||""; }
             }
             div.innerHTML = `
                 <div class="chem-header">
@@ -610,7 +555,7 @@ function addConfusingRow(data = null) {
             wrapper.appendChild(div);
         }
 
-        // --- 圖片處理 ---
+        // --- 圖片 ---
         function handleImagePreview() {
             const file = document.getElementById('img-input').files[0];
             if(!file) return;
@@ -640,7 +585,7 @@ function addConfusingRow(data = null) {
                 const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
                     const c = document.createElement('canvas');
-                    const s = 500 / img.width; c.width = 500; c.height = img.height * s;
+                    const s = 500/img.width; c.width=500; c.height=img.height*s;
                     c.getContext('2d').drawImage(img,0,0,c.width,c.height);
                     const b64 = c.toDataURL('image/jpeg', 0.7);
                     document.getElementById(imgId).src = b64;
@@ -664,7 +609,7 @@ function addConfusingRow(data = null) {
             return data.content.download_url;
         }
 
-        // === 6. 儲存並上傳 ===
+        // === 6. 儲存並上傳 (修復版) ===
         async function saveAndUpload() {
             const idVal = document.getElementById('edit-id').value;
             const name = document.getElementById('chinese_name').value;
@@ -692,33 +637,32 @@ function addConfusingRow(data = null) {
                 if(en || ch) chemData.push({name_en:en, name_ch:ch, image:cImg});
             }
 
-            // 3. 收集動態列表資料 (基原 & 易混淆)
-           // 確保 openEditModal 裡面是這樣寫的 (這段不用替換，檢查一下就好)
-             if(Array.isArray(h.origin)) {  h.origin.forEach(o => addOriginRow(o));} else if(h.origin) {addOriginRow(h.origin);} else { addOriginRow();};
-           // === 修改處 2：儲存易混淆資料 (三欄格式) ===
-const confRows = document.querySelectorAll('.confusing-row');
-const confusingData = [];
-confRows.forEach(row => {
-    const ch = row.querySelector('.conf-ch').value.trim();
-    const en = row.querySelector('.conf-en').value.trim();
-    const note = row.querySelector('.conf-note').value.trim();
-    
-    // 只要三格之中有任一格有填，就存起來
-    if (ch || en || note) {
-        confusingData.push({ 
-            name_ch: ch, 
-            name_en: en, 
-            note: note 
-        });
-    }
-});
-            // 4. 整理物件
+            // 3. 收集基原 (修復)
+            const originRows = document.querySelectorAll('.origin-row');
+            const originData = [];
+            originRows.forEach(row => {
+                const lat = row.querySelector('.origin-lat').value.trim();
+                const ch = row.querySelector('.origin-ch').value.trim();
+                if(lat || ch) originData.push({ lat, ch });
+            });
+
+            // 4. 收集易混淆 (修復)
+            const confRows = document.querySelectorAll('.confusing-row');
+            const confusingData = [];
+            confRows.forEach(row => {
+                const ch = row.querySelector('.conf-ch').value.trim();
+                const en = row.querySelector('.conf-en').value.trim();
+                const note = row.querySelector('.conf-note').value.trim();
+                if(ch || en || note) confusingData.push({ name_ch: ch, name_en: en, note: note });
+            });
+
+            // 5. 整理物件
             const newHerb = {
                 id: idVal ? parseInt(idVal) : Date.now(),
                 grade: document.getElementById('edit-grade').value,
                 chinese_name: name,
-                origin: originData,             // 現在是陣列
-                confusing_drugs: confusingData, // 新增的欄位
+                origin: originData,
+                confusing_drugs: confusingData,
                 latin_name: document.getElementById('latin_name').value,
                 family_ch: document.getElementById('family_ch').value,
                 family_en: document.getElementById('family_en').value,
@@ -730,7 +674,7 @@ confRows.forEach(row => {
                 image: finalMainImg
             };
 
-            // 5. 更新陣列
+            // 6. 更新陣列
             if(idVal) {
                 const idx = allHerbs.findIndex(h => h.id == idVal);
                 allHerbs[idx] = newHerb;
@@ -738,7 +682,7 @@ confRows.forEach(row => {
                 allHerbs.push(newHerb);
             }
 
-            // 6. 上傳 JSON
+            // 7. 上傳 JSON
             try {
                 const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(allHerbs, null, 2))));
                 const res = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.path}`, {
@@ -751,7 +695,7 @@ confRows.forEach(row => {
                 sha = data.content.sha;
                 alert("🎉 儲存成功！");
                 closeEditModal();
-                renderTable();
+                renderTable(); // 重新渲染表格
             } catch(e) { alert("儲存失敗: " + e.message); }
         }
 
@@ -761,7 +705,6 @@ confRows.forEach(row => {
             alert("已從列表移除，請按任一編輯並儲存以同步至 GitHub");
             renderTable();
         }
-
     </script>
 </body>
 </html>
