@@ -549,6 +549,23 @@
                     let list = Array.isArray(h.chemistry) ? h.chemistry : h.chemistry.split(',').map(s=>({name_en:s}));
                     list.forEach(c => addChemRow(c));
                 }
+                // ★ 核心修復：讀取成分
+        const chemWrapper = document.getElementById('chem-rows-wrapper');
+        chemWrapper.innerHTML = ""; // 先清空，避免重複出現
+        
+        if (h.chemistry && Array.isArray(h.chemistry) && h.chemistry.length > 0) {
+            h.chemistry.forEach(c => addChemRow(c));
+        } else if (h.chemistry && typeof h.chemistry === 'string') {
+            // 處理舊的字串資料
+            addChemRow(h.chemistry);
+        } else {
+            addChemRow(); // 如果完全沒資料，至少給一組空格子
+        }
+    } else {
+        // ... 新增模式 ...
+        document.getElementById('chem-rows-wrapper').innerHTML = ""; 
+        addChemRow(); // 新增時給一組空格子
+    }
             } else {
                 document.getElementById('modal-title').innerText = "新增藥材";
                 document.querySelectorAll('#edit-modal input[type=text], #edit-modal textarea').forEach(e => e.value="");
@@ -610,31 +627,46 @@
             wrapper.appendChild(div);
         }
 
-        function addChemRow(d) { 
-    const w = document.getElementById('chem-rows-wrapper'); 
-    const idx = Date.now() + Math.random(); 
+      function addChemRow(data = null) {
+    const wrapper = document.getElementById('chem-rows-wrapper');
+    const idx = Date.now() + Math.random();
     
-    // 1. 這裡定義名稱
-    const div = document.createElement('div'); 
-    div.className = 'chem-row'; 
-    
-    // 2. 這裡名稱要一致
+    // 1. 建立容器並命名為 div
+    const div = document.createElement('div');
+    div.className = 'chem-row';
+
+    // 2. 處理資料：確保不管是字串、物件或空的，都不會報錯
+    let nameEn = "";
+    let nameCh = "";
+    let imgVal = "";
+
+    if (data) {
+        if (typeof data === 'string') {
+            nameEn = data;
+        } else {
+            nameEn = data.name_en || data.name || ""; // 相容舊版欄位名
+            nameCh = data.name_ch || "";
+            imgVal = data.image || "";
+        }
+    }
+
+    // 3. 統一使用 div.innerHTML
     div.innerHTML = `
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-            <input type="text" class="chem-en" placeholder="英文" value="${d?.name_en || (typeof d==='string'?d:'') || ''}" style="margin:0; flex:1;">
-            <input type="text" class="chem-ch" placeholder="中文" value="${d?.name_ch || ''}" style="margin:0; flex:1;">
+            <input type="text" class="chem-en" placeholder="英文 (Ephedrine)" value="${nameEn}" style="margin:0; flex:1;">
+            <input type="text" class="chem-ch" placeholder="中文 (麻黃鹼)" value="${nameCh}" style="margin:0; flex:1;">
             <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.chem-row').remove()">X</button>
         </div>
         <label style="cursor:pointer; background:#eee; padding:5px; border-radius:5px; font-size:0.8rem; display:block; text-align:center;">
             📸 上傳結構圖 <input type="file" style="display:none" onchange="handleChemImg(this, 'c-img-${idx}')">
         </label>
-        <img id="c-img-${idx}" src="${d?.image || ''}" class="chem-img-preview" style="display:${d?.image ? 'block' : 'none'}">
-        <input type="hidden" class="chem-old-img" value="${d?.image || ''}">
+        <img id="c-img-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
+        <input type="hidden" class="chem-old-img" value="${imgVal}">
         <input type="hidden" class="chem-new-base64">
-    `; 
-    
-    // 3. 這裡也要一致
-    w.appendChild(div); 
+    `;
+
+    // 4. 將結果加入畫面
+    wrapper.appendChild(div);
 }
         // --- 圖片處理 (保持不變) ---
         function handleImagePreview() {
