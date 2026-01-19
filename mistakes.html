@@ -3,29 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>錯題本 | 本草學園</title>
+    <title>智能錯題本 | 本草學園</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 共用背景與字體 */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        /* 毛玻璃容器 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 20px;
+        }
+
+        /* 錯題卡片 */
+        .mistake-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 6px solid #dc3545; /* 紅色代表錯誤 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .mistake-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .m-info h3 { margin: 0 0 5px 0; color: #333; font-size: 1.2rem; }
+        .m-meta { font-size: 0.9rem; color: #666; margin-top: 5px; }
+        .m-tag { 
+            background: #ffebee; color: #c62828; padding: 3px 10px; 
+            border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-left: 5px;
+        }
+        
+        .wrong-ans { color: #dc3545; text-decoration: line-through; margin-right: 5px; }
+        
+        /* AI 按鈕 */
+        .ai-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 8px 18px;
+            border-radius: 50px; cursor: pointer; font-size: 0.9rem;
+            font-weight: bold; display: flex; align-items: center; gap: 5px;
+            box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3);
+            transition: 0.2s;
+        }
+        .ai-btn:hover { transform: scale(1.05); box-shadow: 0 6px 15px rgba(118, 75, 162, 0.5); }
+
+        /* 功能按鈕 */
+        .btn-sm { 
+            padding: 6px 15px; border: 1px solid #ddd; background: white; 
+            border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-sm:hover { background: #eee; }
+        .btn-danger { color: #dc3545; border-color: #f8d7da; }
+        .btn-danger:hover { background: #f8d7da; }
+
+        /* 彈窗樣式 */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; animation: fadeIn 0.3s; }
+        .modal-content { 
+            background:white; width:90%; max-width:500px; margin:10vh auto; 
+            padding:30px; border-radius:20px; position:relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+    </style>
 </head>
 <body>
     <nav>
-        <div class="logo">🌿 本草學園</div>
-        <ul class="menu">
+        <div class="nav-left">
+            <button class="back-btn" onclick="location.href='index.html'">❮</button>
+            <a href="index.html" class="logo">🌿 本草學園</a>
+        </div>
+        <div class="burger" onclick="toggleMenu()">☰</div>
+        <ul class="menu" id="nav-menu">
             <li><a href="index.html">中藥查詢</a></li>
             <li><a href="quiz.html">自我測驗</a></li>
             <li><a href="mistakes.html" class="active">錯題複習</a></li>
         </ul>
     </nav>
 
-    <main>
-        <div style="text-align:center; margin-bottom:30px;">
-            <h2>📚 錯題本</h2>
-            <p>溫故而知新，這裡是你在測驗中答錯的題目。</p>
-        </div>
-        <div id="mistakes-list" class="mistakes-list">
+    <main style="max-width: 800px; margin: 30px auto; padding: 0 15px;">
+        
+        <div class="glass-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color:#2C5E4F; margin:0;">❌ 我的弱點分析</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-sm" onclick="exportMistakes()">📥 備份</button>
+                    <button class="btn-sm" onclick="importMistakes()">📤 匯入</button>
+                    <button class="btn-sm btn-danger" onclick="clearMistakes()">🗑️ 清空</button>
+                    <input type="file" id="fileInput" style="display:none" onchange="handleFileLoad(this)">
+                </div>
             </div>
+
+            <div id="mistakes-list">
+                </div>
+        </div>
+
     </main>
 
+    <div id="ai-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:1.5rem; color:#999;">&times;</span>
+            <h3 style="color:#764ba2; margin-top:0;">🤖 AI 助教分析</h3>
+            <p style="color:#666; font-size:0.95rem;">
+                請點擊下方按鈕複製指令，貼給 ChatGPT 或 Gemini，讓 AI 幫你找出記憶盲點：
+            </p>
+            <textarea id="ai-prompt-box" style="width:100%; height:120px; padding:15px; border-radius:12px; border:2px solid #eee; font-family:inherit; resize:none; margin-bottom:15px;"></textarea>
+            <div style="text-align:right;">
+                <button class="ai-btn" onclick="copyPrompt()" style="display:inline-flex; width:auto;">📋 複製指令</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
+    <script>
+        // --- 1. 讀取並顯示錯題 ---
+        function loadMistakes() {
+            const list = JSON.parse(localStorage.getItem('tcm_mistakes_v2') || "[]");
+            const container = document.getElementById('mistakes-list');
+            container.innerHTML = "";
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px; color:#888;">
+                        <div style="font-size:3rem; margin-bottom:10px;">🎉</div>
+                        <h3>目前沒有錯題紀錄</h3>
+                        <p>快去 <a href="quiz.html" style="color:#4A7C59; font-weight:bold;">自我測驗</a> 累積實力吧！</p>
+                    </div>`;
+                return;
+            }
+
+            // 依照時間倒序排列 (最新的錯誤在上面)
+            list.sort((a, b) => b.timestamp - a.timestamp);
+
+            const modeMap = {
+                'origin': '基原', 'chemistry': '成分', 'effects': '功效', 
+                'family': '科名', 'latin_name': '生藥名', 'image': '外觀辨識',
+                'chinese_name': '中藥名'
+            };
+
+            list.forEach(item => {
+                const dateStr = new Date(item.timestamp).toLocaleDateString();
+                const modeName = modeMap[item.mode] || item.mode;
+                
+                const div = document.createElement('div');
+                div.className = 'mistake-card';
+                div.innerHTML = `
+                    <div class="m-info">
+                        <h3>${item.name} <span class="m-tag">${modeName}</span></h3>
+                        <div class="m-meta">
+                            <span>累積錯誤: <b style="color:#dc3545">${item.count}</b> 次</span>
+                            <span style="margin:0 10px; color:#ddd;">|</span>
+                            <span>${dateStr}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:#555; margin-top:8px;">
+                            誤選為: <span class="wrong-ans">${item.wrong_choise || '未知'}</span>
+                        </div>
+                    </div>
+                    <button class="ai-btn" onclick="analyzeError('${item.name}', '${modeName}', '${item.wrong_choise}')">
+                        ✨ 分析
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- 2. AI 分析功能 ---
+        function analyzeError(herbName, mode, wrongChoice) {
+            const modal = document.getElementById('ai-modal');
+            const promptBox = document.getElementById('ai-prompt-box');
+            modal.style.display = 'block';
+            
+            const prompt = `我是一名藥學系學生。我在複習中藥「${herbName}」的「${mode}」時，不小心誤選了「${wrongChoice}」。
+請幫我分析：
+1. 為什麼我會搞混？(兩者有什麼相似處)
+2. 請提供一個簡單好記的口訣或辨識關鍵。
+3. 如果是多基原，請列出該藥材正確的基原列表。`;
+
+            promptBox.value = prompt;
+        }
+
+        function copyPrompt() {
+            const promptBox = document.getElementById('ai-prompt-box');
+            promptBox.select();
+            document.execCommand("copy"); // 相容性較好的複製方法
+            alert("指令已複製！請貼給 AI 助教。");
+        }
+
+        function closeModal() {
+            document.getElementById('ai-modal').style.display = 'none';
+        }
+
+        // --- 3. 備份與還原 ---
+        function exportMistakes() {
+            const data = localStorage.getItem('tcm_mistakes_v2');
+            if (!data || data === "[]") return alert("目前沒有錯題可備份！");
+            
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `本草錯題本_備份_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        function importMistakes() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(confirm(`確定要匯入 ${data.length} 筆錯題紀錄嗎？(這會覆蓋目前的紀錄)`)) {
+                        localStorage.setItem('tcm_mistakes_v2', JSON.stringify(data));
+                        loadMistakes();
+                        alert("匯入成功！");
+                    }
+                } catch (err) {
+                    alert("檔案格式錯誤，請選擇正確的備份檔 (.json)");
+                }
+            };
+            reader.readAsText(file);
+            input.value = ""; // 重置 input 以便重複選同檔案
+        }
+
+        function clearMistakes() {
+            if(confirm("⚠️ 確定要清空所有錯題紀錄嗎？無法復原喔！")) {
+                localStorage.removeItem('tcm_mistakes_v2');
+                loadMistakes();
+            }
+        }
+
+        // 啟動
+        loadMistakes();
+        
+        // 點擊背景關閉 Modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('ai-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
