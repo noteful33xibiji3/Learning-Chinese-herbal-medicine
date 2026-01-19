@@ -27,29 +27,34 @@
             <h2>🛠️ 測驗設定</h2>
             
             <div class="setup-group">
-                <h3>1. 選擇範圍</h3>
+                <h3>1. 快速選擇範圍 (批次勾選)</h3>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:10px;">勾選年級會自動選取下方對應的中藥：</p>
                 <div id="grade-checkboxes" class="checkbox-grid"></div>
-                
-                <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
-                    <label class="checkbox-label" style="font-weight:bold; color:var(--primary);">
-                        <input type="checkbox" id="toggle-custom-scope" onchange="toggleCustomScope()"> 
-                        👉 自選中藥 (勾選開啟清單)
-                    </label>
-                </div>
-
-                <div id="custom-selection-area">
-                    <input type="text" id="filter-search" placeholder="搜尋中藥..." style="width:100%; margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:5px;">
-                    <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <button onclick="selectAllHerbs(true)" style="font-size:0.8rem; padding:5px 10px;">全選</button>
-                        <button onclick="selectAllHerbs(false)" style="font-size:0.8rem; padding:5px 10px;">全不選</button>
-                    </div>
-                    <div id="manual-selection-list" class="checkbox-grid" style="grid-template-columns: 1fr 1fr; max-height:300px; overflow-y:auto;">
-                        </div>
-                </div>
             </div>
 
             <div class="setup-group">
-                <h3>2. 測驗項目 (可複選)</h3>
+                <h3>2. 預覽 / 微調測驗中藥</h3>
+                
+                <div style="background:#f1f3f4; padding:10px; border-radius:8px; margin-bottom:10px;">
+                    <input type="text" id="filter-search" placeholder="在此搜尋要考的中藥..." 
+                           style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ddd; border-radius:5px; box-sizing:border-box;">
+                    
+                    <div style="display:flex; gap:10px; justify-content: space-between; align-items:center;">
+                        <span id="selected-count" style="font-size:0.9rem; color:var(--primary); font-weight:bold;">已選: 0</span>
+                        <div>
+                            <button class="btn-sm" onclick="selectAllHerbs(true)">全選顯示項目</button>
+                            <button class="btn-sm" onclick="selectAllHerbs(false)">清空顯示項目</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="manual-selection-list" class="checkbox-grid" 
+                     style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); max-height:400px; overflow-y:auto; border:1px solid #eee; padding:10px;">
+                    </div>
+            </div>
+
+            <div class="setup-group">
+                <h3>3. 測驗項目 (可複選)</h3>
                 <div class="checkbox-grid">
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="effects" checked> 功效</label>
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="family"> 科名</label>
@@ -69,8 +74,7 @@
                 <span id="score-display" style="font-weight:bold; color:var(--primary);"></span>
             </div>
             
-            <div id="quiz-card" class="herb-card" style="padding:25px; text-align:center;">
-                </div>
+            <div id="quiz-card" class="herb-card" style="padding:25px; text-align:center;"></div>
             
             <div class="quiz-nav-buttons">
                 <button id="prev-btn" class="nav-btn" onclick="prevQuestion()">⬅ 上一題</button>
@@ -84,7 +88,6 @@
             <h2>📊 測驗結果</h2>
             <h1 id="final-score" style="color:var(--primary); font-size:3rem; margin:20px 0;"></h1>
             <p id="result-msg"></p>
-            
             <div style="display:flex; gap:10px; justify-content:center;">
                 <button class="btn-primary" onclick="resetQuizSetup()">重新設定</button>
                 <button id="retry-mistakes-btn" class="btn-primary" style="background:#dc3545; display:none;" onclick="retryMistakes()">錯誤題重測</button>
@@ -93,5 +96,10 @@
     </main>
 
     <script src="app.js"></script>
+    
+    <style>
+        .btn-sm { padding: 5px 10px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer; font-size: 0.85rem; }
+        .btn-sm:hover { background: #eee; }
+    </style>
 </body>
 </html>
