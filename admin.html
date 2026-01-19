@@ -361,7 +361,8 @@
             document.getElementById('img-input').value = "";
         }
 
-        // --- 開啟新增模式 ---
+       
+       // --- 開啟新增模式 ---
         function startCreateNew() {
             const searchTerm = document.getElementById('admin-search').value;
             
@@ -370,10 +371,17 @@
             document.getElementById('edit-mode-badge').innerText = "新增一筆資料";
             document.getElementById('edit-mode-badge').className = "mode-badge mode-create";
 
-            // 清空欄位
+            // 1. 清空變數與一般輸入框
             currentHerbId = null; // 標記為新增
             document.querySelectorAll('input, textarea').forEach(el => el.value = "");
             document.getElementById('chinese_name').value = searchTerm; // 自動帶入剛剛搜的字
+
+            // 2. (新增) 重置化學成分區塊
+            // 先清空裡面舊有的格子，再呼叫一次 addChemRow() 產生一個空的
+            document.getElementById('chem-rows-wrapper').innerHTML = "";
+            addChemRow(); 
+
+            // 3. 重置圖片狀態
             document.getElementById('preview-img').style.display = "none";
             document.getElementById('img-status').innerText = "";
             newImageBase64 = null;
