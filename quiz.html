@@ -413,16 +413,102 @@ window.batchSelectByGrade = function() {
         };
 
         // --- 4. 測驗核心 ---
+       // ============================================
+        //  更新後的 JS 邏輯 (支援鞏固學習)
+        // ============================================
+
+        window.quizLogic = "standard"; // 全域變數：記錄目前的模式
+
         window.startQuiz = function() {
-            // 轉換 Set 為 Array
+            // 1. 收集名單
+            // 從 Set 轉換回陣列物件
             window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
 
-            if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
+            if (window.quizList.length === 0) {
+                alert("請至少選擇一味藥材！");
+                return;
+            }
 
+            // 2. 檢查題目/答案模式是否相同
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
-            if (qMode === aMode) return alert("題目跟答案不能一樣啦！");
+            if (qMode === aMode) {
+                alert("題目和答案不能一樣啦！");
+                return;
+            }
 
+            // 3. ★ 讀取測驗機制 (標準 vs 鞏固) ★
+            const logicRadios = document.querySelector('input[name="quizLogic"]:checked');
+            window.quizLogic = logicRadios ? logicRadios.value : "standard";
+
+            // 初始化狀態
+            window.currentIdx = 0;
+            window.score = 0;
+            window.quizList.sort(() => Math.random() - 0.5); // 隨機洗牌
+
+            // 切換介面
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('quiz-panel').style.display = 'block';
+            
+            // 更新總題數顯示
+            document.getElementById('q-total').innerText = window.quizList.length;
+
+            console.log(`🚀 測驗開始！模式：${window.quizLogic}，共 ${window.quizList.length} 題`);
+            window.nextQuestion();
+        };
+
+        // --- 檢查答案 (加入錯題重練邏輯) ---
+        window.checkAnswer = function(btn, isCorrect, btnLabel) {
+            // 鎖定按鈕
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            const herb = window.quizList[window.currentIdx];
+            const qMode = document.getElementById('mode-question').value;
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                window.score += 10;
+            } else {
+                btn.classList.add('wrong');
+                
+                // 錯題本儲存 (原本的功能)
+                window.saveDetailedMistake(herb, qMode, btnLabel);
+
+                // ★★★ 新增：鞏固學習邏輯 ★★★
+                if (window.quizLogic === "reinforce") {
+                    // 1. 複製目前這題的藥材物件
+                    const wrongHerb = herb; // 這裡可以直接引用，因為 quizList 存的是物件參考
+                    
+                    // 2. 計算插入位置 (目前位置 + 3)
+                    // 如果剩餘題目少於 3 題，就直接插在最後面
+                    let insertIndex = window.currentIdx + 3;
+                    if (insertIndex > window.quizList.length) {
+                        insertIndex = window.quizList.length;
+                    }
+
+                    // 3. 插隊！ (splice: 在 insertIndex 位置，刪除 0 個，插入 wrongHerb)
+                    window.quizList.splice(insertIndex, 0, wrongHerb);
+
+                    // 4. 更新介面上的總題數 (因為題目變多了)
+                    document.getElementById('q-total').innerText = window.quizList.length;
+                    
+                    // 5. (選用) 給一點提示
+                    // 可以在畫面上顯示一個小小的 Toast 提示 "已加入待複習列"
+                    console.log(`錯題：${herb.chinese_name} 已重新排入第 ${insertIndex} 順位`);
+                }
+            }
+
+            // 標示正確答案
+            allBtns.forEach(b => {
+                 // 這裡若要做精確標示，可再次呼叫 getFieldData 比對，或是簡單略過
+            });
+
+            setTimeout(() => {
+                window.currentIdx++;
+                window.nextQuestion();
+            }, 1200); // 稍微停久一點看結果
+        };
             // 初始化
             window.currentIdx = 0;
             window.score = 0;
