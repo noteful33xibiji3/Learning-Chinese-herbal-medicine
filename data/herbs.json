@@ -4,23 +4,22 @@
     "chinese_name": "麻黃",
     "latin_name": "Ephedrae Herba",
     "origin": "Ephedra sinica",
-    "family_ch": "麻黃科",          
-    "family_en": "Ephedraceae",    
-    "chemistry": [                 
-      { 
-        "name_en": "Ephedrine", 
-        "name_ch": "麻黃鹼", 
+    "family_ch": "麻黃科",
+    "family_en": "Ephedraceae",
+    "chemistry": [
+      {
+        "name_en": "Ephedrine",
+        "name_ch": "麻黃鹼",
         "image": ""
       },
-      { 
-        "name_en": "Pseudoephedrine", 
-        "name_ch": "偽麻黃鹼"'
+      {
+        "name_en": "Pseudoephedrine",
+        "name_ch": "偽麻黃鹼",
         "image": ""
       }
     ],
     "image": "",
     "effects": "發汗解表，宣肺平喘...",
-    "grade": "大一"
-  },
-
+    "grade": "大二"
+  }
 ]
