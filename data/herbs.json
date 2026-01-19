@@ -134,14 +134,21 @@
       }
     ],
     "confusing_drugs": [],
-    "latin_name": "",
-    "family_ch": "",
-    "family_en": "",
+    "latin_name": "Glycyrrhizae Radix",
+    "part": "乾燥根",
+    "family_ch": "豆科",
+    "family_en": "Fabaceae/ Leguminosae",
     "chem_main": "",
     "chem_sub": "",
-    "chemistry": [],
+    "chemistry": [
+      {
+        "name_en": "Glycyrrhizin",
+        "name_ch": "",
+        "image": ""
+      }
+    ],
     "effects": [],
-    "indications": "國老、乾燥根\nGlycyrrhizin 有增強Steroid hormone -月亮臉\n",
+    "indications": "國老、乾燥根\n 有增強Steroid hormone -月亮臉\n",
     "image": "",
     "isTrash": false
   }
