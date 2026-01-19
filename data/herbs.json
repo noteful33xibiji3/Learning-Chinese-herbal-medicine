@@ -49,7 +49,7 @@
     "grade": "大二",
     "image": "images/huang-bo.jpg",
     "wrong_effects": []
-  }
+  },
   {
     "id": 5,
     "chinese_name": "黃耆",
@@ -61,7 +61,7 @@
     "grade": "大二上",
     "image": "images/huang-qi.jpg",
     "wrong_effects": ["滋陰降火", "清熱涼血", "軟堅散結"]
-  }
+  },
   {
     "id": 6,
     "chinese_name": "三七",
@@ -391,7 +391,7 @@
     "grade": "大二",
     "image": "images/ma-bo.jpg",
     "wrong_effects": []
-  }
+  },
   {
     "id": 28,
     "chinese_name": "洋金花",
