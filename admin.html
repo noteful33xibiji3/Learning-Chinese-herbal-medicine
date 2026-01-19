@@ -285,24 +285,47 @@
 
         async function loadFromGitHub(isLoginCheck = false) {
             const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.path}`;
+            
             try {
-                const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-                if (!res.ok) throw new Error(res.status);
+                const res = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!res.ok) throw new Error("連線失敗 (HTTP " + res.status + ")");
+
                 const data = await res.json();
-                sha = data.sha;
-                const content = decodeURIComponent(escape(window.atob(data.content)));
-                allHerbs = JSON.parse(content);
+                sha = data.sha; 
+                
+                // 解碼內容
+                const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
+                
+                // ★★★ 防呆檢查開始 ★★★
+                try {
+                    allHerbs = JSON.parse(decodedContent);
+                } catch (jsonErr) {
+                    console.error("JSON 格式錯誤內容:", decodedContent); // 在 Console 印出錯誤內容方便除錯
+                    throw new Error(`檔案格式錯誤 (JSON Syntax Error)！\n請檢查 GitHub 上的 herbs.json 第 18 行附近。\n通常是少了一個逗號 ','`);
+                }
+                // ★★★ 防呆檢查結束 ★★★
 
                 if (isLoginCheck) {
                     localStorage.setItem('tcm_admin_config', JSON.stringify(config));
                     document.getElementById('login-overlay').style.display = 'none';
                 }
-                document.getElementById('status-text').innerText = `✅ 已連線: ${config.repo} (${allHerbs.length}筆)`;
+
+                document.getElementById('status-text').innerText = `✅ 已連線: ${config.repo}`;
                 renderTable();
+
             } catch (err) {
                 console.error(err);
-                if (isLoginCheck) document.getElementById('login-msg').innerText = "連線失敗";
-                else { alert("Token 可能過期"); logout(); }
+                if (isLoginCheck) {
+                    document.getElementById('login-msg').innerText = "失敗：" + err.message;
+                } else {
+                    alert("錯誤：" + err.message);
+                }
             }
         }
 
