@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自我測驗 | 本草學園</title>
+    <title>智能錯題本 | 本草學園</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* === 全域樣式 === */
-        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; margin: 0; }
-        
+        /* === 繼承 quiz.html 的質感風格 === */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            margin: 0; padding: 0;
+        }
+
         /* 導覽列 */
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: rgba(255,255,255,0.98); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 5%; background: rgba(255,255,255,0.98);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
+        }
         .nav-left { display: flex; align-items: center; gap: 10px; }
         .back-btn { font-size: 1.2rem; cursor: pointer; border: none; background: none; color: #666; }
         .logo { font-weight: 700; font-size: 1.5rem; color: #4A7C59; text-decoration: none; }
@@ -25,57 +34,72 @@
             .menu.show { display: flex; }
         }
 
-        /* === 玻璃擬態面板 === */
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); border: 1px solid rgba(255, 255, 255, 0.18); margin-bottom: 20px; max-width: 800px; margin: 20px auto; }
-        .section-title { font-size: 1.1rem; color: #2C5E4F; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #4A7C59; padding-left: 10px; }
+        /* 毛玻璃面板 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 20px;
+            max-width: 800px; margin: 30px auto;
+        }
 
-        /* === 1. 年級方塊 === */
-        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; }
-        .grade-check { cursor: pointer; }
-        .grade-check input { display: none; }
-        .grade-box { display: block; text-align: center; padding: 8px; border: 1px solid #ddd; border-radius: 8px; color: #666; background: white; transition: 0.2s; }
-        .grade-check input:checked ~ .grade-box { background: #e8f5e9; border-color: #4A7C59; color: #2C5E4F; font-weight: bold; box-shadow: 0 2px 5px rgba(74, 124, 89, 0.2); }
+        /* 錯題卡片 */
+        .mistake-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 6px solid #dc3545; /* 紅色代表錯誤 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .mistake-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
 
-        /* === 2. 藥材膠囊按鈕 === */
-        .herb-chip-container { display: flex; flex-wrap: wrap; gap: 8px; height: 250px; overflow-y: auto; align-content: flex-start; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; background: #fafafa; }
-        .herb-chip { cursor: pointer; user-select: none; display: inline-block; }
-        .herb-chip input { display: none; }
-        .chip-content { display: inline-block; padding: 8px 16px; border: 1px solid #ccc; border-radius: 50px; background: white; color: #666; font-size: 0.95rem; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .herb-chip:hover .chip-content { background: #f1f1f1; transform: translateY(-2px); }
-        .herb-chip input:checked + .chip-content { background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%); color: white; border-color: #2C5E4F; box-shadow: 0 4px 10px rgba(74, 124, 89, 0.4); transform: translateY(-1px); }
+        .m-info h3 { margin: 0 0 5px 0; color: #333; font-size: 1.2rem; }
+        .m-meta { font-size: 0.9rem; color: #666; margin-top: 5px; }
+        .m-tag { 
+            background: #ffebee; color: #c62828; padding: 3px 10px; 
+            border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-left: 5px;
+        }
+        
+        .wrong-ans { color: #dc3545; text-decoration: line-through; margin-right: 5px; font-weight:bold; }
+        
+        /* AI 按鈕 */
+        .ai-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 8px 18px;
+            border-radius: 50px; cursor: pointer; font-size: 0.9rem;
+            font-weight: bold; display: flex; align-items: center; gap: 5px;
+            box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3);
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .ai-btn:hover { transform: scale(1.05); box-shadow: 0 6px 15px rgba(118, 75, 162, 0.5); }
 
-        /* === 其他介面 === */
-        .mode-selector { display: flex; gap: 10px; align-items: center; justify-content: center; background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2; }
-        .mode-select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; }
-        
-        .custom-check { cursor: pointer; display: block; }
-        .custom-check input { display: none; }
-        .check-content { display: block; border: 2px solid #eee; border-radius: 10px; background: white; transition: 0.2s; text-align: center; }
-        .custom-check input:checked ~ .check-content { border-color: #4A7C59; background: #e8f5e9; color: #2C5E4F; }
-
-        .progress-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #4A7C59, #81c784); width: 0%; transition: width 0.3s; }
-        .question-text { font-size: 1.8rem; font-weight: bold; color: #333; margin: 15px 0; text-align: center; }
-        .question-img { max-height: 180px; max-width: 100%; display: block; margin: 10px auto; border-radius: 8px; }
-        
-        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 600px) { .option-grid { grid-template-columns: 1fr; } }
-        
-        .option-btn { background: white; border: 2px solid #eee; border-radius: 15px; padding: 15px; min-height: 60px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1.1rem; color: #444; transition: 0.2s; position: relative; }
-        .option-btn:hover { border-color: #4A7C59; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .option-btn img { max-height: 80px; object-fit: contain; margin-bottom: 5px; }
-        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
-        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; animation: shake 0.4s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        
-        .btn-primary { background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%); color: white; border: none; padding: 12px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 15px rgba(44, 94, 79, 0.3); transition: 0.3s; }
-        .btn-primary:hover { transform: scale(1.02); }
-        .btn-sm { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 15px; cursor: pointer; font-size: 0.85rem; transition:0.2s; }
+        /* 功能按鈕 */
+        .btn-sm { 
+            padding: 8px 15px; border: 1px solid #ddd; background: white; 
+            border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 500;
+            transition: 0.2s; color: #555;
+        }
         .btn-sm:hover { background: #eee; }
-        
-        /* 輔助顏色按鈕 */
-        .btn-secondary { background: #666; color: white; border:none; border-radius:50px; padding:12px; font-weight:bold; cursor:pointer; }
-        .btn-outline { background: white; border: 2px solid #4A7C59; color: #4A7C59; border-radius:50px; padding:12px; font-weight:bold; cursor:pointer; }
+        .btn-danger { color: #dc3545; border-color: #f8d7da; }
+        .btn-danger:hover { background: #f8d7da; }
+
+        /* 彈窗樣式 */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; animation: fadeIn 0.3s; }
+        .modal-content { 
+            background:white; width:90%; max-width:500px; margin:10vh auto; 
+            padding:30px; border-radius:20px; position:relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
     </style>
 </head>
 <body>
@@ -84,453 +108,192 @@
             <button class="back-btn" onclick="location.href='index.html'">❮</button>
             <a href="index.html" class="logo">🌿 本草學園</a>
         </div>
-        <div class="burger" onclick="window.toggleMenu()">☰</div>
+        <div class="burger" onclick="toggleMenu()">☰</div>
         <ul class="menu" id="nav-menu">
             <li><a href="index.html">中藥查詢</a></li>
             <li><a href="pharmacognosy.html">生藥分類</a></li>
-            <li><a href="quiz.html" class="active">自我測驗</a></li>
-            <li><a href="mistakes.html">錯題複習</a></li>
+            <li><a href="quiz.html">自我測驗</a></li>
+            <li><a href="mistakes.html" class="active">錯題複習</a></li>
         </ul>
     </nav>
 
     <main>
-        <div id="setup-panel" class="glass-panel">
-            <h2 style="text-align:center; color:#2C5E4F; margin-bottom:20px;">🛠️ 建立測驗</h2>
-            
-            <div style="margin-bottom:20px;">
-                <div class="section-title">1. 快速選擇範圍</div>
-                <div class="checkbox-grid">
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大一" onchange="window.batchSelectByGrade()"><span class="grade-box">大一</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二" onchange="window.batchSelectByGrade()"><span class="grade-box">大二</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二上" onchange="window.batchSelectByGrade()"><span class="grade-box">大二上</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大二下" onchange="window.batchSelectByGrade()"><span class="grade-box">大二下</span></label>
-                    <label class="grade-check"><input type="checkbox" name="grade" value="大三" onchange="window.batchSelectByGrade()"><span class="grade-box">大三</span></label>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <div class="section-title">2. 微調藥材清單</div>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="filter-search" placeholder="輸入關鍵字搜尋..." onkeyup="window.renderHerbList()" 
-                           style="flex:1; padding:10px 15px; border:1px solid #ddd; border-radius:20px; outline:none;">
-                    <button class="btn-sm" onclick="window.toggleSelectAll(true)">全選</button>
-                    <button class="btn-sm" onclick="window.toggleSelectAll(false)">清空</button>
-                </div>
-                
-                <div id="herb-chip-container" class="herb-chip-container">
-                    <p style="color:#999; width:100%; text-align:center;">載入中...</p>
-                </div>
-                <div style="text-align:right; font-size:0.9rem; color:#4A7C59; margin-top:5px; font-weight:bold;" id="selected-count">已選: 0</div>
-            </div>
-
-            <div class="control-group" style="margin-bottom:20px;">
-                <div class="section-title">3. 自由配對模式</div>
-                <div class="mode-selector">
-                    <div style="text-align:center;">
-                        <small>題目顯示 (Q)</small><br>
-                        <select id="mode-question" class="mode-select">
-                            <option value="chinese_name">中藥名</option>
-                            <option value="latin_name">生藥名</option> 
-                            <option value="family">科名</option>     
-                            <option value="origin">基原(學名)</option>
-                            <option value="chemistry" selected>成分/圖片</option>
-                            <option value="image">中藥外觀圖</option>
-                            <option value="effects">功效</option>
-                        </select>
-                    </div>
-                    <div style="font-size:1.5rem; color:#f57c00;">➡</div>
-                    <div style="text-align:center;">
-                        <small>選項答案 (A)</small><br>
-                        <select id="mode-answer" class="mode-select">
-                            <option value="chinese_name" selected>中藥名</option>
-                            <option value="latin_name">生藥名</option>
-                            <option value="family">科名</option>
-                            <option value="origin">基原</option>
-                            <option value="chemistry">成分/結構圖</option> 
-                            <option value="effects">功效</option>         
-                            <option value="image">中藥外觀圖</option>     
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="section-title">4. 選擇測驗機制</div>
-                <div style="display:flex; gap:15px; justify-content:center;">
-                    <label class="custom-check" style="flex:1;">
-                        <input type="radio" name="quizLogic" value="standard" checked>
-                        <span class="check-content" style="padding:15px;">
-                            <strong>🏁 標準模式</strong><br>
-                            <small style="color:#888;">考完即結束</small>
-                        </span>
-                    </label>
-                    <label class="custom-check" style="flex:1;">
-                        <input type="radio" name="quizLogic" value="reinforce">
-                        <span class="check-content" style="padding:15px;">
-                            <strong>💪 鞏固學習</strong><br>
-                            <small style="color:#888;">錯題會再出現</small>
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <button class="btn-primary" onclick="window.startQuiz()">🚀 開始測驗</button>
-        </div>
-
-        <div id="quiz-panel" class="glass-panel" style="display: none;">
-            <div style="display:flex; justify-content:space-between; color:#666; font-weight:bold; font-size:0.9rem; margin-bottom:10px;">
-                <span>進度 <span id="q-current">1</span> / <span id="q-total">10</span></span>
-                <span style="color:#4A7C59;">得分: <span id="q-score">0</span></span>
-            </div>
-            
-            <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
-            <div id="quiz-content"></div>
-
-            <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
-                <button id="btn-prev" class="btn-sm" onclick="window.prevQuestion()" style="padding: 10px 20px; font-size: 1rem; border-radius: 50px;">⬅ 上一題</button>
-                
+        
+        <div class="glass-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <h2 style="color:#2C5E4F; margin:0;">❌ 我的弱點分析</h2>
                 <div style="display:flex; gap:10px;">
-                    <button id="btn-next" class="btn-primary" onclick="window.nextQuestion(true)" style="display:none; width:auto; padding: 10px 30px; margin-top:0;">下一題 ➡</button>
-                    <button id="btn-finish" class="btn-primary" onclick="window.endQuiz()" style="display:none; width:auto; padding: 10px 30px; margin-top:0; background:#333;">🏁 結束測驗</button>
+                    <button class="btn-sm" onclick="exportMistakes()">📥 備份</button>
+                    <button class="btn-sm" onclick="importMistakes()">📤 匯入</button>
+                    <button class="btn-sm btn-danger" onclick="clearMistakes()">🗑️ 清空</button>
+                    <input type="file" id="fileInput" style="display:none" onchange="handleFileLoad(this)">
                 </div>
             </div>
+
+            <div id="mistakes-list">
+                </div>
         </div>
 
-        <div id="result-panel" class="glass-panel" style="display: none; text-align:center;">
-            <h2 style="color:#333;">📊 測驗結果</h2>
-            <h1 id="final-score" style="font-size:4rem; color:#4A7C59; margin:20px 0;">100</h1>
-            <p id="result-msg" style="color:#666; font-size:1.1rem;">恭喜完成！</p>
-            
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:30px;">
-                <button class="btn-primary" onclick="window.restartQuiz()" style="margin-top:0;">🔄 再測一次 (同設定)</button>
-                <button class="btn-outline" onclick="window.backToSetup()" style="margin-top:0;">⚙️ 回到測驗設定</button>
-                <button class="btn-secondary" onclick="location.href='mistakes.html'" style="margin-top:0;">📂 查看錯題本</button>
-            </div>
-        </div>
     </main>
 
+    <div id="ai-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" style="position:absolute; right:20px; top:20px; cursor:pointer; font-size:1.5rem; color:#999;">&times;</span>
+            <h3 style="color:#764ba2; margin-top:0;">🤖 AI 助教分析</h3>
+            <p style="color:#666; font-size:0.95rem;">
+                請點擊下方按鈕複製指令，貼給 ChatGPT 或 Gemini，讓 AI 幫你找出記憶盲點：
+            </p>
+            <textarea id="ai-prompt-box" style="width:100%; height:120px; padding:15px; border-radius:12px; border:2px solid #eee; font-family:inherit; resize:none; margin-bottom:15px;"></textarea>
+            <div style="text-align:right;">
+                <button class="ai-btn" onclick="copyPrompt()" style="display:inline-flex; width:auto;">📋 複製指令</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ============================================
-        //  全域變數設定
-        // ============================================
-        window.allHerbs = [];   
-        window.quizList = [];   
-        window.currentIdx = 0;
-        window.score = 0;
-        window.selectedHerbIds = new Set(); 
-        window.quizLogic = "standard";
-
-        // ============================================
-        //  1. 初始化與資料載入
-        // ============================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch('data/herbs.json');
-                if (!res.ok) throw new Error("HTTP error " + res.status);
-                window.allHerbs = await res.json();
-                console.log(`✅ 資料庫載入成功，共 ${window.allHerbs.length} 筆`);
-                window.renderHerbList();
-                
-                // 防止題目答案選一樣
-                const qSelect = document.getElementById('mode-question');
-                const aSelect = document.getElementById('mode-answer');
-                function updateAnswerOptions() {
-                    const qVal = qSelect.value;
-                    Array.from(aSelect.options).forEach(opt => {
-                        opt.disabled = (opt.value === qVal);
-                        if (opt.value === qVal && aSelect.value === qVal) {
-                            const next = Array.from(aSelect.options).find(o => o.value !== qVal);
-                            if (next) aSelect.value = next.value;
-                        }
-                    });
-                }
-                qSelect.addEventListener('change', updateAnswerOptions);
-                updateAnswerOptions();
-
-            } catch (err) {
-                console.error(err);
-                const container = document.getElementById('herb-chip-container');
-                if(container) container.innerHTML = `<p style="color:red; text-align:center;">❌ 資料載入失敗</p>`;
-            }
-        });
-
         // 漢堡選單
-        window.toggleMenu = function() {
+        function toggleMenu() {
             document.getElementById('nav-menu').classList.toggle('show');
         }
 
-        // ============================================
-        //  2. 列表渲染 (Chip 膠囊)
-        // ============================================
-        window.renderHerbList = function() {
-            const container = document.getElementById('herb-chip-container');
-            const searchInput = document.getElementById('filter-search');
-            if(!container) return;
-
-            const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+        // --- 1. 讀取並顯示錯題 (核心修復：確保讀取 tcm_mistakes_v2) ---
+        function loadMistakes() {
+            // ★ 這裡一定要跟 quiz.html 存的 key 一模一樣！
+            const list = JSON.parse(localStorage.getItem('tcm_mistakes_v2') || "[]");
+            const container = document.getElementById('mistakes-list');
             container.innerHTML = "";
-            const filtered = window.allHerbs.filter(h => !term || h.chinese_name.includes(term));
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `<div style="width:100%; text-align:center; color:#999; padding:10px;">找不到符合的藥材</div>`;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px; color:#888;">
+                        <div style="font-size:3rem; margin-bottom:10px;">🎉</div>
+                        <h3>目前沒有錯題紀錄</h3>
+                        <p>快去 <a href="quiz.html" style="color:#4A7C59; font-weight:bold;">自我測驗</a> 累積實力吧！</p>
+                    </div>`;
                 return;
             }
 
-            filtered.forEach(herb => {
-                const label = document.createElement('label');
-                label.className = 'herb-chip';
-                const isChecked = window.selectedHerbIds.has(herb.id) ? 'checked' : '';
-                label.innerHTML = `
-                    <input type="checkbox" value="${herb.id}" onchange="window.handleChipChange(this)" ${isChecked}>
-                    <span class="chip-content">${herb.chinese_name}</span>
+            // 依照時間倒序排列 (最新的錯誤在上面)
+            list.sort((a, b) => b.timestamp - a.timestamp);
+
+            const modeMap = {
+                'origin': '基原', 'chemistry': '成分', 'effects': '功效', 
+                'family': '科名', 'latin_name': '生藥名', 'image': '外觀辨識',
+                'chinese_name': '中藥名'
+            };
+
+            list.forEach(item => {
+                const dateStr = new Date(item.timestamp).toLocaleDateString();
+                const modeName = modeMap[item.mode] || item.mode;
+                
+                // 處理錯題顯示 (如果是圖片網址，顯示為[圖片])
+                let wrongDisplay = item.wrong_choise;
+                if (wrongDisplay && (wrongDisplay.includes('http') || wrongDisplay.includes('images/'))) {
+                    wrongDisplay = "[圖片選項]";
+                }
+                
+                const div = document.createElement('div');
+                div.className = 'mistake-card';
+                div.innerHTML = `
+                    <div class="m-info">
+                        <h3>${item.name} <span class="m-tag">${modeName}</span></h3>
+                        <div class="m-meta">
+                            <span>累積錯誤: <b style="color:#dc3545">${item.count}</b> 次</span>
+                            <span style="margin:0 10px; color:#ddd;">|</span>
+                            <span>${dateStr}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:#555; margin-top:8px;">
+                            誤選為: <span class="wrong-ans">${wrongDisplay || '未知'}</span>
+                        </div>
+                    </div>
+                    <button class="ai-btn" onclick="analyzeError('${item.name}', '${modeName}', '${wrongDisplay}')">
+                        ✨ 分析
+                    </button>
                 `;
-                container.appendChild(label);
+                container.appendChild(div);
             });
-            window.updateCount();
-        };
+        }
 
-        window.handleChipChange = function(checkbox) {
-            const id = parseInt(checkbox.value);
-            if (checkbox.checked) window.selectedHerbIds.add(id);
-            else window.selectedHerbIds.delete(id);
-            window.updateCount();
-        };
-
-        window.updateCount = function() {
-            document.getElementById('selected-count').innerText = `已選: ${window.selectedHerbIds.size}`;
-        };
-
-        // ============================================
-        //  3. 批次選取
-        // ============================================
-        window.batchSelectByGrade = function() {
-            const checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(cb => cb.value);
-            const uncheckedGrades = Array.from(document.querySelectorAll('input[name="grade"]:not(:checked)')).map(cb => cb.value);
-
-            window.allHerbs.forEach(herb => {
-                if (checkedGrades.includes(herb.grade)) window.selectedHerbIds.add(herb.id);
-                else if (uncheckedGrades.includes(herb.grade)) window.selectedHerbIds.delete(herb.id);
-            });
-            window.renderHerbList();
-        };
-
-        window.toggleSelectAll = function(shouldSelectAll) {
-            const visibleInputs = document.querySelectorAll('#herb-chip-container input');
-            visibleInputs.forEach(input => {
-                input.checked = shouldSelectAll;
-                const id = parseInt(input.value);
-                if (shouldSelectAll) window.selectedHerbIds.add(id);
-                else window.selectedHerbIds.delete(id);
-            });
-            window.updateCount();
-        };
-
-        // ============================================
-        //  4. 測驗核心 (整合版)
-        // ============================================
-        window.startQuiz = function() {
-            window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
-            if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
-
-            const qMode = document.getElementById('mode-question').value;
-            const aMode = document.getElementById('mode-answer').value;
-            if (qMode === aMode) return alert("題目和答案不能選一樣的！");
-
-            const logicRadios = document.querySelector('input[name="quizLogic"]:checked');
-            window.quizLogic = logicRadios ? logicRadios.value : "standard";
-
-            window.currentIdx = 0;
-            window.score = 0;
-            window.quizList.sort(() => Math.random() - 0.5);
-
-            document.getElementById('setup-panel').style.display = 'none';
-            document.getElementById('quiz-panel').style.display = 'block';
-            document.getElementById('result-panel').style.display = 'none'; // 確保結果頁隱藏
-            document.getElementById('q-total').innerText = window.quizList.length;
-
-            window.nextQuestion();
-        };
-
-        window.nextQuestion = function(isManualNext = false) {
-            if (isManualNext) window.currentIdx++;
-            if (window.currentIdx >= window.quizList.length) return window.endQuiz();
-
-            // 重置按鈕狀態
-            document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-finish').style.display = 'none'; // 先隱藏結束按鈕
-            document.getElementById('btn-prev').style.visibility = (window.currentIdx === 0) ? 'hidden' : 'visible';
-
-            const herb = window.quizList[window.currentIdx];
-            const qMode = document.getElementById('mode-question').value;
-            const aMode = document.getElementById('mode-answer').value;
-
-            document.getElementById('q-current').innerText = window.currentIdx + 1;
-            document.getElementById('q-score').innerText = window.score;
-            document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
-
-            // --- 產生題目 ---
-            let qHtml = "";
-            let qRaw = window.getFieldData(herb, qMode);
-            let qShow = "";
-            if (Array.isArray(qRaw)) {
-                const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
-                if (typeof rnd === 'object' && rnd.image) { qShow = rnd.name; qHtml = `<img src="${rnd.image}" class="question-img">`; } 
-                else { qShow = rnd; }
-            } else { qShow = qRaw; }
-
-            if (qMode === 'image') qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
-            else if (!qHtml) qHtml = `<div class="question-text">${qShow}</div>`;
-
-            const modeMap = {'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'};
-            const content = `
-                <div style="text-align:center;">
-                    <span style="background:#2C5E4F; color:white; padding:3px 10px; border-radius:20px; font-size:0.8rem;">題目：${modeMap[qMode]}</span>
-                    ${qHtml}
-                    <p style="color:#666; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></p>
-                </div>`;
-
-            // --- 產生選項 (防撞) ---
-            function parseOptionData(data, mode) {
-                let label = ""; let image = null;
-                if (Array.isArray(data)) {
-                    let rnd = data[Math.floor(Math.random() * data.length)];
-                    if (typeof rnd === 'object') { label = rnd.name; image = rnd.image; }
-                    else label = rnd;
-                } else { label = data; }
-                if (mode === 'image') { image = label; label = ""; }
-                return { label, image };
-            }
-
-            let correctRaw = window.getFieldData(herb, aMode);
-            let correctObj = parseOptionData(correctRaw, aMode);
-            let options = [{ ...correctObj, isCorrect: true }];
-
-            let attempts = 0;
-            while(options.length < 4 && attempts < 200) {
-                attempts++;
-                const rndHerb = window.allHerbs[Math.floor(Math.random() * window.allHerbs.length)];
-                if (rndHerb.id === herb.id) continue;
-                
-                let wrongRaw = window.getFieldData(rndHerb, aMode);
-                let wrongObj = parseOptionData(wrongRaw, aMode);
-                if (!wrongObj.label && !wrongObj.image) wrongObj.label = "無資料";
-
-                let isCollision = false;
-                const correctPool = Array.isArray(correctRaw) ? correctRaw.map(d => (typeof d === 'object' ? d.name : d)) : [correctRaw];
-                if (correctPool.includes(wrongObj.label)) isCollision = true;
-
-                if (!isCollision && !options.some(o => o.label === wrongObj.label)) {
-                    options.push({ ...wrongObj, isCorrect: false, herbName: rndHerb.chinese_name });
-                }
-            }
-            options.sort(() => Math.random() - 0.5);
-
-            let btnsHtml = "";
-            options.forEach(opt => {
-                let inner = opt.image ? `<img src="${opt.image}" style="max-height:100px; object-fit:contain; margin-bottom:5px;">` : "";
-                if(opt.label) inner += `<span>${opt.label.replace(/'/g, "&#39;")}</span>`;
-                // 確保傳入錯題本的是純文字
-                const safeRec = (opt.label || "圖片選項").replace(/'/g, "\\'");
-                
-                btnsHtml += `<button class="option-btn" data-is-correct="${opt.isCorrect}" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeRec}')">${inner}</button>`;
-            });
-
-            document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
-        };
-
-        window.prevQuestion = function() {
-            if (window.currentIdx > 0) { window.currentIdx--; window.nextQuestion(false); }
-        };
-
-        window.checkAnswer = function(btn, isCorrect, btnLabel) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.disabled = true);
-            const herb = window.quizList[window.currentIdx];
-
-            if (isCorrect) {
-                btn.classList.add('correct');
-                window.score += 10;
-            } else {
-                btn.classList.add('wrong');
-                const correctBtn = document.querySelector('.option-btn[data-is-correct="true"]');
-                if (correctBtn) correctBtn.classList.add('correct');
-
-                // 錯題本儲存
-                window.saveDetailedMistake(herb, document.getElementById('mode-question').value, btnLabel);
-
-                if (window.quizLogic === "reinforce") {
-                    let pos = window.currentIdx + 3;
-                    if (pos > window.quizList.length) pos = window.quizList.length;
-                    window.quizList.splice(pos, 0, herb);
-                    document.getElementById('q-total').innerText = window.quizList.length;
-                }
-            }
-            document.getElementById('q-score').innerText = window.score;
+        // --- 2. AI 分析功能 ---
+        function analyzeError(herbName, mode, wrongChoice) {
+            const modal = document.getElementById('ai-modal');
+            const promptBox = document.getElementById('ai-prompt-box');
+            modal.style.display = 'block';
             
-            // ★ 判斷是否為最後一題 ★
-            if (window.currentIdx === window.quizList.length - 1) {
-                document.getElementById('btn-finish').style.display = 'block'; // 顯示結束
-            } else {
-                document.getElementById('btn-next').style.display = 'block'; // 顯示下一題
-            }
-        };
+            const prompt = `我是一名藥學系學生。我在複習中藥「${herbName}」的「${mode}」時，不小心誤選了「${wrongChoice}」。
+請幫我分析：
+1. 為什麼我會搞混？(兩者有什麼相似處)
+2. 請提供一個簡單好記的口訣或辨識關鍵。
+3. 如果是多基原，請列出該藥材正確的基原列表。`;
 
-        window.endQuiz = function() {
-            document.getElementById('quiz-panel').style.display = 'none';
-            document.getElementById('result-panel').style.display = 'block';
-            document.getElementById('final-score').innerText = window.score;
-            let msg = "繼續加油！";
-            if (window.score >= window.quizList.length * 10 * 0.8) msg = "太神啦！🎉";
-            document.getElementById('result-msg').innerText = msg;
-        };
+            promptBox.value = prompt;
+        }
 
-        // --- 重測與返回設定 (新功能) ---
-        window.restartQuiz = function() {
-            window.currentIdx = 0;
-            window.score = 0;
-            window.quizList.sort(() => Math.random() - 0.5); // 重新洗牌
+        function copyPrompt() {
+            const promptBox = document.getElementById('ai-prompt-box');
+            promptBox.select();
+            document.execCommand("copy"); // 相容性較好的複製方法
+            alert("指令已複製！請貼給 AI 助教。");
+        }
+
+        function closeModal() {
+            document.getElementById('ai-modal').style.display = 'none';
+        }
+
+        // --- 3. 備份與還原 ---
+        function exportMistakes() {
+            const data = localStorage.getItem('tcm_mistakes_v2');
+            if (!data || data === "[]") return alert("目前沒有錯題可備份！");
             
-            document.getElementById('result-panel').style.display = 'none';
-            document.getElementById('quiz-panel').style.display = 'block';
-            document.getElementById('q-total').innerText = window.quizList.length;
-            window.nextQuestion();
-        };
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `本草錯題本_備份_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
 
-        window.backToSetup = function() {
-            document.getElementById('result-panel').style.display = 'none';
-            document.getElementById('setup-panel').style.display = 'block';
-        };
+        function importMistakes() {
+            document.getElementById('fileInput').click();
+        }
 
-        // --- 輔助與錯題 ---
-        window.getFieldData = function(herb, mode) {
-            if (mode === 'image') return herb.image;
-            return herb[mode] || "無資料";
-        };
-
-        window.saveDetailedMistake = function(herb, mode, wrongText) {
-            try {
-                let mistakes = JSON.parse(localStorage.getItem('tcm_mistakes_v2') || "[]");
-                const existing = mistakes.find(m => m.herb_id === herb.id && m.mode === mode);
-                
-                // 防呆：確保文字是字串
-                const safeWrongText = (typeof wrongText === 'string') ? wrongText : '未知圖片';
-
-                if (existing) {
-                    existing.count += 1;
-                    existing.last_time = Date.now();
-                    existing.last_wrong = safeWrongText;
-                } else {
-                    mistakes.push({
-                        id: Date.now(), herb_id: herb.id, name: herb.chinese_name,
-                        mode: mode, wrong_choise: safeWrongText, timestamp: Date.now(), count: 1
-                    });
+        function handleFileLoad(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(confirm(`確定要匯入 ${data.length} 筆錯題紀錄嗎？(這會覆蓋目前的紀錄)`)) {
+                        localStorage.setItem('tcm_mistakes_v2', JSON.stringify(data));
+                        loadMistakes();
+                        alert("匯入成功！");
+                    }
+                } catch (err) {
+                    alert("檔案格式錯誤，請選擇正確的備份檔 (.json)");
                 }
-                localStorage.setItem('tcm_mistakes_v2', JSON.stringify(mistakes));
-                console.log("📝 錯題已記錄:", herb.chinese_name);
-            } catch(e) {
-                console.error("錯題儲存失敗", e);
+            };
+            reader.readAsText(file);
+            input.value = ""; // 重置 input 以便重複選同檔案
+        }
+
+        function clearMistakes() {
+            if(confirm("⚠️ 確定要清空所有錯題紀錄嗎？無法復原喔！")) {
+                localStorage.removeItem('tcm_mistakes_v2');
+                loadMistakes();
             }
-        };
+        }
+
+        // 啟動
+        loadMistakes();
+        
+        // 點擊背景關閉 Modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('ai-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>
