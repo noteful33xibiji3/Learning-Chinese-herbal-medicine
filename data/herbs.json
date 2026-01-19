@@ -180,5 +180,28 @@
     "indications": "根如連珠而色黃",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 6,
+    "grade": "大二上",
+    "chinese_name": "川芎",
+    "origin": [
+      {
+        "lat": "Ligusticum chuanxiong",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Chuanxiong Rhizoma",
+    "part": "",
+    "family_ch": "繖形科",
+    "family_en": "Apiaceae/Umbelliferae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "沒有saponin!!!",
+    "image": "",
+    "isTrash": false
   }
 ]
