@@ -417,16 +417,33 @@
         // --- 動態列表 Helper Functions ---
         
         // 1. 基原
-        function addOriginRow(val = "") {
-            const wrapper = document.getElementById('origin-rows-wrapper');
-            const div = document.createElement('div');
-            div.className = 'dynamic-row';
-            div.innerHTML = `
-                <input type="text" class="origin-input" value="${val}" placeholder="輸入基原學名">
-                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-            `;
-            wrapper.appendChild(div);
+       // === 修改處 1：產生基原輸入框 (分中英文) ===
+function addOriginRow(data = null) {
+    const wrapper = document.getElementById('origin-rows-wrapper');
+    const div = document.createElement('div');
+    div.className = 'dynamic-row origin-row'; // 多加一個 origin-row class 方便抓取
+
+    let valLat = "";
+    let valCh = "";
+
+    // 判斷資料格式 (相容舊字串格式與新物件格式)
+    if (data) {
+        if (typeof data === 'string') {
+            valLat = data; // 舊資料只有一行，暫時填入學名欄
+        } else {
+            valLat = data.lat || "";
+            valCh = data.ch || "";
         }
+    }
+      div.innerHTML = `
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; flex:1;">
+            <input type="text" class="origin-lat" value="${valLat}" placeholder="學名 (Ephedra sinica)" style="margin:0;">
+            <input type="text" class="origin-ch" value="${valCh}" placeholder="中文 (草麻黃)" style="margin:0;">
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+    `;
+    wrapper.appendChild(div);
+}
 
         // 2. 易混淆 (邏輯一樣，只是容器不同)
         function addConfusingRow(val = "") {
@@ -553,7 +570,8 @@
             }
 
             // 3. 收集動態列表資料 (基原 & 易混淆)
-            const originData = Array.from(document.querySelectorAll('.origin-input')).map(i => i.value.trim()).filter(v => v);
+           // 確保 openEditModal 裡面是這樣寫的 (這段不用替換，檢查一下就好)
+             if(Array.isArray(h.origin)) {  h.origin.forEach(o => addOriginRow(o));} else if(h.origin) {addOriginRow(h.origin);} else { addOriginRow();};
             const confusingData = Array.from(document.querySelectorAll('.confusing-input')).map(i => i.value.trim()).filter(v => v);
 
             // 4. 整理物件
