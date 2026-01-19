@@ -169,6 +169,7 @@
     });
 
     // --- 核心：根據類別過濾 (支援新結構) ---
+   // --- 核心：根據類別過濾 (已加入藥用部位搜尋) ---
     function getFilteredMatches(val) {
         if (!val) return [];
         const searchType = typeSelect.value;
@@ -177,28 +178,26 @@
         return db.filter(item => {
             const cName = (item.chinese_name || "").toLowerCase();
             const lName = (item.latin_name || "").toLowerCase(); 
-            const part = (item.part || "").toLowerCase(); // ★ 新增這行
-            // 科名 (支援分開或合併)
+            
+            // ★ 新增：取得藥用部位 (如果沒有就變空字串)
+            const part = (item.part || "").toLowerCase();
+
             const fCh = (item.family_ch || item.family || "").toLowerCase();
             const fEn = (item.family_en || "").toLowerCase();
             const fMix = fCh + " " + fEn;
             
-            // 處理 Origin (新舊相容)
             let originText = "";
             if(Array.isArray(item.origin)) {
-                // 如果是新版物件陣列 [{lat, ch}, ...]
                 originText = item.origin.map(o => (typeof o==='object') ? (o.lat+" "+o.ch) : o).join(" ").toLowerCase();
             } else {
                 originText = (item.origin || "").toLowerCase();
             }
 
-            // 處理 Chemistry (新舊相容)
             let chemText = "";
             if(Array.isArray(item.chemistry)) {
-                // 新版物件陣列 [{name_en, name_ch}, ...]
                 chemText = item.chemistry.map(c => {
                     if(typeof c === 'object') return (c.name_en||"") + " " + (c.name_ch||"") + " " + (c.name||"");
-                    return c; // 舊版純字串
+                    return c;
                 }).join(" ").toLowerCase();
             } else {
                 chemText = (item.chemistry || "").toLowerCase();
@@ -209,15 +208,17 @@
             switch (searchType) {
                 case 'name': return cName.includes(term);
                 case 'latin': return lName.includes(term);
-                case 'part': return part.includes(term); 
                 case 'family': return fMix.includes(term);
                 case 'origin': return originText.includes(term); 
                 case 'chemistry': return chemText.includes(term);
                 case 'effects': return effects.includes(term);
+                
+                // ★ 修改這裡：在 'all' (全部) 的時候加入 part (藥用部位)
                 case 'all': default:
                     return cName.includes(term) || lName.includes(term) || 
                            fMix.includes(term) || originText.includes(term) || 
-                           chemText.includes(term) || effects.includes(term);
+                           chemText.includes(term) || effects.includes(term) ||
+                           part.includes(term); // <--- 關鍵就是加了這行！
             }
         });
     }
