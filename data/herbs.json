@@ -3,13 +3,27 @@
     "id": 1,
     "chinese_name": "麻黃",
     "latin_name": "Ephedrae Herba",
-    "family": "麻黃科",
-    "used_part": "草質莖",
-    "effects": ["發汗解表", "宣肺平喘", "利水消腫"],
-    "indications": "風寒感冒，胸悶喘咳，風水浮腫",
-    "grade": "大二上",
-    "image": "images/ma-huang.jpg",
-    "wrong_effects": ["補氣固表", "清熱解毒", "涼血止血"]
+    "origin": "Ephedra sinica",
+
+    "family_ch": "麻黃科",          /* ✅ 這裡要改 */
+    "family_en": "Ephedraceae",    /* ✅ 這裡要改 */
+
+    "chemistry": [                 /* ✅ 這裡變陣列 */
+      { 
+        "name_en": "Ephedrine", 
+        "name_ch": "麻黃鹼", 
+        "image": "images/struc_ephedrine.png" 
+      },
+      { 
+        "name_en": "Pseudoephedrine", 
+        "name_ch": "偽麻黃鹼" 
+        /* 沒有圖片可以不寫 image */
+      }
+    ],
+
+    "image": "images/mahuang.jpg",
+    "effects": "發汗解表，宣肺平喘...",
+    "grade": "大一"
   },
   {
     "id": 2,
