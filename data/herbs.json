@@ -111,26 +111,5 @@
     "effects": [],
     "indications": "茺蔚-果實",
     "image": ""
-  },
-  {
-    "id": 1768843362780,
-    "grade": "大二上",
-    "chinese_name": "益母草",
-    "origin": [
-      {
-        "lat": "Leonurus heterophuus",
-        "ch": ""
-      }
-    ],
-    "confusing_drugs": [],
-    "latin_name": "Leonuri Herba",
-    "family_ch": "脣形科",
-    "family_en": "Lamiaceae/Labiatae",
-    "chem_main": "",
-    "chem_sub": "",
-    "chemistry": [],
-    "effects": [],
-    "indications": "茺蔚-果實",
-    "image": ""
   }
 ]
