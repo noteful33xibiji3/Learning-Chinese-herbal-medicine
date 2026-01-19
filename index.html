@@ -7,20 +7,66 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* 智慧搜尋專屬 CSS */
-        .search-container { position: relative; width: 100%; max-width: 600px; margin: 30px auto; }
-        .search-box { 
-            width: 100%; padding: 15px 20px; font-size: 1.2rem; 
-            border: 2px solid #ddd; border-radius: 30px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); outline: none; transition: 0.3s;
+        /* --- 智慧搜尋專屬 CSS (升級版) --- */
+        .search-container { position: relative; width: 100%; max-width: 700px; margin: 30px auto; }
+        
+        /* 搜尋框組合包 (包含下拉選單 + 輸入框 + 按鈕) */
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            background: white;
+            padding: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: 0.3s;
         }
-        .search-box:focus { border-color: #2c5e40; }
+        .search-wrapper:focus-within { border-color: #2c5e40; }
 
+        /* 下拉選單樣式 */
+        .search-select {
+            border: none;
+            background: transparent;
+            padding: 10px 15px;
+            font-size: 1rem;
+            color: #555;
+            font-weight: bold;
+            cursor: pointer;
+            border-right: 1px solid #eee; /* 分隔線 */
+            outline: none;
+            border-radius: 30px 0 0 30px;
+        }
+        .search-select:hover { background-color: #f9f9f9; }
+
+        /* 輸入框樣式 */
+        .search-box { 
+            flex: 1; /* 佔滿剩餘空間 */
+            border: none;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            outline: none;
+            border-radius: 0;
+        }
+
+        /* 搜尋按鈕樣式 */
+        .search-btn {
+            background: #2c5e40;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .search-btn:hover { background: #1e422d; }
+
+        /* 建議清單 */
         .suggestions-list {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border: 1px solid #ddd; border-radius: 0 0 15px 15px;
+            position: absolute; top: 110%; left: 15px; right: 15px;
+            background: white; border: 1px solid #ddd; border-radius: 12px;
             z-index: 999; max-height: 300px; overflow-y: auto;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: none;
         }
         .suggestion-item {
             padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #eee;
@@ -30,6 +76,7 @@
         .s-main { font-weight: bold; color: #333; }
         .s-sub { font-size: 0.85rem; color: #888; }
 
+        /* 結果卡片 */
         .result-card { 
             background: white; padding: 25px; border-radius: 12px; 
             margin-bottom: 15px; border-left: 6px solid #2c5e40; 
@@ -40,9 +87,8 @@
         .r-name { font-size: 1.5rem; font-weight: bold; color: #2c5e40; }
         .r-family { color: #666; font-style: italic; }
         .r-detail-row { margin-bottom: 8px; font-size: 1.05rem; }
-        .label { font-weight: bold; color: #555; width: 80px; display: inline-block; }
+        .label { font-weight: bold; color: #555; width: 90px; display: inline-block; }
         
-        /* 圖片樣式 */
         .r-img-container { width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 15px; }
         .r-img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -68,8 +114,22 @@
         <h1>🔍 藥材資料庫</h1>
         
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-box" 
-                   placeholder="輸入藥名、科名、基原或成分..." autocomplete="off">
+            <div class="search-wrapper">
+                <select id="searchType" class="search-select">
+                    <option value="all">全部</option>
+                    <option value="name">中藥名</option>
+                    <option value="family">科名</option>
+                    <option value="origin">基原(學名)</option>
+                    <option value="chemistry">成分</option>
+                    <option value="effects">功效</option>
+                </select>
+                
+                <input type="text" id="searchInput" class="search-box" 
+                       placeholder="輸入關鍵字..." autocomplete="off">
+                
+                <button class="search-btn" onclick="performSearch()">搜尋</button>
+            </div>
+            
             <div id="suggestions" class="suggestions-list"></div>
         </div>
 
@@ -79,29 +139,67 @@
     <script src="app.js"></script>
 
     <script>
-        // 1. 定義變數
         let db = []; 
         const input = document.getElementById('searchInput');
+        const typeSelect = document.getElementById('searchType'); // 取得下拉選單
         const suggestionsBox = document.getElementById('suggestions');
         const resultsArea = document.getElementById('results-area');
 
-        // 2. 網頁載入時，抓取 GitHub 裡的資料 (data/herbs.json)
+        // 載入資料
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // 這裡一定要確認你的 json 檔名路徑正確
                 const response = await fetch('data/herbs.json');
                 if (!response.ok) throw new Error("資料讀取失敗");
                 db = await response.json();
                 console.log("資料庫載入成功，共 " + db.length + " 筆資料");
             } catch (error) {
                 console.error(error);
-                resultsArea.innerHTML = `<p style="text-align:center; color:red;">❌ 無法讀取資料庫，請檢查 data/herbs.json 檔案格式是否正確 (例如逗號問題)。</p>`;
+                resultsArea.innerHTML = `<p style="text-align:center; color:red;">❌ 資料庫讀取失敗。</p>`;
             }
         });
 
-        // 3. 監聽輸入事件：產生建議詞
+        // --- 核心搜尋邏輯 (過濾器) ---
+        function getFilteredMatches(val) {
+            if (!val) return [];
+            const searchType = typeSelect.value; // 取得目前選的類別
+
+            return db.filter(item => {
+                // 統一轉小寫比對
+                const term = val.toLowerCase();
+
+                // 準備各欄位資料 (防止空值報錯)
+                const cName = (item.chinese_name || "").toLowerCase();
+                const lName = (item.latin_name || "").toLowerCase(); // 生藥名
+                const family = (item.family || "").toLowerCase();
+                const origin = (item.origin || "").toLowerCase(); // 基原
+                const chem = (item.chemistry || "").toLowerCase();
+                const effects = (item.effects || []).join(' ').toLowerCase();
+
+                // 根據選擇的類別進行比對
+                switch (searchType) {
+                    case 'name':
+                        return cName.includes(term) || lName.includes(term);
+                    case 'family':
+                        return family.includes(term); // 搜科名
+                    case 'origin':
+                        return origin.includes(term); // 搜基原
+                    case 'chemistry':
+                        return chem.includes(term); // 搜成分
+                    case 'effects':
+                        return effects.includes(term); // 搜功效
+                    case 'all':
+                    default:
+                        // 全部都搜
+                        return cName.includes(term) || lName.includes(term) || 
+                               family.includes(term) || origin.includes(term) || 
+                               chem.includes(term) || effects.includes(term);
+                }
+            });
+        }
+
+        // --- 監聽輸入：顯示建議 ---
         input.addEventListener('input', function() {
-            const val = this.value.toLowerCase().trim();
+            const val = this.value.trim();
             suggestionsBox.innerHTML = '';
             
             if (!val || db.length === 0) {
@@ -110,31 +208,28 @@
                 return;
             }
 
-            // 過濾邏輯 (對應你的 JSON 欄位)
-            const matches = db.filter(item => {
-                const origin = item.origin || "";
-                const chemistry = item.chemistry || "";
-                const grade = item.grade || "";
+            const matches = getFilteredMatches(val);
+            // 建議選單只顯示前 8 筆 (避免太長)
+            const suggestionSlice = matches.slice(0, 8); 
 
-                return item.chinese_name.includes(val) || 
-                       item.latin_name.toLowerCase().includes(val) ||
-                       item.family.toLowerCase().includes(val) ||
-                       origin.toLowerCase().includes(val) ||
-                       chemistry.toLowerCase().includes(val) ||
-                       grade.includes(val);
-            }).slice(0, 8); // 只顯示前 8 筆
-
-            if (matches.length > 0) {
+            if (suggestionSlice.length > 0) {
                 suggestionsBox.style.display = 'block';
-                matches.forEach(item => {
+                suggestionSlice.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.innerHTML = `<span class="s-main">${item.chinese_name}</span><span class="s-sub">${item.latin_name}</span>`;
+                    
+                    // 根據搜尋類型，建議選單顯示不同資訊會更直覺
+                    let subInfo = item.latin_name;
+                    if(typeSelect.value === 'family') subInfo = item.family;
+                    if(typeSelect.value === 'chemistry') subInfo = item.chemistry ? item.chemistry.substring(0, 15)+"..." : "";
+
+                    div.innerHTML = `<span class="s-main">${item.chinese_name}</span><span class="s-sub">${subInfo}</span>`;
                     
                     div.onclick = function() {
+                        // 點擊建議 -> 直接顯示該藥
                         input.value = item.chinese_name;
                         suggestionsBox.style.display = 'none';
-                        displayResult(item);
+                        displayResult(item); 
                     };
                     suggestionsBox.appendChild(div);
                 });
@@ -143,40 +238,42 @@
             }
         });
 
-        // 4. 點擊空白處關閉選單
-        document.addEventListener('click', function(e) {
-            if (e.target !== input && e.target !== suggestionsBox) {
-                suggestionsBox.style.display = 'none';
-            }
-        });
+        // --- 執行完整搜尋 (按 Enter 或 搜尋按鈕) ---
+        // 這裡會列出「所有」符合的結果，不僅僅是一筆
+        window.performSearch = function() {
+            const val = input.value.trim();
+            suggestionsBox.style.display = 'none';
+            
+            if(!val) return;
 
-        // 5. 按下 Enter 搜尋
+            const matches = getFilteredMatches(val);
+            
+            resultsArea.innerHTML = "";
+            if(matches.length === 0) {
+                resultsArea.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>找不到符合的資料...</p>";
+            } else {
+                // 顯示找到幾筆
+                resultsArea.innerHTML = `<p style="color:#666; font-size:0.9rem; margin-bottom:10px;">找到 ${matches.length} 筆符合「${val}」的資料：</p>`;
+                // 全部列出來
+                matches.forEach(item => displayResult(item, true));
+            }
+        }
+
+        // 綁定 Enter 鍵
         input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const val = this.value.toLowerCase().trim();
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // 點擊空白處關閉建議
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
                 suggestionsBox.style.display = 'none';
-                
-                const matches = db.filter(item => {
-                    const origin = item.origin || "";
-                    const chemistry = item.chemistry || "";
-                    return item.chinese_name.includes(val) || 
-                           item.latin_name.toLowerCase().includes(val) ||
-                           item.family.toLowerCase().includes(val) ||
-                           origin.toLowerCase().includes(val) ||
-                           chemistry.toLowerCase().includes(val);
-                });
-                
-                resultsArea.innerHTML = "";
-                if(matches.length === 0) {
-                    resultsArea.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>找不到符合的藥材...</p>";
-                } else {
-                    matches.forEach(item => displayResult(item, true));
-                }
             }
         });
 
-        // 6. 顯示卡片功能
+        // --- 顯示卡片 ---
         function displayResult(item, append = false) {
+            // 如果不是附加模式(列表模式)，就先清空
             if (!append) resultsArea.innerHTML = "";
 
             const originText = item.origin ? item.origin : "暫無資料";
