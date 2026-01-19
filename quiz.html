@@ -193,27 +193,53 @@
             </div>
 
             <div style="margin-bottom:10px;">
-                <div class="section-title">3. 自由配對模式</div>
-              <div class="mode-selector">
-    <div style="text-align:center;">
-        <small>題目顯示 (Q)</small><br>
-        <select id="mode-question" class="mode-select">
-            <option value="chinese_name">中藥名</option>
-            <option value="latin_name">生藥名</option> <option value="family">科名</option>     <option value="origin">基原(學名)</option>
-            <option value="chemistry" selected>成分/圖片</option>
-            <option value="image">中藥外觀圖</option>
-            <option value="effects">功效</option>
-        </select>
+               <div class="control-group">
+    <div class="section-title">3. 自由配對模式</div>
+    <div class="mode-selector">
+        <div style="text-align:center;">
+            <small>題目顯示 (Q)</small><br>
+            <select id="mode-question" class="mode-select">
+                <option value="chinese_name">中藥名</option>
+                <option value="latin_name">生藥名</option> 
+                <option value="family">科名</option>     
+                <option value="origin">基原(學名)</option>
+                <option value="chemistry" selected>成分/圖片</option>
+                <option value="image">中藥外觀圖</option>
+                <option value="effects">功效</option>
+            </select>
+        </div>
+        <div style="font-size:1.5rem; color:#f57c00;">➡</div>
+        <div style="text-align:center;">
+            <small>選項答案 (A)</small><br>
+            <select id="mode-answer" class="mode-select">
+                <option value="chinese_name" selected>中藥名</option>
+                <option value="latin_name">生藥名</option>
+                <option value="family">科名</option>
+                <option value="origin">基原</option>
+                <option value="chemistry">成分/結構圖</option> 
+                <option value="effects">功效</option>         
+                <option value="image">中藥外觀圖</option>     
+            </select>
+        </div>
     </div>
-    <div style="font-size:1.5rem; color:#f57c00;">➡</div>
-    <div style="text-align:center;">
-        <small>選項答案 (A)</small><br>
-        <select id="mode-answer" class="mode-select">
-            <option value="chinese_name" selected>中藥名</option>
-            <option value="latin_name">生藥名</option>
-            <option value="family">科名</option>
-            <option value="origin">基原</option>
-            <option value="chemistry">成分/結構圖</option> <option value="effects">功效</option>         <option value="image">中藥外觀圖</option>     </select>
+</div> <div class="control-group">
+    <div class="section-title">4. 選擇測驗機制</div>
+    <div style="display:flex; gap:15px; justify-content:center;">
+        <label class="custom-check" style="flex:1;">
+            <input type="radio" name="quizLogic" value="standard" checked>
+            <span class="check-content" style="padding:15px;">
+                <strong>🏁 標準模式</strong><br>
+                <small style="color:#888;">隨機考完一輪即結束</small>
+            </span>
+        </label>
+
+        <label class="custom-check" style="flex:1;">
+            <input type="radio" name="quizLogic" value="reinforce">
+            <span class="check-content" style="padding:15px;">
+                <strong>💪 鞏固學習</strong><br>
+                <small style="color:#888;">答錯會再次出現 (約3題後)</small>
+            </span>
+        </label>
     </div>
 </div>
             </div>
