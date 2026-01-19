@@ -90,26 +90,5 @@
     ],
     "indications": "用於水腫腳氣，風濕痺痛，濕疹瘡毒。",
     "image": ""
-  },
-  {
-    "id": 1768842722493,
-    "grade": "大二上",
-    "chinese_name": "益母草",
-    "origin": [
-      {
-        "lat": "Leonurus heterophuus",
-        "ch": ""
-      }
-    ],
-    "confusing_drugs": [],
-    "latin_name": "Leonuri Herba",
-    "family_ch": "脣形科",
-    "family_en": "Lamiaceae/Labiatae",
-    "chem_main": "",
-    "chem_sub": "",
-    "chemistry": [],
-    "effects": [],
-    "indications": "茺蔚-果實",
-    "image": ""
   }
 ]
