@@ -47,6 +47,27 @@
         /* 圖片預覽 */
         .img-preview-box { text-align: center; margin-top: 10px; }
         #preview-img { max-height: 150px; border-radius: 8px; display: none; margin: 0 auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* --- 新增：化學成分動態列表樣式 --- */
+        .chem-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafafa;
+        }
+        .chem-row {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+        .chem-row h5 { margin: 0 0 10px 0; color: #666; font-size: 0.9rem; }
+        .chem-header { display: flex; justify-content: space-between; align-items: center; }
+        .btn-del { background: #ffebee; color: #c62828; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .btn-del:hover { background: #ffcdd2; }
+        .chem-img-preview { max-height: 100px; display: block; margin-top: 10px; border: 1px solid #eee; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
