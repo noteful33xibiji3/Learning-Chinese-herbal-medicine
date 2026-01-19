@@ -275,334 +275,461 @@
 
     <script src="app.js"></script> 
    <script>
-    // ============================================
-    //  全域變數設定
-    // ============================================
-    window.allHerbs = [];        // 完整資料庫
-    window.quizList = [];        // 測驗題庫
-    window.currentIdx = 0;
-    window.score = 0;
-    window.selectedHerbIds = new Set(); // 使用者勾選的藥材 ID
-    window.quizLogic = "standard";      // 測驗模式 (standard / reinforce)
+        // --- 漢堡選單邏輯 (確保選單能開關) ---
+        function toggleMenu() {
+            const menu = document.getElementById('nav-menu');
+            menu.classList.toggle('show');
+        }
 
-    // ============================================
-    //  1. 初始化與資料載入
-    // ============================================
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            console.log("🚀 開始載入藥材資料...");
-            const res = await fetch('data/herbs.json');
-            if (!res.ok) throw new Error("HTTP error " + res.status);
-            
-            window.allHerbs = await res.json();
-            console.log(`✅ 成功載入 ${window.allHerbs.length} 筆資料`);
-            
-            // 1. 渲染藥材清單 (這就是讓藥材出現的關鍵！)
-            window.renderHerbList();
-            
-            // 2. 防止題目與答案選到一樣的邏輯
-            const qSelect = document.getElementById('mode-question');
-            const aSelect = document.getElementById('mode-answer');
+        // --- 全域變數 ---
+        window.allHerbs = [];   
+        window.quizList = [];   
+        window.currentIdx = 0;
+        window.score = 0;
+        window.selectedHerbIds = new Set(); // 記錄使用者勾選的 ID
 
-            function updateAnswerOptions() {
-                const qVal = qSelect.value;
-                Array.from(aSelect.options).forEach(opt => {
-                    if (opt.value === qVal) {
-                        opt.disabled = true;
-                        if (aSelect.value === qVal) {
-                            const firstAvailable = Array.from(aSelect.options).find(o => o.value !== qVal);
-                            if (firstAvailable) aSelect.value = firstAvailable.value;
-                        }
-                    } else {
-                        opt.disabled = false;
-                    }
-                });
+        // --- 1. 初始化與資料載入 ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('data/herbs.json');
+                if (!res.ok) throw new Error("Load failed");
+                window.allHerbs = await res.json();
+                
+                // 載入完成後，直接渲染所有藥材的「小按鈕」
+                window.renderHerbList();
+                // ... (在 window.renderHerbList(); 之後加入以下程式碼) ...
+
+    // === 新增功能：防止題目與答案選到一樣的 ===
+    const qSelect = document.getElementById('mode-question');
+    const aSelect = document.getElementById('mode-answer');
+
+    function updateAnswerOptions() {
+        const qVal = qSelect.value;
+        
+        // 遍歷答案選單的所有選項
+        Array.from(aSelect.options).forEach(opt => {
+            // 如果選項值跟題目一樣，就設為 disabled (不可選)
+            if (opt.value === qVal) {
+                opt.disabled = true;
+                // 如果目前剛好選到這個被禁用的，就自動跳到下一個可用的選項
+                if (aSelect.value === qVal) {
+                    const firstAvailable = Array.from(aSelect.options).find(o => o.value !== qVal);
+                    if (firstAvailable) aSelect.value = firstAvailable.value;
+                }
+            } else {
+                opt.disabled = false; // 其他的恢復可選
             }
-            qSelect.addEventListener('change', updateAnswerOptions);
-            updateAnswerOptions(); // 初始執行
+        });
+    }
 
-        } catch (err) {
-            console.error("❌ 資料載入失敗:", err);
-            alert('無法載入 data/herbs.json，請檢查檔案路徑');
+    // 綁定事件：當題目改變時，更新答案選項
+    qSelect.addEventListener('change', updateAnswerOptions);
+    
+    // 初始化時先執行一次
+    updateAnswerOptions();
+            } catch (err) {
+                console.error(err);
+                alert('資料庫載入失敗，請檢查 data/herbs.json');
+            }
+        });
+
+        // --- 2. 渲染藥材小按鈕 (Chips) ---
+        window.renderHerbList = function() {
+            const container = document.getElementById('herb-chip-container');
+            const term = document.getElementById('filter-search').value.trim().toLowerCase();
+            
+            container.innerHTML = ""; // 清空
+            
+            // 過濾邏輯：如果有搜尋詞就過濾，沒有就顯示全部
+            const filtered = window.allHerbs.filter(h => !term || h.chinese_name.includes(term));
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="width:100%; text-align:center; color:#999; padding:10px;">找不到符合的藥材</div>`;
+                return;
+            }
+
+            filtered.forEach(herb => {
+                const label = document.createElement('label');
+                label.className = 'herb-chip';
+                
+                // 檢查 Set 裡有沒有這個 ID
+                const isChecked = window.selectedHerbIds.has(herb.id) ? 'checked' : '';
+
+                label.innerHTML = `
+                    <input type="checkbox" value="${herb.id}" onchange="window.handleChipChange(this)" ${isChecked}>
+                    <span class="chip-content">${herb.chinese_name}</span>
+                `;
+                container.appendChild(label);
+            });
+            window.updateCount();
+        };
+
+        // 處理小按鈕點擊
+        window.handleChipChange = function(checkbox) {
+            const id = parseInt(checkbox.value);
+            if (checkbox.checked) window.selectedHerbIds.add(id);
+            else window.selectedHerbIds.delete(id);
+            window.updateCount();
+        };
+
+        window.updateCount = function() {
+            document.getElementById('selected-count').innerText = `已選: ${window.selectedHerbIds.size}`;
+        };
+
+        // --- 3. 批次功能 ---
+        // 年級勾選
+       // === 修改後的 JS：年級批次勾選 (即時連動) ===
+window.batchSelectByGrade = function() {
+    // 1. 找出目前「被勾選」的年級
+    const checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(cb => cb.value);
+    
+    // 2. 找出目前「沒被勾選」的年級 (用來執行取消選取)
+    const uncheckedGrades = Array.from(document.querySelectorAll('input[name="grade"]:not(:checked)')).map(cb => cb.value);
+
+    // 3. 遍歷所有藥材，根據年級決定是 加入 還是 移除
+    window.allHerbs.forEach(herb => {
+        if (checkedGrades.includes(herb.grade)) {
+            // 如果這味藥的年級是被勾選的 -> 加入選取
+            window.selectedHerbIds.add(herb.id);
+        } else if (uncheckedGrades.includes(herb.grade)) {
+            // 如果這味藥的年級是沒被勾選的 -> 移除選取 (這樣才能實現按掉就變白)
+            window.selectedHerbIds.delete(herb.id);
         }
     });
 
-    // ============================================
-    //  2. 列表渲染 (小藥丸 Chips 風格)
-    // ============================================
-    window.renderHerbList = function() {
-        const container = document.getElementById('herb-chip-container');
-        // 如果你的 HTML ID 是舊的 herb-selection-list，請改成 herb-chip-container，或這裡改程式碼
-        if (!container) return console.error("找不到容器：herb-chip-container");
+    // 4. 立刻重新渲染畫面，讓你看到變綠/變白
+    window.renderHerbList();
+};
 
-        const term = document.getElementById('filter-search').value.trim().toLowerCase();
-        
-        container.innerHTML = ""; // 清空
-        
-        // 過濾
-        const filtered = window.allHerbs.filter(h => !term || h.chinese_name.includes(term));
-        
-        if (filtered.length === 0) {
-            container.innerHTML = `<div style="width:100%; text-align:center; color:#999; padding:10px;">找不到符合的藥材</div>`;
-            return;
-        }
+        // 全選 / 清空 (只針對目前顯示的)
+        window.toggleSelectAll = function(selectAll) {
+            const visibleInputs = document.querySelectorAll('#herb-chip-container input');
+            visibleInputs.forEach(input => {
+                input.checked = selectAll;
+                const id = parseInt(input.value);
+                if (selectAll) window.selectedHerbIds.add(id);
+                else window.selectedHerbIds.delete(id);
+            });
+            window.updateCount();
+        };
 
-        // 產生小藥丸按鈕
-        filtered.forEach(herb => {
-            const label = document.createElement('label');
-            label.className = 'herb-chip'; // 這裡對應 CSS 的 .herb-chip
+        // --- 4. 測驗核心 ---
+       // ============================================
+        //  更新後的 JS 邏輯 (支援鞏固學習)
+        // ============================================
+
+        window.quizLogic = "standard"; // 全域變數：記錄目前的模式
+
+        window.startQuiz = function() {
+            // 1. 收集名單
+            // 從 Set 轉換回陣列物件
+            window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
+
+            if (window.quizList.length === 0) {
+                alert("請至少選擇一味藥材！");
+                return;
+            }
+
+            // 2. 檢查題目/答案模式是否相同
+            const qMode = document.getElementById('mode-question').value;
+            const aMode = document.getElementById('mode-answer').value;
+            if (qMode === aMode) {
+                alert("題目和答案不能一樣啦！");
+                return;
+            }
+
+            // 3. ★ 讀取測驗機制 (標準 vs 鞏固) ★
+            const logicRadios = document.querySelector('input[name="quizLogic"]:checked');
+            window.quizLogic = logicRadios ? logicRadios.value : "standard";
+
+            // 初始化狀態
+            window.currentIdx = 0;
+            window.score = 0;
+            window.quizList.sort(() => Math.random() - 0.5); // 隨機洗牌
+
+            // 切換介面
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('quiz-panel').style.display = 'block';
             
-            const isChecked = window.selectedHerbIds.has(herb.id) ? 'checked' : '';
+            // 更新總題數顯示
+            document.getElementById('q-total').innerText = window.quizList.length;
 
-            label.innerHTML = `
-                <input type="checkbox" value="${herb.id}" onchange="window.handleChipChange(this)" ${isChecked}>
-                <span class="chip-content">${herb.chinese_name}</span>
-            `;
-            container.appendChild(label);
-        });
-        
-        window.updateCount();
-    };
-
-    // 處理單一藥丸點擊
-    window.handleChipChange = function(checkbox) {
-        const id = parseInt(checkbox.value);
-        if (checkbox.checked) window.selectedHerbIds.add(id);
-        else window.selectedHerbIds.delete(id);
-        window.updateCount();
-    };
-
-    // 更新數量顯示
-    window.updateCount = function() {
-        document.getElementById('selected-count').innerText = `已選: ${window.selectedHerbIds.size}`;
-    };
-
-    // ============================================
-    //  3. 批次功能 (年級 & 全選)
-    // ============================================
-    
-    // 年級勾選 (即時連動)
-    window.batchSelectByGrade = function() {
-        const checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(cb => cb.value);
-        const uncheckedGrades = Array.from(document.querySelectorAll('input[name="grade"]:not(:checked)')).map(cb => cb.value);
-
-        window.allHerbs.forEach(herb => {
-            if (checkedGrades.includes(herb.grade)) {
-                window.selectedHerbIds.add(herb.id);
-            } else if (uncheckedGrades.includes(herb.grade)) {
-                window.selectedHerbIds.delete(herb.id);
-            }
-        });
-        window.renderHerbList();
-    };
-
-    // 全選 / 清空
-    window.toggleSelectAll = function(selectAll) {
-        const visibleInputs = document.querySelectorAll('#herb-chip-container input');
-        visibleInputs.forEach(input => {
-            input.checked = selectAll;
-            const id = parseInt(input.value);
-            if (selectAll) window.selectedHerbIds.add(id);
-            else window.selectedHerbIds.delete(id);
-        });
-        window.updateCount();
-        // 為了讓 UI 更新 (變色)，重新渲染一次
-        window.renderHerbList();
-    };
-
-    // ============================================
-    //  4. 測驗核心 (防撞 + 鞏固 + 圖片)
-    // ============================================
-
-    window.startQuiz = function() {
-        // 1. 準備題目
-        window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
-        if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
-
-        const qMode = document.getElementById('mode-question').value;
-        const aMode = document.getElementById('mode-answer').value;
-        if (qMode === aMode) return alert("題目跟答案不能一樣啦！");
-
-        // 2. 讀取模式 (標準 or 鞏固)
-        const logicRadios = document.querySelector('input[name="quizLogic"]:checked');
-        window.quizLogic = logicRadios ? logicRadios.value : "standard";
-
-        // 3. 初始化
-        window.currentIdx = 0;
-        window.score = 0;
-        window.quizList.sort(() => Math.random() - 0.5);
-
-        // 4. 切換介面
-        document.getElementById('setup-panel').style.display = 'none';
-        document.getElementById('quiz-panel').style.display = 'block';
-        document.getElementById('q-total').innerText = window.quizList.length;
-
-        window.nextQuestion();
-    };
-
-    window.nextQuestion = function() {
-        if (window.currentIdx >= window.quizList.length) return window.endQuiz();
-
-        const herb = window.quizList[window.currentIdx];
-        const qMode = document.getElementById('mode-question').value;
-        const aMode = document.getElementById('mode-answer').value;
-
-        // UI 更新
-        document.getElementById('q-current').innerText = window.currentIdx + 1;
-        document.getElementById('q-score').innerText = window.score;
-        document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
-
-        // --- 題目生成 ---
-        let qHtml = "";
-        let qRaw = window.getFieldData(herb, qMode);
-        let qShow = "";
-
-        if (Array.isArray(qRaw)) {
-            const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
-            if (typeof rnd === 'object' && rnd.image) {
-                qShow = rnd.name; qHtml = `<img src="${rnd.image}" class="question-img">`;
-            } else { qShow = rnd; }
-        } else { qShow = qRaw; }
-
-        if (qMode === 'image') {
-            qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
-        } else if (!qHtml) {
-            qHtml = `<div class="question-text">${qShow}</div>`;
-        }
-
-        const modeMap = {'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'};
-        const content = `
-            <div style="text-align:center;">
-                <span style="background:#2C5E4F; color:white; padding:3px 10px; border-radius:20px; font-size:0.8rem;">題目：${modeMap[qMode]}</span>
-                ${qHtml}
-                <p style="color:#666; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></p>
-            </div>`;
-
-        // --- 選項生成 (含防撞) ---
-        function parseOptionData(data, mode) {
-            let label = ""; let image = null;
-            if (Array.isArray(data)) {
-                let rnd = data[Math.floor(Math.random() * data.length)];
-                if (typeof rnd === 'object') { label = rnd.name; image = rnd.image; }
-                else label = rnd;
-            } else { label = data; }
-            if (mode === 'image') { image = label; label = ""; }
-            return { label, image };
-        }
-
-        let correctRaw = window.getFieldData(herb, aMode);
-        let correctObj = parseOptionData(correctRaw, aMode);
-        let options = [{ ...correctObj, isCorrect: true }];
-
-        let attempts = 0;
-        while(options.length < 4 && attempts < 200) {
-            attempts++;
-            const rndHerb = window.allHerbs[Math.floor(Math.random() * window.allHerbs.length)];
-            if (rndHerb.id === herb.id) continue;
-
-            let wrongRaw = window.getFieldData(rndHerb, aMode);
-            let wrongObj = parseOptionData(wrongRaw, aMode);
-
-            // 防撞檢查
-            let isCollision = false;
-            const correctPool = Array.isArray(correctRaw) ? correctRaw.map(d => (typeof d === 'object' ? d.name : d)) : [correctRaw];
-            if (correctPool.includes(wrongObj.label)) isCollision = true;
-
-            if (!isCollision && !options.some(o => o.label === wrongObj.label && o.image === wrongObj.image)) {
-                options.push({ ...wrongObj, isCorrect: false });
-            }
-        }
-        options.sort(() => Math.random() - 0.5);
-
-        let btnsHtml = "";
-        options.forEach(opt => {
-            let btnInside = opt.image ? `<img src="${opt.image}">` : "";
-            btnInside += `<span>${opt.label || ''}</span>`;
-            const safeLabel = (opt.label || "").replace(/'/g, "\\'");
-            btnsHtml += `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeLabel}')">${btnInside}</button>`;
-        });
-
-        document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
-    };
-
-    // --- 檢查答案 (含鞏固模式) ---
-    window.checkAnswer = function(btn, isCorrect, btnLabel) {
-        const allBtns = document.querySelectorAll('.option-btn');
-        allBtns.forEach(b => b.disabled = true);
-
-        const herb = window.quizList[window.currentIdx];
-
-        if (isCorrect) {
-            btn.classList.add('correct');
-            window.score += 10;
-        } else {
-            btn.classList.add('wrong');
-            // 標示正確答案
-            const correctText = window.getFieldData(herb, document.getElementById('mode-answer').value);
-            // 簡單標示 (因為正確答案可能是多基原之一，這裡只做簡單的 UI 提示，不強制比對文字以免出錯)
-            allBtns.forEach(b => {
-                if(b.classList.contains('wrong') === false) {
-                     // 這裡可以選擇把剩下的都標示，或不做動作
-                }
-            });
-
-            // 儲存錯題
-            window.saveDetailedMistake(herb, document.getElementById('mode-question').value, btnLabel);
-
-            // ★ 鞏固學習插隊 ★
-            if (window.quizLogic === "reinforce") {
-                let insertPos = window.currentIdx + 3;
-                if (insertPos > window.quizList.length) insertPos = window.quizList.length;
-                window.quizList.splice(insertPos, 0, herb);
-                document.getElementById('q-total').innerText = window.quizList.length;
-                console.log(`錯題重排：${herb.chinese_name} 插入至第 ${insertPos} 順位`);
-            }
-        }
-
-        setTimeout(() => {
-            window.currentIdx++;
+            console.log(`🚀 測驗開始！模式：${window.quizLogic}，共 ${window.quizList.length} 題`);
             window.nextQuestion();
-        }, 1200);
-    };
+        };
 
-    window.endQuiz = function() {
-        document.getElementById('quiz-panel').style.display = 'none';
-        document.getElementById('result-panel').style.display = 'block';
-        document.getElementById('final-score').innerText = window.score;
-        
-        let msg = "繼續加油！";
-        if(window.score === 0 && window.quizList.length > 0) msg = "別灰心，多練習幾次！";
-        else if(window.score >= window.quizList.length * 10) msg = "太神啦！全對！🎉";
-        
-        document.getElementById('result-msg').innerText = msg;
-    };
+        // --- 檢查答案 (加入錯題重練邏輯) ---
+        window.checkAnswer = function(btn, isCorrect, btnLabel) {
+            // 鎖定按鈕
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
 
-    // 輔助函式
-    window.getFieldData = function(herb, mode) {
-        if (mode === 'image') return herb.image;
-        return herb[mode] || "無資料";
-    };
+            const herb = window.quizList[window.currentIdx];
+            const qMode = document.getElementById('mode-question').value;
 
-    window.saveDetailedMistake = function(herb, mode, wrongText) {
-        let mistakes = JSON.parse(localStorage.getItem('tcm_mistakes_v2') || "[]");
-        const existing = mistakes.find(m => m.herb_id === herb.id && m.mode === mode);
-        if (existing) {
-            existing.count += 1;
-            existing.last_time = Date.now();
-            existing.last_wrong = wrongText;
-        } else {
-            mistakes.push({
-                id: Date.now(),
-                herb_id: herb.id,
-                name: herb.chinese_name,
-                mode: mode, 
-                wrong_choise: wrongText,
-                timestamp: Date.now(),
-                count: 1
+            if (isCorrect) {
+                btn.classList.add('correct');
+                window.score += 10;
+            } else {
+                btn.classList.add('wrong');
+                
+                // 錯題本儲存 (原本的功能)
+                window.saveDetailedMistake(herb, qMode, btnLabel);
+
+                // ★★★ 新增：鞏固學習邏輯 ★★★
+                if (window.quizLogic === "reinforce") {
+                    // 1. 複製目前這題的藥材物件
+                    const wrongHerb = herb; // 這裡可以直接引用，因為 quizList 存的是物件參考
+                    
+                    // 2. 計算插入位置 (目前位置 + 3)
+                    // 如果剩餘題目少於 3 題，就直接插在最後面
+                    let insertIndex = window.currentIdx + 3;
+                    if (insertIndex > window.quizList.length) {
+                        insertIndex = window.quizList.length;
+                    }
+
+                    // 3. 插隊！ (splice: 在 insertIndex 位置，刪除 0 個，插入 wrongHerb)
+                    window.quizList.splice(insertIndex, 0, wrongHerb);
+
+                    // 4. 更新介面上的總題數 (因為題目變多了)
+                    document.getElementById('q-total').innerText = window.quizList.length;
+                    
+                    // 5. (選用) 給一點提示
+                    // 可以在畫面上顯示一個小小的 Toast 提示 "已加入待複習列"
+                    console.log(`錯題：${herb.chinese_name} 已重新排入第 ${insertIndex} 順位`);
+                }
+            }
+
+            // 標示正確答案
+            allBtns.forEach(b => {
+                 // 這裡若要做精確標示，可再次呼叫 getFieldData 比對，或是簡單略過
             });
-        }
-        localStorage.setItem('tcm_mistakes_v2', JSON.stringify(mistakes));
-    };
-</script>
+
+            setTimeout(() => {
+                window.currentIdx++;
+                window.nextQuestion();
+            }, 1200); // 稍微停久一點看結果
+        };
+            // 初始化
+            window.currentIdx = 0;
+            window.score = 0;
+            window.quizList.sort(() => Math.random() - 0.5);
+
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('quiz-panel').style.display = 'block';
+            document.getElementById('q-total').innerText = window.quizList.length;
+
+            window.nextQuestion();
+        };
+
+      // === 修改後的 nextQuestion (含完整防撞邏輯) ===
+        window.nextQuestion = function() {
+            if (window.currentIdx >= window.quizList.length) {
+                return window.endQuiz();
+            }
+
+            const herb = window.quizList[window.currentIdx];
+            const qMode = document.getElementById('mode-question').value;
+            const aMode = document.getElementById('mode-answer').value;
+
+            // 更新 UI 進度
+            document.getElementById('q-current').innerText = window.currentIdx + 1;
+            document.getElementById('q-score').innerText = window.score;
+            document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
+
+            // -----------------------------------------
+            // 1. 產生題目 (Question)
+            // -----------------------------------------
+            let qHtml = "";
+            let qRaw = window.getFieldData(herb, qMode);
+            let qText = ""; 
+            
+            // 處理題目內容 (如果是陣列，隨機抽一個)
+            if (Array.isArray(qRaw)) {
+                const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
+                if (typeof rnd === 'object' && rnd.image) {
+                    qText = rnd.name; 
+                    qHtml = `<img src="${rnd.image}" class="question-img">`; 
+                } else {
+                    qText = rnd;
+                }
+            } else {
+                qText = qRaw;
+            }
+
+            // 特殊模式處理
+            if (qMode === 'image') {
+                qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
+            } else if (!qHtml) {
+                qHtml = `<div class="question-text">${qText}</div>`;
+            }
+
+            const modeMap = {
+                'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 
+                'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'
+            };
+            
+            const content = `
+                <div class="question-area">
+                    <div class="question-tag">題目：${modeMap[qMode]}</div>
+                    ${qHtml}
+                    <div style="color:#666; font-size:0.9rem; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></div>
+                </div>
+            `;
+
+            // -----------------------------------------
+            // 2. 產生選項 (Answer) - 支援圖文並茂 + 防撞
+            // -----------------------------------------
+            
+            // 內部小函式：解析資料並回傳 {label, image}
+            function parseOptionData(rawData, mode) {
+                let label = "";
+                let image = null;
+
+                if (Array.isArray(rawData)) {
+                    let rnd = rawData[Math.floor(Math.random() * rawData.length)];
+                    if (typeof rnd === 'object') {
+                        label = rnd.name;
+                        image = rnd.image;
+                    } else {
+                        label = rnd;
+                    }
+                } else {
+                    label = rawData;
+                }
+
+                // 如果考的是外觀圖，資料本身就是網址
+                if (mode === 'image') {
+                    image = label; 
+                    label = ""; 
+                }
+
+                return { label, image };
+            }
+
+            // A. 正確選項
+            // ★重點：保留原始完整資料 correctRaw 用來做防撞比對
+            let correctRaw = window.getFieldData(herb, aMode);
+            let correctObj = parseOptionData(correctRaw, aMode);
+            let options = [{ ...correctObj, isCorrect: true }];
+
+            // B. 錯誤選項 (3個)
+            let attempts = 0;
+            while(options.length < 4 && attempts < 200) {
+                attempts++;
+                const rndHerb = window.allHerbs[Math.floor(Math.random() * window.allHerbs.length)];
+                
+                // 1. 基本避開：不能選到同一味藥
+                if (rndHerb.id === herb.id) continue;
+
+                let wrongRaw = window.getFieldData(rndHerb, aMode);
+                let wrongObj = parseOptionData(wrongRaw, aMode);
+                
+                if (!wrongObj.label && !wrongObj.image) wrongObj.label = "無資料";
+
+                // ★★★ 2. 進階防撞機制 (關鍵修改) ★★★
+                // 檢查這個錯誤選項，是否剛好包含在「正確答案的所有可能列表」裡？
+                let isCollision = false;
+                if (Array.isArray(correctRaw)) {
+                    // 如果正確答案是多基原/多成分，要把裡面每一個都拿出來比對
+                    // 例如 correctRaw = ["A", "B", "C"]，我們選了 A 當答案
+                    // 如果 wrongObj.label 剛好是 "B"，那也不行！
+                    const correctStrings = correctRaw.map(d => (typeof d === 'object') ? d.name : d);
+                    if (correctStrings.includes(wrongObj.label)) isCollision = true;
+                } else {
+                    // 單一答案比對
+                    if (correctRaw === wrongObj.label) isCollision = true;
+                }
+                
+                if (isCollision) continue; // 撞到了，重抽！
+
+                // 3. 避免選項重複 (自己跟自己比)
+                const isDuplicate = options.some(o => 
+                    (o.label && o.label === wrongObj.label) || 
+                    (o.image && o.image === wrongObj.image)
+                );
+                
+                if (!isDuplicate) {
+                    options.push({ ...wrongObj, isCorrect: false, herbName: rndHerb.chinese_name });
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            // C. 渲染按鈕
+            let btnsHtml = "";
+            options.forEach(opt => {
+                let innerContent = "";
+                if (opt.image) {
+                    innerContent += `<img src="${opt.image}" style="max-height:100px; object-fit:contain; margin-bottom:5px;">`;
+                }
+                if (opt.label) {
+                    const safeLabel = opt.label.replace(/'/g, "&#39;");
+                    innerContent += `<span>${safeLabel}</span>`;
+                }
+
+                const recordText = opt.label || "圖片選項"; 
+                const safeRecord = recordText.replace(/'/g, "\\'"); 
+
+                btnsHtml += `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeRecord}')">
+                                ${innerContent}
+                             </button>`;
+            });
+
+            document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
+        };
+
+        window.getFieldData = function(herb, mode) {
+            if (mode === 'image') return herb.image;
+            return herb[mode] || "無資料";
+        };
+
+        window.checkAnswer = function(btn, isCorrect, btnLabel) {
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+            const herb = window.quizList[window.currentIdx];
+            const qMode = document.getElementById('mode-question').value;
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                window.score += 10;
+            } else {
+                btn.classList.add('wrong');
+                // 錯題本儲存
+                window.saveDetailedMistake(herb, qMode, btnLabel);
+            }
+
+            setTimeout(() => {
+                window.currentIdx++;
+                window.nextQuestion();
+            }, 1000);
+        };
+
+        window.endQuiz = function() {
+            document.getElementById('quiz-panel').style.display = 'none';
+            document.getElementById('result-panel').style.display = 'block';
+            document.getElementById('final-score').innerText = window.score;
+        };
+
+        window.saveDetailedMistake = function(herb, mode, wrongText) {
+            let mistakes = JSON.parse(localStorage.getItem('tcm_mistakes_v2') || "[]");
+            const existing = mistakes.find(m => m.herb_id === herb.id && m.mode === mode);
+            if (existing) {
+                existing.count += 1;
+                existing.last_time = Date.now();
+                existing.last_wrong = wrongText;
+            } else {
+                mistakes.push({
+                    id: Date.now(),
+                    herb_id: herb.id,
+                    name: herb.chinese_name,
+                    mode: mode, 
+                    wrong_choise: wrongText,
+                    timestamp: Date.now(),
+                    count: 1
+                });
+            }
+            localStorage.setItem('tcm_mistakes_v2', JSON.stringify(mistakes));
+        };
+    </script>
 </body>
 </html>
