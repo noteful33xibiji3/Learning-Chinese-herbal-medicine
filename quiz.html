@@ -27,9 +27,25 @@
             <h2>🛠️ 測驗設定</h2>
             
             <div class="setup-group">
-                <h3>1. 測驗範圍 (可複選)</h3>
-                <div id="grade-checkboxes" class="checkbox-grid">
+                <h3>1. 選擇範圍</h3>
+                <div id="grade-checkboxes" class="checkbox-grid"></div>
+                
+                <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+                    <label class="checkbox-label" style="font-weight:bold; color:var(--primary);">
+                        <input type="checkbox" id="toggle-custom-scope" onchange="toggleCustomScope()"> 
+                        👉 自選中藥 (勾選開啟清單)
+                    </label>
+                </div>
+
+                <div id="custom-selection-area">
+                    <input type="text" id="filter-search" placeholder="搜尋中藥..." style="width:100%; margin-bottom:10px; padding:8px; border:1px solid #ddd; border-radius:5px;">
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <button onclick="selectAllHerbs(true)" style="font-size:0.8rem; padding:5px 10px;">全選</button>
+                        <button onclick="selectAllHerbs(false)" style="font-size:0.8rem; padding:5px 10px;">全不選</button>
                     </div>
+                    <div id="manual-selection-list" class="checkbox-grid" style="grid-template-columns: 1fr 1fr; max-height:300px; overflow-y:auto;">
+                        </div>
+                </div>
             </div>
 
             <div class="setup-group">
@@ -38,36 +54,30 @@
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="effects" checked> 功效</label>
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="family"> 科名</label>
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="latin_name"> 生藥名</label>
+                    <label class="checkbox-label"><input type="checkbox" name="quizMode" value="origin"> 基原(學名)</label>
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="used_part"> 用部</label>
                     <label class="checkbox-label"><input type="checkbox" name="quizMode" value="chemistry"> 成分</label>
                 </div>
-            </div>
-
-            <div class="setup-group">
-                <h3>3. 指定特定中藥</h3>
-                <details class="herb-accordion">
-                    <summary>點擊展開 / 選擇特定中藥</summary>
-                    <div class="accordion-content">
-                        <input type="text" id="filter-search" placeholder="在此篩選清單..." style="width:100%; margin-bottom:10px; padding:8px;">
-                        <div id="manual-selection-list" class="checkbox-grid" style="grid-template-columns: 1fr 1fr;">
-                            </div>
-                    </div>
-                </details>
             </div>
 
             <button class="btn-primary" onclick="initCustomQuiz()">開始測驗</button>
         </div>
 
         <div id="quiz-panel" style="display: none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <span id="progress-display">題目: 1/10</span>
-                <span id="score-display">得分: 0</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span id="progress-display" style="font-weight:bold; color:#666;"></span>
+                <span id="score-display" style="font-weight:bold; color:var(--primary);"></span>
             </div>
             
-            <div id="quiz-card" class="herb-card" style="padding:30px; text-align:center;">
+            <div id="quiz-card" class="herb-card" style="padding:25px; text-align:center;">
                 </div>
             
-            <button class="btn-primary" onclick="resetQuizSetup()" style="background:#999; margin-top:20px;">結束測驗</button>
+            <div class="quiz-nav-buttons">
+                <button id="prev-btn" class="nav-btn" onclick="prevQuestion()">⬅ 上一題</button>
+                <button id="next-btn" class="nav-btn next" onclick="nextQuestion()">下一題 ➡</button>
+            </div>
+
+            <button class="btn-primary" onclick="showResult()" style="background:#666; margin-top:30px; padding:10px 20px; font-size:0.9rem;">結束測驗並結算</button>
         </div>
 
         <div id="result-panel" style="display: none;">
