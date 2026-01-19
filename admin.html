@@ -744,11 +744,53 @@
             } catch(e) { alert("儲存失敗: " + e.message); }
         }
 
-        async function deleteHerb(id) {
-            if(!confirm("確定刪除？")) return;
-            allHerbs = allHerbs.filter(h => h.id !== id);
-            alert("已從列表移除，請按任一編輯並儲存以同步至 GitHub");
-            renderTable();
+       async function deleteHerb(id) {
+            if(!confirm("⚠️ 確定要永久刪除這筆資料嗎？\n(此動作會立刻同步到 GitHub，無法復原)")) return;
+
+            // 1. 先從本地陣列移除
+            const originalLength = allHerbs.length;
+            // 注意：使用 != 而非 !== 以防 ID 型別不同 (字串 vs 數字)
+            allHerbs = allHerbs.filter(h => h.id != id);
+
+            if (allHerbs.length === originalLength) {
+                return alert("❌ 刪除失敗：找不到該 ID");
+            }
+
+            // 2. 立刻上傳更新到 GitHub
+            try {
+                document.getElementById('status-text').innerText = "⏳ 正在刪除並同步...";
+                
+                // 重新打包 JSON
+                const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(allHerbs, null, 2))));
+                
+                const res = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.path}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: `Delete ID ${id}`, // Commit 訊息
+                        content: content, 
+                        sha: sha // 必須帶上最新的 SHA 校驗碼
+                    })
+                });
+
+                if(!res.ok) {
+                    const errJson = await res.json();
+                    throw new Error(errJson.message);
+                }
+
+                const data = await res.json();
+                sha = data.content.sha; // ★ 重要：更新 SHA，避免下次操作衝突
+                
+                alert("🗑️ 刪除成功！");
+                document.getElementById('status-text').innerText = `✅ 已連線: ${config.repo} (${allHerbs.length}筆)`;
+                renderTable();
+                
+            } catch(e) { 
+                console.error(e);
+                alert("刪除失敗: " + e.message + "\n(建議重新整理網頁後再試)");
+                // 如果失敗，建議重新讀取，以免本地與雲端不同步
+                loadFromGitHub();
+            }
         }
     </script>
 </body>
