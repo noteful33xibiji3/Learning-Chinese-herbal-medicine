@@ -176,7 +176,7 @@
         return db.filter(item => {
             const cName = (item.chinese_name || "").toLowerCase();
             const lName = (item.latin_name || "").toLowerCase(); 
-            
+            const part = (item.part || "").toLowerCase(); // ★ 新增這行
             // 科名 (支援分開或合併)
             const fCh = (item.family_ch || item.family || "").toLowerCase();
             const fEn = (item.family_en || "").toLowerCase();
@@ -208,6 +208,7 @@
             switch (searchType) {
                 case 'name': return cName.includes(term);
                 case 'latin': return lName.includes(term);
+                case 'part': return part.includes(term); 
                 case 'family': return fMix.includes(term);
                 case 'origin': return originText.includes(term); 
                 case 'chemistry': return chemText.includes(term);
@@ -353,6 +354,7 @@
             </div>
             <div class="r-detail-row"><span class="label">生藥名:</span> <i>${item.latin_name || ""}</i></div>
             <div class="r-detail-row">
+            <div class="r-detail-row"><span class="label">藥用部位:</span> ${item.part || "<span style='color:#ccc;'>暫無資料</span>"}</div>
                 <span class="label">基原(學名):</span>
                 <div style="display:inline-block; vertical-align:top;">${originDisplay}</div>
             </div>
