@@ -446,16 +446,37 @@ function addOriginRow(data = null) {
 }
 
         // 2. 易混淆 (邏輯一樣，只是容器不同)
-        function addConfusingRow(val = "") {
-            const wrapper = document.getElementById('confusing-rows-wrapper');
-            const div = document.createElement('div');
-            div.className = 'dynamic-row';
-            div.innerHTML = `
-                <input type="text" class="confusing-input" value="${val}" placeholder="輸入易混淆藥材">
-                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-            `;
-            wrapper.appendChild(div);
+// === 修改處 1：產生易混淆輸入框 (中藥名 / 學名 / 備註) ===
+function addConfusingRow(data = null) {
+    const wrapper = document.getElementById('confusing-rows-wrapper');
+    const div = document.createElement('div');
+    div.className = 'dynamic-row confusing-row'; 
+
+    let valCh = "";
+    let valEn = "";
+    let valNote = "";
+
+    if (data) {
+        if (typeof data === 'string') {
+            valCh = data; // 舊資料只有一行，暫時填入中文名
+        } else {
+            // 相容舊的 name/diff 欄位，自動對應過來
+            valCh = data.name_ch || data.name || ""; 
+            valEn = data.name_en || "";
+            valNote = data.note || data.diff || ""; 
         }
+    }
+
+    div.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:10px; flex:1;">
+            <input type="text" class="conf-ch" value="${valCh}" placeholder="中文名 (廣防己)" style="margin:0;">
+            <input type="text" class="conf-en" value="${valEn}" placeholder="學名 (Aristolochia fangchi)" style="margin:0;">
+            <input type="text" class="conf-note" value="${valNote}" placeholder="備註 (馬兜鈴科...)" style="margin:0;">
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+    `;
+    wrapper.appendChild(div);
+}
 
         // 3. 成分
         function addChemRow(data = null) {
@@ -572,8 +593,23 @@ function addOriginRow(data = null) {
             // 3. 收集動態列表資料 (基原 & 易混淆)
            // 確保 openEditModal 裡面是這樣寫的 (這段不用替換，檢查一下就好)
              if(Array.isArray(h.origin)) {  h.origin.forEach(o => addOriginRow(o));} else if(h.origin) {addOriginRow(h.origin);} else { addOriginRow();};
-            const confusingData = Array.from(document.querySelectorAll('.confusing-input')).map(i => i.value.trim()).filter(v => v);
-
+           // === 修改處 2：儲存易混淆資料 (三欄格式) ===
+const confRows = document.querySelectorAll('.confusing-row');
+const confusingData = [];
+confRows.forEach(row => {
+    const ch = row.querySelector('.conf-ch').value.trim();
+    const en = row.querySelector('.conf-en').value.trim();
+    const note = row.querySelector('.conf-note').value.trim();
+    
+    // 只要三格之中有任一格有填，就存起來
+    if (ch || en || note) {
+        confusingData.push({ 
+            name_ch: ch, 
+            name_en: en, 
+            note: note 
+        });
+    }
+});
             // 4. 整理物件
             const newHerb = {
                 id: idVal ? parseInt(idVal) : Date.now(),
