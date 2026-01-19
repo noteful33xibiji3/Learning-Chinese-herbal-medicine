@@ -352,7 +352,24 @@
 
             currentHerbId = herb.id;
             document.getElementById('chinese_name').value = herb.chinese_name;
-            document.getElementById('origin').value = herb.origin || "";
+            // --- 修改前 ---
+// document.getElementById('origin').value = herb.origin || "";
+
+// --- 修改後 (支援 Array 與 String) ---
+const originWrapper = document.getElementById('origin-rows-wrapper');
+originWrapper.innerHTML = ""; // 先清空
+
+if (Array.isArray(herb.origin)) {
+    // 如果已經是新格式 (陣列)，跑迴圈
+    herb.origin.forEach(or => addOriginRow(or));
+} else if (herb.origin) {
+    // 如果是舊格式 (字串)，用逗號切開或是直接當作一格
+    // 假設你以前是用逗號分隔，可以 split，如果不是就直接丟進去
+    // 這裡保險起見，直接當作一格
+    addOriginRow(herb.origin);
+} else {
+    addOriginRow(); // 空的
+}
             document.getElementById('latin_name').value = herb.latin_name || "";
             document.getElementById('family').value = herb.family || "";
             document.getElementById('effects').value = (herb.effects || []).join(', ');
@@ -553,12 +570,18 @@
                     }
                     chemistryData.push({ name: name, image: finalChemImg });
                 }
+                const originRows = document.querySelectorAll('.origin-input');
+const originData = [];
+originRows.forEach(input => {
+    if(input.value.trim()) originData.push(input.value.trim());
+});
 
                 // 3. 整理物件
+                
                 const newHerb = {
                     id: currentHerbId || Date.now(),
                     chinese_name: document.getElementById('chinese_name').value.trim(),
-                    origin: document.getElementById('origin').value.trim(),
+                    origin: originData,
                     latin_name: document.getElementById('latin_name').value.trim(),
                     family: document.getElementById('family').value.trim(),
                     chem_main: document.getElementById('chem_main').value,
