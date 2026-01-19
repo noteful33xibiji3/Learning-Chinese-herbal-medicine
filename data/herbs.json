@@ -203,5 +203,34 @@
     "indications": "沒有saponin!!!",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 7,
+    "grade": "大二上",
+    "chinese_name": "何首烏",
+    "origin": [
+      {
+        "lat": "Polygonum multiflorum",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Polygoni Multiflori Radix",
+    "part": "",
+    "family_ch": "蓼科",
+    "family_en": "Polygonaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [
+      {
+        "name_en": "",
+        "name_ch": "抗氧化劑",
+        "image": ""
+      }
+    ],
+    "effects": [],
+    "indications": "雲錦花紋為異常維管束\n有馬肝石，能治人髮\n有瀉下、強壯、緩下作用\n(化學結構-抗氧化劑)\n",
+    "image": "",
+    "isTrash": false
   }
 ]
