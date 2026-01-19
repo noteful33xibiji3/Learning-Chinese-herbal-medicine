@@ -123,7 +123,16 @@
     "id": 4,
     "grade": "大二上",
     "chinese_name": "甘草",
-    "origin": [],
+    "origin": [
+      {
+        "lat": "Glycyrrhizae uralensis Fisch",
+        "ch": "東北甘草"
+      },
+      {
+        "lat": "Glycyrrhiza glabra",
+        "ch": "西北甘草"
+      }
+    ],
     "confusing_drugs": [],
     "latin_name": "",
     "family_ch": "",
@@ -132,7 +141,7 @@
     "chem_sub": "",
     "chemistry": [],
     "effects": [],
-    "indications": "",
+    "indications": "國老、乾燥根\nGlycyrrhizin 有增強Steroid hormone -月亮臉\n",
     "image": "",
     "isTrash": false
   }
