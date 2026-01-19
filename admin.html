@@ -661,6 +661,99 @@
             toggleSettings();
             loadDatabase();
         }
+        // ==========================================
+    //  請將這整段貼在 <script> 標籤的最後面
+    // ==========================================
+
+    // 1. 產生一個成分格子
+    function addChemRow(data = null) {
+        console.log("正在新增成分格子..."); //這行會在控制台顯示，讓你知道程式有跑
+        const wrapper = document.getElementById('chem-rows-wrapper');
+        if (!wrapper) {
+            console.error("找不到 chem-rows-wrapper！請檢查 HTML ID");
+            return;
+        }
+
+        const idx = Date.now() + Math.floor(Math.random() * 1000); // 確保 ID 不重複
+        
+        const div = document.createElement('div');
+        div.className = 'chem-row';
+        div.id = `row-${idx}`;
+        
+        // 判斷是新資料還是舊資料
+        let nameVal = "";
+        let imgVal = "";
+        if (data) {
+            if (typeof data === 'string') {
+                nameVal = data; 
+            } else {
+                nameVal = data.name || "";
+                imgVal = data.image || "";
+            }
+        }
+
+        // 填入 HTML 內容
+        div.innerHTML = `
+            <div class="chem-header">
+                <h5>成分 #${wrapper.children.length + 1}</h5>
+                <button type="button" class="btn-del" onclick="removeChemRow('row-${idx}')">移除</button>
+            </div>
+            <input type="text" class="chem-name" placeholder="成分名稱 (如: Ephedrine)" value="${nameVal}" style="margin-bottom:10px;">
+            
+            <div style="font-size:0.9rem;">
+                <label style="display:inline-block; cursor:pointer; background:#eee; padding:5px 10px; border-radius:5px;">
+                    📸 上傳結構圖
+                    <input type="file" accept="image/*" style="display:none" onchange="handleChemImg(this, 'preview-${idx}')">
+                </label>
+                <span style="font-size:0.8rem; color:#888;">(自動壓縮)</span>
+            </div>
+            
+            <img id="preview-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
+            <input type="hidden" class="chem-old-img" value="${imgVal}">
+            <input type="hidden" class="chem-new-base64">
+        `;
+        wrapper.appendChild(div);
+    }
+
+    // 2. 移除某一格
+    function removeChemRow(id) {
+        const row = document.getElementById(id);
+        if(row) row.remove();
+    }
+
+    // 3. 處理小圖片預覽與壓縮
+    function handleChemImg(input, previewId) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = function() {
+                // 壓縮邏輯
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxWidth = 600; 
+                const scale = maxWidth / img.width;
+                
+                canvas.width = maxWidth;
+                canvas.height = img.height * scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // 更新預覽
+                const preview = document.getElementById(previewId);
+                preview.src = base64;
+                preview.style.display = 'block';
+                
+                // 存入 hidden input
+                input.closest('.chem-row').querySelector('.chem-new-base64').value = base64;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
     </script>
 </body>
 </html>
