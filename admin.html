@@ -60,14 +60,22 @@
         }
 
         /* 編輯視窗 (Modal) */
+       /* 編輯視窗 (Modal) - 增加底部空間版 */
         #edit-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto;
-            align-items: flex-start; justify-content: center; padding-top: 50px; padding-bottom: 50px;
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); 
+            z-index: 1000; 
+            overflow-y: auto; /* 允許垂直捲動 */
+            align-items: flex-start; 
+            justify-content: center; 
+            padding-top: 50px; 
+            padding-bottom: 100px; /* ★★★ 這裡改成了 100px，底部空間變大 */
         }
         .modal-content {
             background: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;
+            margin-bottom: 50px; /* ★★★ 多加這個，確保手機版有額外緩衝 */
         }
 
         /* ★★★ 新增：動態列表樣式 ★★★ */
@@ -217,9 +225,13 @@
                 <p id="img-status" style="font-size:0.8rem; color:#666;"></p>
             </div>
 
-            <div style="display:flex; gap:10px; margin-top:30px;">
-                <button onclick="closeEditModal()" class="btn" style="background:#ddd; flex:1;">取消</button>
-                <button onclick="saveAndUpload()" class="btn btn-primary" style="flex:2;">💾 儲存並上傳 GitHub</button>
+            <div style="display:flex; gap:15px; margin-top:30px; padding-top:20px; border-top:1px solid #eee;">
+                <button onclick="closeEditModal()" class="btn" style="background:#90a4ae; color:white; flex:1; padding:12px;">
+                    取消
+                </button>
+                 <button onclick="saveAndUpload()" class="btn btn-primary" style="flex:1; padding:12px;">
+                    💾 儲存並上傳
+                </button>
             </div>
         </div>
     </div>
