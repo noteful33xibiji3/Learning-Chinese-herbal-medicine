@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自我測驗 | 本草學園 (防彈版)</title>
+    <title>自我測驗 | 本草學園 (完全體)</title>
     <link rel="stylesheet" href="style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* =========================================
-           ✨ 樣式區 (保持你的質感設計)
+           ✨ 樣式區
            ========================================= */
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -64,25 +64,31 @@
             background: #fff3e0; padding: 20px; border-radius: 12px; border: 1px solid #ffe0b2; flex-wrap: wrap;
         }
         .mode-select {
-            padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; background: white;
+            padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; background: white; width: 160px;
         }
         /* 測驗區 */
         .question-area {
             text-align: center; margin: 20px 0 30px; min-height: 200px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .question-text { font-size: 1.8rem; font-weight: 700; color: #333; margin: 10px 0; }
-        .question-img { max-height: 200px; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .question-text { font-size: 1.8rem; font-weight: 700; color: #333; margin: 10px 0; line-height: 1.4; }
+        .question-img { max-height: 200px; max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        
         .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .option-grid { grid-template-columns: 1fr; } }
+        
         .option-btn {
-            background: white; border: 2px solid #eee; border-radius: 15px; padding: 15px;
-            min-height: 60px; cursor: pointer; font-size: 1.1rem; color: #444; word-break: break-all;
+            background: white; border: 2px solid #eee; border-radius: 15px; padding: 10px;
+            min-height: 70px; cursor: pointer; font-size: 1.1rem; color: #444; word-break: break-all;
+            display: flex; align-items: center; justify-content: center;
         }
         .option-btn:hover { border-color: #4A7C59; transform: translateY(-3px); }
         .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
         .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
         
+        /* 選項內的圖片 */
+        .option-btn img { max-height: 100px; width: auto; object-fit: contain; }
+
         .btn-primary {
             background: linear-gradient(135deg, #4A7C59 0%, #2C5E4F 100%);
             color: white; border: none; padding: 12px 30px; border-radius: 50px;
@@ -96,7 +102,7 @@
     <nav style="background: white; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
         <div class="nav-left">
             <button onclick="history.back()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">❮</button>
-            <span style="font-weight:bold; color:#2C5E4F; margin-left:10px;">🌿 本草學園 (除錯版)</span>
+            <span style="font-weight:bold; color:#2C5E4F; margin-left:10px;">🌿 本草學園 (完全體)</span>
         </div>
     </nav>
 
@@ -135,10 +141,11 @@
                     <div>
                         <div style="font-size:0.85rem; color:#666;">題目顯示 (Q)</div>
                         <select id="mode-question" class="mode-select">
-                            <option value="chinese_name">中藥名</option>
+                            <option value="chinese_name" selected>中藥名</option>
                             <option value="origin">基原 (學名)</option>
+                            <option value="family">科名</option>
                             <option value="latin_name">生藥名</option>
-                            <option value="chemistry" selected>成分</option>
+                            <option value="chemistry">成分</option>
                             <option value="effects">功效</option>
                             <option value="image">中藥外觀圖</option>
                         </select>
@@ -147,14 +154,19 @@
                     <div>
                         <div style="font-size:0.85rem; color:#666;">選項答案 (A)</div>
                         <select id="mode-answer" class="mode-select">
-                            <option value="chinese_name" selected>中藥名</option>
+                            <option value="chinese_name">中藥名</option>
                             <option value="origin">基原 (學名)</option>
-                            <option value="latin_name">生藥名</option>
+                            <option value="family">科名</option>
+                            <option value="latin_name" selected>生藥名</option>
                             <option value="chemistry">成分</option>
                             <option value="effects">功效</option>
+                            <option value="image">中藥外觀圖</option>
                         </select>
                     </div>
                 </div>
+                <p style="text-align:center; color:#666; font-size:0.9rem; margin-top:10px;">
+                    💡 提示：試試看 左邊選「中藥名」，右邊選「中藥外觀圖」！
+                </p>
             </div>
 
             <button class="btn-primary" onclick="startQuiz()">🚀 開始測驗</button>
@@ -177,15 +189,15 @@
     </main>
 
     <script>
-        // 1. 定義全域變數 (放在最外面)
-        var allHerbs = []; // 存放所有資料
-        var quizList = []; // 存放要考的資料
+        // 1. 定義全域變數
+        var allHerbs = [];
+        var quizList = [];
         var currentIdx = 0;
         var score = 0;
         var qMode = "";
         var aMode = "";
 
-        // 欄位對照表
+        // 欄位對照表 (用於顯示)
         var fieldMap = {
             'chinese_name': '中藥名',
             'origin': '基原',
@@ -196,49 +208,35 @@
             'family': '科名'
         };
 
-        // 2. 頁面載入後執行
         document.addEventListener('DOMContentLoaded', function() {
             console.log("✅ 程式開始執行...");
             
-            // ★ 這裡我先用假資料模擬，確保你直接複製能跑
-            // ★ 如果你要接 data/herbs.json，請把下面這段註解打開，把假資料刪掉
-            
-            /* fetch('data/herbs.json')
-                .then(res => res.json())
-                .then(data => {
-                    allHerbs = data;
-                    initHerbList();
-                })
-                .catch(err => alert("資料載入失敗：" + err));
-            */
-
-            // --- 模擬資料 (測試用) ---
+            // --- 模擬資料 (加入科名 Family) ---
+            // 注意：這裡我幫你補上了 family 欄位，這樣才能考科名
             allHerbs = [
-                { id: 1, grade: "大一", chinese_name: "人參", origin: "Panax ginseng", latin_name: "Ginseng Radix", chemistry: ["Ginsenoside Rg1", "Panaxadiol"], effects: "大補元氣", image: "https://via.placeholder.com/150?text=人參" },
-                { id: 2, grade: "大一", chinese_name: "大黃", origin: "Rheum palmatum", latin_name: "Rhei Radix", chemistry: ["Sennoside A", "Emodin"], effects: "瀉下攻積", image: "https://via.placeholder.com/150?text=大黃" },
-                { id: 3, grade: "大二上", chinese_name: "麻黃", origin: "Ephedra sinica", latin_name: "Ephedrae Herba", chemistry: ["Ephedrine", "Pseudoephedrine"], effects: "發汗解表", image: "https://via.placeholder.com/150?text=麻黃" },
-                { id: 4, grade: "大二上", chinese_name: "當歸", origin: "Angelica sinensis", latin_name: "Angelicae Radix", chemistry: ["Ligustilide"], effects: "補血活血", image: "https://via.placeholder.com/150?text=當歸" },
-                { id: 5, grade: "大二下", chinese_name: "黃連", origin: "Coptis chinensis", latin_name: "Coptidis Rhizoma", chemistry: ["Berberine"], effects: "清熱燥濕", image: "https://via.placeholder.com/150?text=黃連" },
+                { id: 1, grade: "大一", chinese_name: "人參", family: "五加科", origin: "Panax ginseng", latin_name: "Ginseng Radix", chemistry: ["Ginsenoside Rg1", "Panaxadiol"], effects: "大補元氣", image: "https://via.placeholder.com/150?text=人參圖" },
+                { id: 2, grade: "大一", chinese_name: "大黃", family: "蓼科", origin: "Rheum palmatum", latin_name: "Rhei Radix", chemistry: ["Sennoside A", "Emodin"], effects: "瀉下攻積", image: "https://via.placeholder.com/150?text=大黃圖" },
+                { id: 3, grade: "大二上", chinese_name: "麻黃", family: "麻黃科", origin: "Ephedra sinica", latin_name: "Ephedrae Herba", chemistry: ["Ephedrine", "Pseudoephedrine"], effects: "發汗解表", image: "https://via.placeholder.com/150?text=麻黃圖" },
+                { id: 4, grade: "大二上", chinese_name: "當歸", family: "繖形科", origin: "Angelica sinensis", latin_name: "Angelicae Radix", chemistry: ["Ligustilide"], effects: "補血活血", image: "https://via.placeholder.com/150?text=當歸圖" },
+                { id: 5, grade: "大二下", chinese_name: "黃連", family: "毛茛科", origin: "Coptis chinensis", latin_name: "Coptidis Rhizoma", chemistry: ["Berberine"], effects: "清熱燥濕", image: "https://via.placeholder.com/150?text=黃連圖" },
+                { id: 6, grade: "大三", chinese_name: "甘草", family: "豆科", origin: "Glycyrrhiza uralensis", latin_name: "Glycyrrhizae Radix", chemistry: ["Glycyrrhizin"], effects: "調和諸藥", image: "https://via.placeholder.com/150?text=甘草圖" }
             ];
             initHerbList();
-            // --- 模擬結束 ---
         });
 
         // ==========================================
-        //  核心函式 (全部掛載到 window，防止找不到)
+        //  核心函式 (強制綁定 window)
         // ==========================================
 
-        // 3. 初始化列表
         window.initHerbList = function() {
-            console.log("正在初始化列表...");
             var container = document.getElementById('herb-selection-list');
-            container.innerHTML = ""; // 清空
+            container.innerHTML = ""; 
 
             allHerbs.forEach(function(herb) {
                 var label = document.createElement('label');
                 label.className = 'custom-check';
-                label.dataset.name = herb.chinese_name; // 用於搜尋
-                label.dataset.grade = herb.grade;       // 用於年級連動
+                label.dataset.name = herb.chinese_name;
+                label.dataset.grade = herb.grade;
 
                 label.innerHTML = `
                     <input type="checkbox" value="${herb.id}" onchange="updateCount()">
@@ -249,53 +247,30 @@
             updateCount();
         };
 
-        // 4. 搜尋功能 (只隱藏 DOM，不破壞勾選狀態)
         window.filterHerbList = function() {
             var term = document.getElementById('filter-search').value.toLowerCase();
-            console.log("搜尋: " + term);
-            
             var labels = document.querySelectorAll('#herb-selection-list .custom-check');
             labels.forEach(function(label) {
                 var name = label.dataset.name || "";
-                if (term === "" || name.includes(term)) {
-                    label.style.display = "block";
-                } else {
-                    label.style.display = "none";
-                }
+                if (term === "" || name.includes(term)) label.style.display = "block";
+                else label.style.display = "none";
             });
         };
 
-        // 5. 年級連動 (修正邏輯：年級勾選時，強制勾選/取消對應的藥材)
         window.syncGradeToPreview = function() {
-            console.log("年級連動觸發");
-            
-            // 抓出所有被選的年級
             var checkedGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked'))
                                      .map(function(cb) { return cb.value; });
-
             var herbChecks = document.querySelectorAll('#herb-selection-list input');
-            
             herbChecks.forEach(function(cb) {
-                // 找出 checkbox 外層的 label 上的 data-grade
-                var label = cb.parentElement; 
-                var g = label.dataset.grade;
-
-                if (checkedGrades.includes(g)) {
-                    cb.checked = true;
-                } else {
-                    cb.checked = false;
-                }
+                var g = cb.parentElement.dataset.grade;
+                cb.checked = checkedGrades.includes(g);
             });
             updateCount();
         };
 
-        // 6. 全選/清除 (★★★ 修正邏輯：只對看得到的項目有效 ★★★)
         window.toggleSelectAll = function(isChecked) {
-            console.log("全選狀態: " + isChecked);
             var labels = document.querySelectorAll('#herb-selection-list .custom-check');
-            
             labels.forEach(function(label) {
-                // 只有當 display 不是 none 時才操作 (即「看得見」的時候)
                 if (label.style.display !== 'none') {
                     var input = label.querySelector('input');
                     if (input) input.checked = isChecked;
@@ -304,25 +279,18 @@
             updateCount();
         };
 
-        // 7. 更新計數
         window.updateCount = function() {
             var count = document.querySelectorAll('#herb-selection-list input:checked').length;
             document.getElementById('selected-count').innerText = "已選: " + count;
         };
 
-        // 8. 開始測驗
         window.startQuiz = function() {
-            console.log("嘗試開始測驗...");
-            
-            // 收集勾選的 ID
             var checkedInputs = document.querySelectorAll('#herb-selection-list input:checked');
             var ids = Array.from(checkedInputs).map(function(cb) { return parseInt(cb.value); });
-            
-            // 過濾出藥材物件
             quizList = allHerbs.filter(function(h) { return ids.includes(h.id); });
 
             if (quizList.length === 0) {
-                alert("❌ 請至少選擇一味藥材！\n(可以勾選上方年級快速選取)");
+                alert("❌ 請至少選擇一味藥材！");
                 return;
             }
 
@@ -330,17 +298,14 @@
             aMode = document.getElementById('mode-answer').value;
 
             if (qMode === aMode) {
-                alert("❌ 題目跟答案不能選一樣的！");
+                alert("❌ 題目跟答案選一樣的沒意義啦 XD");
                 return;
             }
 
-            // 初始化變數
             currentIdx = 0;
             score = 0;
-            // 洗牌
-            quizList.sort(function() { return 0.5 - Math.random(); });
+            quizList.sort(function() { return 0.5 - Math.random(); }); // 洗牌
 
-            // UI 切換
             document.getElementById('setup-panel').style.display = 'none';
             document.getElementById('quiz-panel').style.display = 'block';
             document.getElementById('q-total').innerText = quizList.length;
@@ -348,7 +313,6 @@
             renderQuestion();
         };
 
-        // 9. 渲染題目
         window.renderQuestion = function() {
             if (currentIdx >= quizList.length) {
                 finishQuiz();
@@ -384,63 +348,50 @@
             var btnHtml = "";
             
             options.forEach(function(opt) {
-                // 如果選項是圖片，就顯示圖片，否則顯示文字
-                var display = aMode === 'image' ? `<img src="${opt.text}" style="max-height:80px">` : opt.text;
-                
-                // 注意：這裡使用 escape 將文字中的單引號轉義，防止 JS 報錯
+                // ★★★ 關鍵修改：如果答案模式是 image，就顯示 <img> 標籤 ★★★
+                var displayContent = opt.text;
+                if (aMode === 'image') {
+                    displayContent = `<img src="${opt.text}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">`;
+                }
+
                 var safeText = String(opt.text).replace(/'/g, "\\'");
-                
-                btnHtml += `<button class="option-btn" onclick="checkAnswer(this, ${opt.correct}, '${safeText}')">${display}</button>`;
+                btnHtml += `<button class="option-btn" onclick="checkAnswer(this, ${opt.correct}, '${safeText}')">${displayContent}</button>`;
             });
 
             document.getElementById('quiz-content').innerHTML = html + `<div class="option-grid">${btnHtml}</div>`;
         };
 
-        // 10. 產生選項邏輯
         function generateOptions(correctHerb) {
             var correctVal = getFieldContent(correctHerb, aMode);
             var opts = [{ text: correctVal, correct: true }];
 
-            // 產生 3 個錯誤選項
             var safetyCounter = 0;
-            while (opts.length < 4 && safetyCounter < 100) {
+            while (opts.length < 4 && safetyCounter < 200) {
                 safetyCounter++;
                 var rnd = allHerbs[Math.floor(Math.random() * allHerbs.length)];
-                if (rnd.id === correctHerb.id) continue; // 不選自己
+                if (rnd.id === correctHerb.id) continue;
 
                 var wrongVal = getFieldContent(rnd, aMode);
                 if (!wrongVal || wrongVal === "無資料") continue;
                 
-                // 避免重複選項
                 var exists = opts.some(function(o) { return o.text === wrongVal; });
-                if (!exists) {
-                    opts.push({ text: wrongVal, correct: false });
-                }
+                if (!exists) opts.push({ text: wrongVal, correct: false });
             }
-            // 洗牌選項
             return opts.sort(function() { return 0.5 - Math.random(); });
         }
 
-        // 11. 取得欄位內容 (處理陣列或物件)
         function getFieldContent(herb, mode) {
             var data = herb[mode];
             if (!data) return "無資料";
-
-            // 如果是陣列 (如成分、多基原)，隨機抽一個顯示
             if (Array.isArray(data)) {
                 var item = data[Math.floor(Math.random() * data.length)];
-                // 如果 item 是物件 (有 name 和 image)，回傳 name
                 if (typeof item === 'object') return item.name || item;
                 return item;
             }
             return data;
         }
 
-        // 12. 檢查答案
         window.checkAnswer = function(btn, isCorrect, text) {
-            console.log("作答: " + isCorrect);
-            
-            // 鎖定所有按鈕
             var btns = document.querySelectorAll('.option-btn');
             btns.forEach(function(b) { b.disabled = true; });
 
@@ -451,11 +402,15 @@
                 btn.classList.add('wrong');
                 // 標示正確答案
                 var currentHerb = quizList[currentIdx];
-                var correctText = getFieldContent(currentHerb, aMode);
+                var correctVal = getFieldContent(currentHerb, aMode);
                 
                 btns.forEach(function(b) {
-                    if (b.innerText.trim() === correctText || b.innerHTML.includes(correctText)) {
-                        b.classList.add('correct');
+                    // 比對時要注意：如果是圖片模式，innerText 可能是空的或不對
+                    // 所以我們檢查 innerHTML 是否包含正確的圖片路徑，或者文字是否相符
+                    if (aMode === 'image') {
+                        if (b.innerHTML.includes(correctVal)) b.classList.add('correct');
+                    } else {
+                        if (b.innerText.trim() === correctVal) b.classList.add('correct');
                     }
                 });
             }
@@ -466,7 +421,6 @@
             }, 1000);
         };
 
-        // 13. 結束
         function finishQuiz() {
             document.getElementById('quiz-panel').style.display = 'none';
             document.getElementById('result-panel').style.display = 'block';
