@@ -144,8 +144,12 @@
             </div>
 
             <div class="form-group">
-                <label>主要成分 (Chemistry)</label>
-                <input type="text" id="chemistry" placeholder="例如：Ephedrine">
+                <label>主要成分與結構 (Chemical Components) *</label>
+                <div class="chem-container">
+                    <div id="chem-rows-wrapper">
+                        </div>
+                    <button type="button" onclick="addChemRow()" class="action-btn" style="background:#4caf50; width:100%; margin-top:10px;">+ 新增一個成分</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -317,7 +321,22 @@
             document.getElementById('origin').value = herb.origin || "";
             document.getElementById('latin_name').value = herb.latin_name || "";
             document.getElementById('family').value = herb.family || "";
-            document.getElementById('chemistry').value = herb.chemistry || "";
+           // --- 修改開始：讀取成分 ---
+            const chemWrapper = document.getElementById('chem-rows-wrapper');
+            chemWrapper.innerHTML = ""; // 清空
+            
+            if (Array.isArray(herb.chemistry)) {
+                // 如果已經是新格式 (陣列)，跑迴圈產生格子
+                herb.chemistry.forEach(item => addChemRow(item));
+            } else if (herb.chemistry) {
+                // 如果是舊格式 (純字串)，切開後產生格子
+                // 例如 "Ephedrine, Pseudoephedrine" -> 兩個格子
+                const parts = herb.chemistry.split(/[,，]/);
+                parts.forEach(p => addChemRow(p.trim()));
+            } else {
+                // 如果是空的，預設給一格
+                addChemRow();
+            }
             document.getElementById('effects').value = (herb.effects || []).join(', ');
             document.getElementById('indications').value = herb.indications || "";
             document.getElementById('grade').value = herb.grade || "大二";
@@ -393,8 +412,94 @@
             };
             reader.readAsDataURL(file);
         }
+// --- 新增：動態成分處理邏輯 ---
 
+        // 產生一個成分格子 (如果傳入 data 代表是編輯，否則為新增)
+        function addChemRow(data = null) {
+            const wrapper = document.getElementById('chem-rows-wrapper');
+            const idx = Date.now(); // 用時間戳記當作臨時 ID
+            
+            const div = document.createElement('div');
+            div.className = 'chem-row';
+            div.id = `row-${idx}`;
+            
+            // 如果是舊資料，data 可能是字串 (相容舊格式) 或 物件
+            let nameVal = "";
+            let imgVal = "";
+            
+            if (data) {
+                if (typeof data === 'string') {
+                    nameVal = data; // 舊資料是純文字
+                } else {
+                    nameVal = data.name || "";
+                    imgVal = data.image || "";
+                }
+            }
+
+            div.innerHTML = `
+                <div class="chem-header">
+                    <h5>成分 #${wrapper.children.length + 1}</h5>
+                    <button type="button" class="btn-del" onclick="removeChemRow('row-${idx}')">移除</button>
+                </div>
+                <input type="text" class="chem-name" placeholder="成分名稱 (如: Ephedrine)" value="${nameVal}" style="margin-bottom:10px;">
+                
+                <div style="font-size:0.9rem;">
+                    <label style="display:inline-block; cursor:pointer; background:#eee; padding:5px 10px; border-radius:5px;">
+                        📸 上傳結構圖
+                        <input type="file" accept="image/*" style="display:none" onchange="handleChemImg(this, 'preview-${idx}')">
+                    </label>
+                    <span style="font-size:0.8rem; color:#888;">(自動壓縮)</span>
+                </div>
+                
+                <img id="preview-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
+                
+                <input type="hidden" class="chem-old-img" value="${imgVal}">
+                <input type="hidden" class="chem-new-base64">
+            `;
+            wrapper.appendChild(div);
+        }
+
+        function removeChemRow(id) {
+            document.getElementById(id).remove();
+            // 重新編號 (選用，純視覺)
+            document.querySelectorAll('.chem-row h5').forEach((el, i) => el.innerText = `成分 #${i+1}`);
+        }
+
+        // 成分圖片專用的壓縮預覽
+        function handleChemImg(input, previewId) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    // 壓縮邏輯
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxWidth = 600; // 結構圖不用太大
+                    const scale = maxWidth / img.width;
+                    
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // 更新預覽與隱藏欄位
+                    const preview = document.getElementById(previewId);
+                    preview.src = base64;
+                    preview.style.display = 'block';
+                    
+                    // 找到同一層的 input hidden 存入資料
+                    input.closest('.chem-row').querySelector('.chem-new-base64').value = base64;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
         // --- 核心：儲存並上傳 ---
+       // --- 核心：儲存並上傳 (支援多圖) ---
         async function saveAndUpload() {
             const owner = localStorage.getItem('tcm_owner');
             const repo = localStorage.getItem('tcm_repo');
@@ -406,59 +511,72 @@
             }
 
             const statusText = document.getElementById('status-text');
-            statusText.innerText = "🚀 正在上傳中，請稍候...";
+            statusText.innerText = "🚀 正在處理圖片與資料...";
 
             try {
-                let finalImagePath = document.getElementById('old-image-path').value || "images/placeholder.jpg";
-
-                // 1. 如果有新圖片，先上傳圖片
+                // 1. 處理主圖片 (中藥外觀)
+                let mainImagePath = document.getElementById('old-image-path').value || "";
                 if(newImageBase64) {
-                    const fileName = `images/${Date.now()}.jpg`;
-                    const imgRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: "Upload image via Admin",
-                            content: newImageBase64.split(',')[1] // 去掉 data:image... 前綴
-                        })
-                    });
-                    if(!imgRes.ok) throw new Error("圖片上傳失敗");
-                    finalImagePath = fileName;
+                    statusText.innerText = "正在上傳中藥外觀圖...";
+                    mainImagePath = await uploadImageToGitHub(owner, repo, token, newImageBase64, 'herbs');
                 }
 
-                // 2. 整理新的中藥物件
+                // 2. 處理成分列表 (Loop 處理每一格)
+                const chemRows = document.querySelectorAll('.chem-row');
+                const chemistryData = [];
+
+                for (let i = 0; i < chemRows.length; i++) {
+                    const row = chemRows[i];
+                    const name = row.querySelector('.chem-name').value.trim();
+                    if (!name) continue; // 沒填名字就跳過
+
+                    const oldImg = row.querySelector('.chem-old-img').value;
+                    const newBase64 = row.querySelector('.chem-new-base64').value;
+                    
+                    let finalChemImg = oldImg; // 預設用舊圖
+
+                    if (newBase64) {
+                        statusText.innerText = `正在上傳成分圖片 (${i+1}/${chemRows.length})...`;
+                        // 上傳到 'structures' 資料夾
+                        finalChemImg = await uploadImageToGitHub(owner, repo, token, newBase64, 'structures');
+                    }
+
+                    chemistryData.push({
+                        name: name,
+                        image: finalChemImg
+                    });
+                }
+
+                // 3. 整理 JSON 物件
                 const newHerb = {
-                    id: currentHerbId || Date.now(), // 有 ID 用舊的，沒有就創新的
+                    id: currentHerbId || Date.now(),
                     chinese_name: document.getElementById('chinese_name').value.trim(),
                     origin: document.getElementById('origin').value.trim(),
                     latin_name: document.getElementById('latin_name').value.trim(),
                     family: document.getElementById('family').value.trim(),
                     chem_main: document.getElementById('chem_main').value,
                     chem_sub: document.getElementById('chem_sub').value,
-                    chemistry: document.getElementById('chemistry').value.trim(),
+                    
+                    // 注意：這裡現在是存 Array 了！
+                    chemistry: chemistryData, 
+                    
                     effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
                     indications: document.getElementById('indications').value.trim(),
                     grade: document.getElementById('grade').value,
-                    image: finalImagePath,
-                    wrong_effects: [] // 這裡可以之後再做擴充
+                    image: mainImagePath
                 };
 
-                // 3. 更新本地資料陣列
+                // 4. 更新本地 Array
                 if (currentHerbId) {
-                    // 更新模式：找到原本的位置並替換
                     const idx = allHerbs.findIndex(h => h.id === currentHerbId);
                     if(idx !== -1) allHerbs[idx] = newHerb;
                 } else {
-                    // 新增模式：加到最後
                     allHerbs.push(newHerb);
                 }
 
-                // 4. 上傳更新後的 JSON
+                // 5. 上傳 herbs.json
+                statusText.innerText = "正在更新資料庫...";
                 const jsonString = JSON.stringify(allHerbs, null, 2);
-                // 修正中文編碼問題
                 const encodedContent = window.btoa(unescape(encodeURIComponent(jsonString)));
 
                 const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/data/herbs.json`, {
@@ -468,22 +586,20 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: `Update ${newHerb.chinese_name} via Admin`,
+                        message: `Update ${newHerb.chinese_name} (with structures)`,
                         content: encodedContent,
-                        sha: sha // 必須帶上原本的 sha
+                        sha: sha
                     })
                 });
 
                 if(!res.ok) throw new Error("JSON 更新失敗");
                 
-                // 更新成功後的處理
                 const data = await res.json();
-                localStorage.setItem('herbs_sha', data.content.sha); // 更新 sha
+                localStorage.setItem('herbs_sha', data.content.sha);
                 
                 statusText.innerText = `✅ ${newHerb.chinese_name} 更新成功！`;
-                alert("更新成功！");
+                alert("🎉 更新成功！");
                 
-                // 重置介面
                 cancelEdit();
                 document.getElementById('admin-search').value = "";
                 document.getElementById('search-results').innerHTML = "";
@@ -491,8 +607,32 @@
             } catch (err) {
                 console.error(err);
                 alert("上傳失敗：" + err.message);
-                statusText.innerText = "❌ 上傳發生錯誤";
+                statusText.innerText = "❌ 錯誤";
             }
+        }
+
+        // --- 獨立出來的上傳圖片小幫手 ---
+        async function uploadImageToGitHub(owner, repo, token, base64Data, folder) {
+            const fileName = `images/${folder}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
+            const content = base64Data.split(',')[1]; // 去除 data:image...
+
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload image to ${folder}`,
+                    content: content
+                })
+            });
+
+            if(!res.ok) throw new Error(`圖片上傳失敗 (${folder})`);
+            
+            // GitHub API 回傳的 content.path 就是我們要存的路徑
+            const result = await res.json();
+            return result.content.path; 
         }
 
         // --- 設定面板開關 ---
