@@ -148,3 +148,59 @@ main { padding: 80px 5% 40px; max-width: 1200px; margin: 0 auto; text-align: cen
     .menu li { text-align: center; }
     .nav-left { gap: 10px; }
 }
+/* --- 保留原本的 CSS，請將以下內容加到最下面或覆蓋對應區塊 --- */
+
+/* 測驗卡片上的標籤 (考什麼模式) */
+.quiz-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--primary);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 測驗卡片設定相對定位，讓 Badge 可以定位 */
+#quiz-card {
+    position: relative;
+    padding-top: 40px; /* 留位置給 Badge */
+}
+
+/* 底部導航按鈕區 */
+.quiz-nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 50px;
+    background: #f0f0f0;
+    color: #555;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.nav-btn:hover { background: #e0e0e0; }
+.nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.nav-btn.next { background: var(--primary); color: white; }
+.nav-btn.next:hover { background: var(--secondary); }
+
+/* 自選中藥清單區域 (預設隱藏) */
+#custom-selection-area {
+    display: none;
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
