@@ -151,5 +151,34 @@
     "indications": "國老、乾燥根\n 有增強Steroid hormone -月亮臉\n",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 5,
+    "grade": "大二上",
+    "chinese_name": "黃連",
+    "origin": [
+      {
+        "lat": "Coptis chinensis",
+        "ch": "野黃連"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Coptidis Rhizoma",
+    "part": "",
+    "family_ch": "毛茛科",
+    "family_en": "Ranunculaceae",
+    "chem_main": "生物鹼",
+    "chem_sub": "",
+    "chemistry": [
+      {
+        "name_en": "berberine",
+        "name_ch": "小蘗鹼",
+        "image": ""
+      }
+    ],
+    "effects": [],
+    "indications": "根如連珠而色黃",
+    "image": "",
+    "isTrash": false
   }
 ]
