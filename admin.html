@@ -341,21 +341,45 @@
         }
 
         // === 4. 表格渲染 (含易混淆預覽) ===
+        // === 修改處：更新列表渲染邏輯 (支援新版物件格式) ===
         function renderTable() {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
+            
+            // 排序 (ID 大到小)
             [...allHerbs].sort((a,b) => b.id - a.id).forEach(herb => {
                 const tr = document.createElement('tr');
-                // 預覽第一筆基原與易混淆
-                let originPrev = Array.isArray(herb.origin) ? herb.origin[0] : herb.origin;
-                let confusingPrev = Array.isArray(herb.confusing_drugs) && herb.confusing_drugs.length > 0 ? 
-                                    `<span style="color:#d32f2f;">⚠️ ${herb.confusing_drugs.length}</span>` : '-';
+                
+                // --- 1. 處理基原顯示 (Origin) ---
+                let originPrev = '-';
+                if (herb.origin) {
+                    if (Array.isArray(herb.origin) && herb.origin.length > 0) {
+                        const first = herb.origin[0];
+                        // 判斷是新版物件 {lat, ch} 還是舊版字串
+                        if (typeof first === 'object') {
+                            originPrev = `${first.lat || ''} ${first.ch || ''}`;
+                        } else {
+                            originPrev = first; // 舊版純字串
+                        }
+                        // 如果不只一個，加個驚嘆號或點點點提示
+                        if (herb.origin.length > 1) originPrev += ' ...';
+                    } else if (typeof herb.origin === 'string') {
+                        originPrev = herb.origin;
+                    }
+                }
+
+                // --- 2. 處理易混淆顯示 (Confusing) ---
+                let confusingPrev = '-';
+                if (herb.confusing_drugs && Array.isArray(herb.confusing_drugs) && herb.confusing_drugs.length > 0) {
+                     // 顯示數量就好，例如 "⚠️ 2"
+                    confusingPrev = `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>`;
+                }
 
                 tr.innerHTML = `
                     <td>${herb.id}</td>
                     <td><span style="background:#e8f5e9; color:#2C5E4F; padding:2px 8px; border-radius:10px; font-size:0.85rem;">${herb.grade}</span></td>
                     <td style="font-weight:bold;">${herb.chinese_name}</td>
-                    <td>${originPrev || '-'}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${originPrev}">${originPrev}</td>
                     <td>${confusingPrev}</td>
                     <td>
                         <button class="btn btn-edit btn-sm" onclick="openEditModal(${herb.id})">✏️</button>
