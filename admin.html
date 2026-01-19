@@ -250,6 +250,9 @@
         let sha = ""; 
         let config = {};
         let newImageBase64 = null; 
+        
+        // ★ 新增：追蹤是否有未儲存的變更
+        let hasUnsavedChanges = false;
 
         const categories = {
             "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"],
@@ -274,6 +277,14 @@
                 loadFromGitHub();
             } else {
                 showLogin();
+            }
+        });
+
+        // ★ 防止誤關網頁
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
 
@@ -437,6 +448,9 @@
             document.getElementById('suggestions').style.display = 'none'; // 關閉搜尋建議
             newImageBase64 = null;
 
+            // ★ 重置未儲存狀態
+            hasUnsavedChanges = false;
+
             // 清空列表
             document.getElementById('origin-rows-wrapper').innerHTML = "";
             document.getElementById('confusing-rows-wrapper').innerHTML = "";
@@ -484,9 +498,26 @@
                 addChemRow();
                 document.getElementById('preview-img').style.display = 'none';
             }
+
+            // ★ 綁定監聽器 (只要有打字就算變更)
+            const inputs = document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select');
+            inputs.forEach(input => {
+                input.oninput = () => { hasUnsavedChanges = true; };
+                input.onchange = () => { hasUnsavedChanges = true; };
+            });
         }
 
-        function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        // ★ 修改後的關閉函式
+        function closeEditModal() {
+            // 如果有變更，且使用者按了「取消」(confirm 回傳 false)，則不關閉視窗
+            if (hasUnsavedChanges) {
+                const confirmDiscard = confirm("⚠️ 您有未儲存的資料！\n確定要捨棄變更並關閉嗎？");
+                if (!confirmDiscard) return;
+            }
+            
+            document.getElementById('edit-modal').style.display = 'none';
+            hasUnsavedChanges = false; // 重置狀態
+        }
 
         // --- 動態列表產生器 ---
         function addOriginRow(data = null) {
@@ -555,7 +586,7 @@
             wrapper.appendChild(div);
         }
 
-        // --- 圖片 ---
+        // --- 圖片處理 ---
         function handleImagePreview() {
             const file = document.getElementById('img-input').files[0];
             if(!file) return;
@@ -693,7 +724,12 @@
                 if(!res.ok) throw new Error("JSON 更新失敗");
                 const data = await res.json();
                 sha = data.content.sha;
+                
                 alert("🎉 儲存成功！");
+                
+                // ★ 儲存成功後，解除未儲存狀態
+                hasUnsavedChanges = false;
+
                 closeEditModal();
                 renderTable(); // 重新渲染表格
             } catch(e) { alert("儲存失敗: " + e.message); }
