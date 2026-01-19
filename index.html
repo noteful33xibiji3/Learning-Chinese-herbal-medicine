@@ -67,10 +67,52 @@
         .r-name { font-size: 1.5rem; font-weight: bold; color: #2c5e40; }
         .r-family { color: #666; font-style: italic; }
         .r-detail-row { margin-bottom: 8px; font-size: 1.05rem; line-height: 1.5; }
-        .label { font-weight: bold; color: #555; width: 100px; display: inline-block; }
+        .label { font-weight: bold; color: #555; width: 100px; display: inline-block; vertical-align: top;}
         
         .r-img-container { width: 100%; height: 200px; overflow: hidden; border-radius: 8px; margin-bottom: 15px; }
         .r-img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- 新增：前台化學成分顯示樣式 --- */
+        .chem-display-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+            /* 讓它在 label 下方對齊或區塊顯示 */
+            padding-left: 5px; 
+        }
+
+        .chem-item {
+            background: #fff;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            width: 140px; /* 控制每一格的寬度 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .chem-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            border-color: #2c5e40;
+        }
+
+        .chem-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #4A7C59; 
+            font-size: 0.9rem;
+            word-wrap: break-word;
+        }
+
+        .chem-structure-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 100px; 
+            cursor: zoom-in;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -148,20 +190,35 @@
             const cName = (item.chinese_name || "").toLowerCase();
             const lName = (item.latin_name || "").toLowerCase(); 
             const family = (item.family || "").toLowerCase();
-            const origin = (item.origin || "").toLowerCase(); // 這裡已經修正，不亂用 latin_name 覆蓋
-            const chem = (item.chemistry || "").toLowerCase();
+            
+            // 處理 Origin (可能是陣列也可能是字串)
+            let originText = "";
+            if(Array.isArray(item.origin)) {
+                originText = item.origin.join(" ").toLowerCase();
+            } else {
+                originText = (item.origin || "").toLowerCase();
+            }
+
+            // 處理 Chemistry (可能是陣列也可能是字串)
+            let chemText = "";
+            if(Array.isArray(item.chemistry)) {
+                chemText = item.chemistry.map(c => c.name).join(" ").toLowerCase();
+            } else {
+                chemText = (item.chemistry || "").toLowerCase();
+            }
+
             const effects = (item.effects || []).join(' ').toLowerCase();
 
             switch (searchType) {
                 case 'name': return cName.includes(term) || lName.includes(term);
                 case 'family': return family.includes(term);
-                case 'origin': return origin.includes(term); // 專搜基原
-                case 'chemistry': return chem.includes(term);
+                case 'origin': return originText.includes(term); 
+                case 'chemistry': return chemText.includes(term);
                 case 'effects': return effects.includes(term);
                 case 'all': default:
                     return cName.includes(term) || lName.includes(term) || 
-                           family.includes(term) || origin.includes(term) || 
-                           chem.includes(term) || effects.includes(term);
+                           family.includes(term) || originText.includes(term) || 
+                           chemText.includes(term) || effects.includes(term);
             }
         });
     }
@@ -195,13 +252,25 @@
                     subText = `[科] ${item.family}`;
                     badgeColor = "#e3f2fd";
                 } else if (searchType === 'chemistry') {
-                    let chem = item.chemistry || "無資料";
-                    if(chem.length > 20) chem = chem.substring(0, 20) + "...";
-                    subText = `[成分] ${chem}`;
+                    // 判斷成分顯示文字
+                    let chemShow = "";
+                    if(Array.isArray(item.chemistry)) {
+                        chemShow = item.chemistry.map(c => c.name).join(", ");
+                    } else {
+                        chemShow = item.chemistry || "無資料";
+                    }
+                    if(chemShow.length > 20) chemShow = chemShow.substring(0, 20) + "...";
+                    subText = `[成分] ${chemShow}`;
                     badgeColor = "#fff3e0";
                 } else if (searchType === 'origin') {
-                    // 如果沒有基原，就誠實顯示無資料
-                    subText = `[基原] ${item.origin || "暫無資料"}`; 
+                    // 判斷基原顯示文字
+                    let originShow = "";
+                    if(Array.isArray(item.origin)) {
+                        originShow = item.origin.join(", ");
+                    } else {
+                        originShow = item.origin || "暫無資料";
+                    }
+                    subText = `[基原] ${originShow}`; 
                     badgeColor = "#e8f5e9";
                 }
 
@@ -252,21 +321,31 @@
         }
     });
 
-    // --- 顯示結果卡片 ---
+    // --- 顯示結果卡片 (整合了新版基原與成分邏輯) ---
     function displayResult(item, append = false) {
         if (!append) resultsArea.innerHTML = "";
 
-        // ★ 顯示處理：基原如果是空的，顯示暫無資料，不亂補生藥名 ★
-        let originDisplay = item.origin ? item.origin : "<span style='color:#ccc;'>暫無基原資料</span>";
+        // 1. 處理基原 (Origin) 顯示
+        let originDisplay = "";
+        if (Array.isArray(item.origin)) {
+            // 如果是多基原，換行顯示，並加上小圓點
+            originDisplay = `<div style="display:inline-block; vertical-align:top;">` + 
+                            item.origin.map(o => `<div>• ${o}</div>`).join('') + 
+                            `</div>`;
+        } else {
+            originDisplay = item.origin ? item.origin : "<span style='color:#ccc;'>暫無基原資料</span>";
+        }
 
-        const chemText = item.chemistry ? item.chemistry : "暫無資料";
         const noteText = item.indications ? item.indications : "";
         const effectsText = item.effects ? item.effects.join('、') : "";
         const imgSrc = item.image ? item.image : "images/placeholder.jpg";
 
+        // 建立卡片元素
         const div = document.createElement("div");
         div.className = "result-card";
-        div.innerHTML = `
+        
+        // 組合前半部 HTML
+        let htmlContent = `
             ${item.image ? `<div class="r-img-container"><img src="${imgSrc}" class="r-img" onerror="this.src='images/placeholder.jpg'"></div>` : ''}
             <div class="r-header">
                 <span class="r-name">${item.chinese_name}</span>
@@ -274,11 +353,47 @@
             </div>
             <div class="r-detail-row"><span class="label">生藥名:</span> ${item.latin_name}</div>
             <div class="r-detail-row"><span class="label">基原(學名):</span> ${originDisplay}</div>
-            <div class="r-detail-row"><span class="label">成分:</span> ${chemText}</div>
+            
+            <div class="r-detail-row">
+                <div class="label" style="margin-bottom:5px;">成分:</div>
+                <div class="chem-display-container"></div> </div>
+
             <div class="r-detail-row"><span class="label">功效:</span> ${effectsText}</div>
             <div class="r-detail-row"><span class="label">備註:</span> ${noteText}</div>
             <div class="r-detail-row"><span class="label">年級:</span> <span style="background:#eee; padding:2px 6px; border-radius:4px;">${item.grade}</span></div>
         `;
+        
+        div.innerHTML = htmlContent;
+
+        // 2. 處理成分 (Chemistry) 邏輯
+        const chemContainer = div.querySelector('.chem-display-container');
+        
+        if (Array.isArray(item.chemistry)) {
+            // === 新格式：有圖片的陣列 ===
+            item.chemistry.forEach(c => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'chem-item';
+                
+                const nameEl = document.createElement('strong');
+                nameEl.innerText = c.name;
+                itemDiv.appendChild(nameEl);
+
+                if (c.image) {
+                    const img = document.createElement('img');
+                    img.src = c.image;
+                    img.className = 'chem-structure-img';
+                    img.onclick = () => window.open(c.image); // 點擊看大圖
+                    itemDiv.appendChild(img);
+                }
+                chemContainer.appendChild(itemDiv);
+            });
+        } else if (item.chemistry) {
+            // === 舊格式：純文字 ===
+            chemContainer.innerHTML = item.chemistry;
+        } else {
+            chemContainer.innerHTML = "<span style='color:#ccc;'>暫無資料</span>";
+        }
+
         resultsArea.appendChild(div);
     }
 </script>
