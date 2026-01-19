@@ -6,39 +6,68 @@
     <title>更新資料庫 | 本草學園</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* admin 專用樣式優化 */
-        body { background-color: #f4f7f6; }
+        /* --- 核心變數定義 (防止按鈕隱形) --- */
+        :root {
+            --primary: #4A7C59;
+            --secondary: #2C5E4F;
+            --accent: #E8F5E9;
+        }
+
+        /* --- Admin 頁面樣式 --- */
+        body { background-color: #f4f7f6; font-family: 'Noto Sans TC', sans-serif; }
         .admin-container { max-width: 800px; margin: 20px auto; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         /* 狀態列 */
         .status-bar { background: #e8f5e9; color: #2e7d32; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
         .status-bar.error { background: #ffebee; color: #c62828; }
         
-        /* 搜尋區 */
-        .search-section { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #eee; }
-        .search-box-wrapper { display: flex; gap: 10px; max-width: 500px; margin: 0 auto; }
-        .search-input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 50px; font-size: 1.1rem; outline: none; transition: 0.3s; }
-        .search-input:focus { border-color: var(--primary); }
-        .action-btn { padding: 10px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary); transition: 0.2s; white-space: nowrap;}
-        .action-btn:hover { opacity: 0.9; }
-        .btn-new { background: #ff9800; } /* 橘色新增按鈕 */
+        /* --- 搜尋區 (智慧搜尋樣式) --- */
+        .search-section { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #eee; position: relative; }
+        .search-box-wrapper { display: flex; gap: 10px; max-width: 500px; margin: 0 auto; position: relative; z-index: 100; }
+        .search-input { flex: 1; padding: 12px 20px; border: 2px solid #ddd; border-radius: 50px; font-size: 1.1rem; outline: none; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 4px 10px rgba(74, 124, 89, 0.2); }
+        
+        /* 智慧搜尋建議選單 */
+        .suggestions-list {
+            position: absolute; top: 110%; left: 0; right: 0;
+            background: white; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            max-height: 300px; overflow-y: auto;
+            display: none; text-align: left; border: 1px solid #eee;
+        }
+        .suggestion-item { padding: 12px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; }
+        .suggestion-item:hover { background-color: #f5f5f5; color: var(--primary); }
+        
+        /* 按鈕樣式 */
+        .action-btn { padding: 10px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary); transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-new { background: #ff9800; display: block; margin: 20px auto; } 
 
-        /* 搜尋結果卡片 */
-        .result-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
-        .mini-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: left; }
-        .mini-card:hover { border-color: var(--primary); background: #f1f8e9; transform: translateY(-2px); }
-        .mini-card h4 { margin: 0 0 5px 0; color: #333; }
-        .mini-card p { margin: 0; font-size: 0.85rem; color: #666; }
+        /* --- 搜尋結果卡片 (3D 立體感優化) --- */
+        .result-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .mini-card { 
+            background: white; border: 1px solid #eee; padding: 20px; border-radius: 12px; 
+            cursor: pointer; transition: all 0.3s ease; text-align: left;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
+        }
+        .mini-card::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #ddd; transition: 0.3s; }
+        .mini-card:hover { 
+            border-color: transparent; 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); 
+        }
+        .mini-card:hover::before { background: var(--primary); }
+        .mini-card h4 { margin: 0 0 5px 0; color: #333; font-size: 1.1rem; }
+        .mini-card p { margin: 0; font-size: 0.85rem; color: #888; }
 
-        /* 表單區 (預設隱藏，選取後顯示) */
+        /* 表單區 */
         #edit-form-area { display: none; animation: fadeIn 0.5s; }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .form-title { font-size: 1.5rem; font-weight: bold; color: var(--secondary); margin: 0; }
         .mode-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
-        .mode-update { background: #e3f2fd; color: #1565c0; } /* 藍色更新模式 */
-        .mode-create { background: #fff3e0; color: #ef6c00; } /* 橘色新增模式 */
+        .mode-update { background: #e3f2fd; color: #1565c0; }
+        .mode-create { background: #fff3e0; color: #ef6c00; }
 
-        /* 欄位樣式 */
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
@@ -47,27 +76,15 @@
         /* 圖片預覽 */
         .img-preview-box { text-align: center; margin-top: 10px; }
         #preview-img { max-height: 150px; border-radius: 8px; display: none; margin: 0 auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        /* --- 新增：化學成分動態列表樣式 --- */
-        .chem-container {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            background: #fafafa;
-        }
-        .chem-row {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            position: relative;
-            animation: fadeIn 0.3s;
-        }
-        .chem-row h5 { margin: 0 0 10px 0; color: #666; font-size: 0.9rem; }
-        .chem-header { display: flex; justify-content: space-between; align-items: center; }
-        .btn-del { background: #ffebee; color: #c62828; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-        .btn-del:hover { background: #ffcdd2; }
-        .chem-img-preview { max-height: 100px; display: block; margin-top: 10px; border: 1px solid #eee; }
+        
+        /* --- 化學成分動態列表樣式 --- */
+        .chem-container { border: 2px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #fafafa; }
+        .chem-row { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; position: relative; animation: fadeIn 0.3s; }
+        .chem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+        .chem-header h5 { margin: 0; color: #666; }
+        .btn-del { background: #ffebee; color: #c62828; border: none; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+        .btn-del:hover { background: #ef9a9a; color: white; }
+        .chem-img-preview { max-height: 100px; display: block; margin-top: 10px; border: 1px solid #eee; padding: 5px; background: white; border-radius: 5px; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -97,16 +114,16 @@
         <div class="search-section">
             <h3 style="margin-bottom:15px; color:#555;">你要編輯哪一味藥？</h3>
             <div class="search-box-wrapper">
-                <input type="text" id="admin-search" class="search-input" placeholder="輸入中藥名..." onkeypress="if(event.key==='Enter') doSearch()">
-                <button onclick="doSearch()" class="action-btn">🔍 搜尋</button>
+                <input type="text" id="admin-search" class="search-input" placeholder="輸入中藥名..." oninput="handleSearchInput()">
+                <div id="suggestions" class="suggestions-list"></div>
             </div>
-            
-            <div id="search-results" class="result-list"></div>
             
             <div id="no-result-msg" style="display:none; margin-top:20px;">
                 <p>資料庫裡沒有這味藥。</p>
                 <button onclick="startCreateNew()" class="action-btn btn-new">➕ 新增此中藥</button>
             </div>
+            
+            <div id="search-results" class="result-list"></div>
         </div>
 
         <div id="edit-form-area">
@@ -146,9 +163,8 @@
             <div class="form-group">
                 <label>主要成分與結構 (Chemical Components) *</label>
                 <div class="chem-container">
-                    <div id="chem-rows-wrapper">
-                        </div>
-                    <button type="button" onclick="addChemRow()" class="action-btn" style="background:#4caf50; width:100%; margin-top:10px;">+ 新增一個成分</button>
+                    <div id="chem-rows-wrapper"></div>
+                    <button type="button" onclick="addChemRow()" class="action-btn" style="background:#4caf50; width:100%; margin-top:10px; box-shadow:none;">+ 新增一個成分</button>
                 </div>
             </div>
 
@@ -193,10 +209,10 @@
     <script>
         // --- 全域變數 ---
         let allHerbs = [];
-        let currentHerbId = null; // 記錄目前正在編輯的 ID (如果是 null 代表新增)
-        let newImageBase64 = null; // 暫存新圖片資料
+        let currentHerbId = null; 
+        let newImageBase64 = null; 
 
-        // 分類資料 (需與 categories.json 一致)
+        // 分類資料
         const categories = {
             "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"],
             "生物鹼": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"],
@@ -211,13 +227,11 @@
             "脂質": ["脂肪油", "蠟"]
         };
 
-        // --- 初始化 ---
         document.addEventListener('DOMContentLoaded', () => {
             initCategories();
-            loadDatabase(); // 一進來就自動連線
+            loadDatabase();
         });
 
-        // 初始化分類選單
         function initCategories() {
             const mainSel = document.getElementById('chem_main');
             for(let key in categories) {
@@ -255,17 +269,13 @@
             }
 
             try {
-                // 讀取 herbs.json
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/data/herbs.json`;
                 const res = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
                 if(!res.ok) throw new Error("連線失敗，請檢查 Token");
                 
                 const data = await res.json();
-                // 解碼 Base64 (支援中文)
                 const content = decodeURIComponent(escape(window.atob(data.content)));
                 allHerbs = JSON.parse(content);
-                
-                // 儲存 SHA 以便後續更新使用
                 localStorage.setItem('herbs_sha', data.sha);
 
                 statusText.innerText = `✅ 資料庫已同步 (共 ${allHerbs.length} 筆)`;
@@ -277,111 +287,127 @@
             }
         }
 
-        // --- 搜尋功能 ---
-        function doSearch() {
+        // --- 智慧搜尋功能 ---
+        function handleSearchInput() {
             const term = document.getElementById('admin-search').value.trim().toLowerCase();
+            const suggestionsDiv = document.getElementById('suggestions');
             const resultDiv = document.getElementById('search-results');
             const noResultMsg = document.getElementById('no-result-msg');
             const formArea = document.getElementById('edit-form-area');
 
-            resultDiv.innerHTML = "";
-            formArea.style.display = "none"; // 隱藏表單
+            // 隱藏表單和結果
+            formArea.style.display = "none";
             noResultMsg.style.display = "none";
+            resultDiv.innerHTML = "";
 
-            if(!term) return;
+            if (!term) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
 
+            // 搜尋匹配
             const matches = allHerbs.filter(h => 
                 h.chinese_name.includes(term) || 
                 (h.latin_name && h.latin_name.toLowerCase().includes(term))
             );
 
-            if(matches.length === 0) {
-                noResultMsg.style.display = "block";
-            } else {
+            if (matches.length > 0) {
+                // 顯示下拉建議
+                suggestionsDiv.innerHTML = matches.map(h => `
+                    <div class="suggestion-item" onclick="loadHerbToFormByID(${h.id})">
+                        <span>${h.chinese_name}</span>
+                        <span style="color:#888; font-size:0.85rem;">${h.latin_name || ''}</span>
+                    </div>
+                `).join('');
+                suggestionsDiv.style.display = 'block';
+
+                // 同時顯示 3D 卡片結果
                 matches.forEach(h => {
                     const div = document.createElement('div');
                     div.className = 'mini-card';
                     div.innerHTML = `<h4>${h.chinese_name}</h4><p>${h.latin_name || ''}</p>`;
-                    div.onclick = () => loadHerbToForm(h);
+                    div.onclick = () => loadHerbToFormByID(h.id);
                     resultDiv.appendChild(div);
                 });
+
+            } else {
+                suggestionsDiv.style.display = 'none';
+                noResultMsg.style.display = 'block'; // 顯示新增按鈕
             }
         }
 
-        // --- 載入資料到表單 (編輯模式) ---
+        // 輔助：用 ID 找藥材並載入
+        function loadHerbToFormByID(id) {
+            const herb = allHerbs.find(h => h.id === id);
+            if(herb) loadHerbToForm(herb);
+        }
+
+        // --- 載入資料到表單 ---
         function loadHerbToForm(herb) {
-            document.getElementById('search-results').innerHTML = ""; // 清空搜尋結果
+            document.getElementById('suggestions').style.display = 'none'; // 關閉建議
+            document.getElementById('search-results').innerHTML = ""; 
             document.getElementById('edit-form-area').style.display = "block";
             document.getElementById('edit-mode-badge').innerText = "更新現有資料";
             document.getElementById('edit-mode-badge').className = "mode-badge mode-update";
 
-            // 填寫欄位
             currentHerbId = herb.id;
             document.getElementById('chinese_name').value = herb.chinese_name;
             document.getElementById('origin').value = herb.origin || "";
             document.getElementById('latin_name').value = herb.latin_name || "";
             document.getElementById('family').value = herb.family || "";
-           // --- 修改開始：讀取成分 ---
-            const chemWrapper = document.getElementById('chem-rows-wrapper');
-            chemWrapper.innerHTML = ""; // 清空
-            
-            if (Array.isArray(herb.chemistry)) {
-                // 如果已經是新格式 (陣列)，跑迴圈產生格子
-                herb.chemistry.forEach(item => addChemRow(item));
-            } else if (herb.chemistry) {
-                // 如果是舊格式 (純字串)，切開後產生格子
-                // 例如 "Ephedrine, Pseudoephedrine" -> 兩個格子
-                const parts = herb.chemistry.split(/[,，]/);
-                parts.forEach(p => addChemRow(p.trim()));
-            } else {
-                // 如果是空的，預設給一格
-                addChemRow();
-            }
             document.getElementById('effects').value = (herb.effects || []).join(', ');
             document.getElementById('indications').value = herb.indications || "";
             document.getElementById('grade').value = herb.grade || "大二";
             document.getElementById('old-image-path').value = herb.image || "";
 
-            // 處理分類
+            // 分類
             document.getElementById('chem_main').value = herb.chem_main || "";
             updateSubCats();
             document.getElementById('chem_sub').value = herb.chem_sub || "";
 
-            // 處理圖片預覽
+            // --- 核心修改：讀取成分 ---
+            const chemWrapper = document.getElementById('chem-rows-wrapper');
+            chemWrapper.innerHTML = "";
+            
+            if (Array.isArray(herb.chemistry)) {
+                herb.chemistry.forEach(item => addChemRow(item));
+            } else if (herb.chemistry) {
+                // 舊格式相容
+                const parts = herb.chemistry.split(/[,，]/);
+                parts.forEach(p => addChemRow(p.trim()));
+            } else {
+                addChemRow();
+            }
+
+            // 圖片
             const img = document.getElementById('preview-img');
             if(herb.image && herb.image.startsWith('http')) {
                  img.src = herb.image;
             } else {
-                 // 這裡假設是相對路徑，本地預覽可能破圖，但我們會顯示路徑文字
                  img.src = ""; 
                  document.getElementById('img-status').innerText = `目前圖片：${herb.image}`;
             }
             img.style.display = herb.image ? "block" : "none";
-            newImageBase64 = null; // 重置新圖片
+            newImageBase64 = null;
             document.getElementById('img-input').value = "";
         }
 
-       
-       // --- 開啟新增模式 ---
+        // --- 開啟新增模式 ---
         function startCreateNew() {
             const searchTerm = document.getElementById('admin-search').value;
-            
             document.getElementById('no-result-msg').style.display = "none";
             document.getElementById('edit-form-area').style.display = "block";
             document.getElementById('edit-mode-badge').innerText = "新增一筆資料";
             document.getElementById('edit-mode-badge').className = "mode-badge mode-create";
 
-            // 1. 清空變數與一般輸入框
-            currentHerbId = null; // 標記為新增
+            currentHerbId = null; 
             document.querySelectorAll('input, textarea').forEach(el => el.value = "");
-            document.getElementById('chinese_name').value = searchTerm; // 自動帶入剛剛搜的字
+            document.getElementById('chinese_name').value = searchTerm;
 
-            // 2. (新增) 重置化學成分區塊
-            // 先清空裡面舊有的格子，再呼叫一次 addChemRow() 產生一個空的
+            // 清空並新增一個成分格
             document.getElementById('chem-rows-wrapper').innerHTML = "";
             addChemRow(); 
 
-            // 3. 重置圖片狀態
             document.getElementById('preview-img').style.display = "none";
             document.getElementById('img-status').innerText = "";
             newImageBase64 = null;
@@ -390,29 +416,27 @@
         function cancelEdit() {
             document.getElementById('edit-form-area').style.display = "none";
             document.getElementById('admin-search').value = "";
+            document.getElementById('suggestions').style.display = "none";
         }
 
         // --- 圖片處理 ---
         function handleImagePreview() {
             const file = document.getElementById('img-input').files[0];
             if(!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
-                // 壓縮圖片邏輯 (簡單版)
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const maxWidth = 800; // 限制寬度
+                    const maxWidth = 800; 
                     const scale = maxWidth / img.width;
                     canvas.width = maxWidth;
                     canvas.height = img.height * scale;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // 轉回 Base64
-                    newImageBase64 = canvas.toDataURL('image/jpeg', 0.7); // 70% 品質
+                    newImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById('preview-img').src = newImageBase64;
                     document.getElementById('preview-img').style.display = "block";
                     document.getElementById('img-status').innerText = "準備上傳新圖片...";
@@ -420,24 +444,21 @@
             };
             reader.readAsDataURL(file);
         }
-// --- 新增：動態成分處理邏輯 ---
 
-        // 產生一個成分格子 (如果傳入 data 代表是編輯，否則為新增)
+        // --- 動態成分處理邏輯 (只有這一份，不會打架了) ---
         function addChemRow(data = null) {
             const wrapper = document.getElementById('chem-rows-wrapper');
-            const idx = Date.now(); // 用時間戳記當作臨時 ID
+            const idx = Date.now() + Math.floor(Math.random() * 1000);
             
             const div = document.createElement('div');
             div.className = 'chem-row';
             div.id = `row-${idx}`;
             
-            // 如果是舊資料，data 可能是字串 (相容舊格式) 或 物件
             let nameVal = "";
             let imgVal = "";
-            
             if (data) {
                 if (typeof data === 'string') {
-                    nameVal = data; // 舊資料是純文字
+                    nameVal = data; 
                 } else {
                     nameVal = data.name || "";
                     imgVal = data.image || "";
@@ -450,7 +471,6 @@
                     <button type="button" class="btn-del" onclick="removeChemRow('row-${idx}')">移除</button>
                 </div>
                 <input type="text" class="chem-name" placeholder="成分名稱 (如: Ephedrine)" value="${nameVal}" style="margin-bottom:10px;">
-                
                 <div style="font-size:0.9rem;">
                     <label style="display:inline-block; cursor:pointer; background:#eee; padding:5px 10px; border-radius:5px;">
                         📸 上傳結構圖
@@ -458,9 +478,7 @@
                     </label>
                     <span style="font-size:0.8rem; color:#888;">(自動壓縮)</span>
                 </div>
-                
                 <img id="preview-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
-                
                 <input type="hidden" class="chem-old-img" value="${imgVal}">
                 <input type="hidden" class="chem-new-base64">
             `;
@@ -468,46 +486,36 @@
         }
 
         function removeChemRow(id) {
-            document.getElementById(id).remove();
-            // 重新編號 (選用，純視覺)
-            document.querySelectorAll('.chem-row h5').forEach((el, i) => el.innerText = `成分 #${i+1}`);
+            const row = document.getElementById(id);
+            if(row) row.remove();
         }
 
-        // 成分圖片專用的壓縮預覽
         function handleChemImg(input, previewId) {
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = function() {
-                    // 壓縮邏輯
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const maxWidth = 600; // 結構圖不用太大
+                    const maxWidth = 600; 
                     const scale = maxWidth / img.width;
-                    
                     canvas.width = maxWidth;
                     canvas.height = img.height * scale;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
                     const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    // 更新預覽與隱藏欄位
                     const preview = document.getElementById(previewId);
                     preview.src = base64;
                     preview.style.display = 'block';
-                    
-                    // 找到同一層的 input hidden 存入資料
                     input.closest('.chem-row').querySelector('.chem-new-base64').value = base64;
                 }
             };
             reader.readAsDataURL(file);
         }
+
         // --- 核心：儲存並上傳 ---
-       // --- 核心：儲存並上傳 (支援多圖) ---
         async function saveAndUpload() {
             const owner = localStorage.getItem('tcm_owner');
             const repo = localStorage.getItem('tcm_repo');
@@ -522,40 +530,31 @@
             statusText.innerText = "🚀 正在處理圖片與資料...";
 
             try {
-                // 1. 處理主圖片 (中藥外觀)
+                // 1. 處理主圖片
                 let mainImagePath = document.getElementById('old-image-path').value || "";
                 if(newImageBase64) {
                     statusText.innerText = "正在上傳中藥外觀圖...";
                     mainImagePath = await uploadImageToGitHub(owner, repo, token, newImageBase64, 'herbs');
                 }
 
-                // 2. 處理成分列表 (Loop 處理每一格)
+                // 2. 處理成分列表
                 const chemRows = document.querySelectorAll('.chem-row');
                 const chemistryData = [];
-
                 for (let i = 0; i < chemRows.length; i++) {
                     const row = chemRows[i];
                     const name = row.querySelector('.chem-name').value.trim();
-                    if (!name) continue; // 沒填名字就跳過
-
+                    if (!name) continue; 
                     const oldImg = row.querySelector('.chem-old-img').value;
                     const newBase64 = row.querySelector('.chem-new-base64').value;
-                    
-                    let finalChemImg = oldImg; // 預設用舊圖
-
+                    let finalChemImg = oldImg; 
                     if (newBase64) {
                         statusText.innerText = `正在上傳成分圖片 (${i+1}/${chemRows.length})...`;
-                        // 上傳到 'structures' 資料夾
                         finalChemImg = await uploadImageToGitHub(owner, repo, token, newBase64, 'structures');
                     }
-
-                    chemistryData.push({
-                        name: name,
-                        image: finalChemImg
-                    });
+                    chemistryData.push({ name: name, image: finalChemImg });
                 }
 
-                // 3. 整理 JSON 物件
+                // 3. 整理物件
                 const newHerb = {
                     id: currentHerbId || Date.now(),
                     chinese_name: document.getElementById('chinese_name').value.trim(),
@@ -564,17 +563,14 @@
                     family: document.getElementById('family').value.trim(),
                     chem_main: document.getElementById('chem_main').value,
                     chem_sub: document.getElementById('chem_sub').value,
-                    
-                    // 注意：這裡現在是存 Array 了！
                     chemistry: chemistryData, 
-                    
                     effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
                     indications: document.getElementById('indications').value.trim(),
                     grade: document.getElementById('grade').value,
                     image: mainImagePath
                 };
 
-                // 4. 更新本地 Array
+                // 4. 更新 Array
                 if (currentHerbId) {
                     const idx = allHerbs.findIndex(h => h.id === currentHerbId);
                     if(idx !== -1) allHerbs[idx] = newHerb;
@@ -582,7 +578,7 @@
                     allHerbs.push(newHerb);
                 }
 
-                // 5. 上傳 herbs.json
+                // 5. 上傳
                 statusText.innerText = "正在更新資料庫...";
                 const jsonString = JSON.stringify(allHerbs, null, 2);
                 const encodedContent = window.btoa(unescape(encodeURIComponent(jsonString)));
@@ -594,23 +590,21 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: `Update ${newHerb.chinese_name} (with structures)`,
+                        message: `Update ${newHerb.chinese_name} (Admin)`,
                         content: encodedContent,
                         sha: sha
                     })
                 });
 
                 if(!res.ok) throw new Error("JSON 更新失敗");
-                
                 const data = await res.json();
                 localStorage.setItem('herbs_sha', data.content.sha);
                 
                 statusText.innerText = `✅ ${newHerb.chinese_name} 更新成功！`;
                 alert("🎉 更新成功！");
-                
                 cancelEdit();
                 document.getElementById('admin-search').value = "";
-                document.getElementById('search-results').innerHTML = "";
+                document.getElementById('suggestions').style.display = "none";
 
             } catch (err) {
                 console.error(err);
@@ -619,11 +613,9 @@
             }
         }
 
-        // --- 獨立出來的上傳圖片小幫手 ---
         async function uploadImageToGitHub(owner, repo, token, base64Data, folder) {
             const fileName = `images/${folder}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
-            const content = base64Data.split(',')[1]; // 去除 data:image...
-
+            const content = base64Data.split(',')[1]; 
             const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
                 method: 'PUT',
                 headers: { 
@@ -635,15 +627,11 @@
                     content: content
                 })
             });
-
             if(!res.ok) throw new Error(`圖片上傳失敗 (${folder})`);
-            
-            // GitHub API 回傳的 content.path 就是我們要存的路徑
             const result = await res.json();
             return result.content.path; 
         }
 
-        // --- 設定面板開關 ---
         function toggleSettings() {
             const panel = document.getElementById('settings-panel');
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
@@ -661,99 +649,6 @@
             toggleSettings();
             loadDatabase();
         }
-        // ==========================================
-    //  請將這整段貼在 <script> 標籤的最後面
-    // ==========================================
-
-    // 1. 產生一個成分格子
-    function addChemRow(data = null) {
-        console.log("正在新增成分格子..."); //這行會在控制台顯示，讓你知道程式有跑
-        const wrapper = document.getElementById('chem-rows-wrapper');
-        if (!wrapper) {
-            console.error("找不到 chem-rows-wrapper！請檢查 HTML ID");
-            return;
-        }
-
-        const idx = Date.now() + Math.floor(Math.random() * 1000); // 確保 ID 不重複
-        
-        const div = document.createElement('div');
-        div.className = 'chem-row';
-        div.id = `row-${idx}`;
-        
-        // 判斷是新資料還是舊資料
-        let nameVal = "";
-        let imgVal = "";
-        if (data) {
-            if (typeof data === 'string') {
-                nameVal = data; 
-            } else {
-                nameVal = data.name || "";
-                imgVal = data.image || "";
-            }
-        }
-
-        // 填入 HTML 內容
-        div.innerHTML = `
-            <div class="chem-header">
-                <h5>成分 #${wrapper.children.length + 1}</h5>
-                <button type="button" class="btn-del" onclick="removeChemRow('row-${idx}')">移除</button>
-            </div>
-            <input type="text" class="chem-name" placeholder="成分名稱 (如: Ephedrine)" value="${nameVal}" style="margin-bottom:10px;">
-            
-            <div style="font-size:0.9rem;">
-                <label style="display:inline-block; cursor:pointer; background:#eee; padding:5px 10px; border-radius:5px;">
-                    📸 上傳結構圖
-                    <input type="file" accept="image/*" style="display:none" onchange="handleChemImg(this, 'preview-${idx}')">
-                </label>
-                <span style="font-size:0.8rem; color:#888;">(自動壓縮)</span>
-            </div>
-            
-            <img id="preview-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
-            <input type="hidden" class="chem-old-img" value="${imgVal}">
-            <input type="hidden" class="chem-new-base64">
-        `;
-        wrapper.appendChild(div);
-    }
-
-    // 2. 移除某一格
-    function removeChemRow(id) {
-        const row = document.getElementById(id);
-        if(row) row.remove();
-    }
-
-    // 3. 處理小圖片預覽與壓縮
-    function handleChemImg(input, previewId) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
-            img.onload = function() {
-                // 壓縮邏輯
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const maxWidth = 600; 
-                const scale = maxWidth / img.width;
-                
-                canvas.width = maxWidth;
-                canvas.height = img.height * scale;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                
-                // 更新預覽
-                const preview = document.getElementById(previewId);
-                preview.src = base64;
-                preview.style.display = 'block';
-                
-                // 存入 hidden input
-                input.closest('.chem-row').querySelector('.chem-new-base64').value = base64;
-            }
-        };
-        reader.readAsDataURL(file);
-    }
     </script>
 </body>
 </html>
