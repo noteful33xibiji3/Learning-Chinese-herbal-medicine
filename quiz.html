@@ -247,7 +247,7 @@
             <button class="btn-primary" onclick="startQuiz()">🚀 開始測驗</button>
         </div>
 
-        <div id="quiz-panel" class="glass-panel" style="display: none;">
+       <div id="quiz-panel" class="glass-panel" style="display: none;">
             <div style="display:flex; justify-content:space-between; color:#666; font-weight:bold; font-size:0.9rem; margin-bottom:10px;">
                 <span>進度 <span id="q-current">1</span> / <span id="q-total">10</span></span>
                 <span style="color:#4A7C59;">得分: <span id="q-score">0</span></span>
@@ -256,6 +256,15 @@
             <div class="progress-container">
                 <div id="progress-bar" class="progress-bar"></div>
             </div>
+
+            <div id="quiz-content">
+                </div>
+
+            <div class="quiz-nav-buttons" style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
+                <button id="btn-prev" class="btn-sm" onclick="window.prevQuestion()" style="padding: 10px 20px; font-size: 1rem; border-radius: 50px;">⬅ 上一題</button>
+                <button id="btn-next" class="btn-primary" onclick="window.nextQuestion(true)" style="display:none; width:auto; padding: 10px 30px;">下一題 ➡</button>
+            </div>
+        </div>
 
             <div id="quiz-content">
                 </div>
@@ -523,103 +532,98 @@ window.batchSelectByGrade = function() {
         };
 
       // === 修改後的 nextQuestion (含完整防撞邏輯) ===
-        window.nextQuestion = function() {
+       // ============================================
+        //  🏆 終極整合版：防撞 + 鞏固 + 手動翻頁 + 顯示正解
+        // ============================================
+
+        // --- 1. 產生題目與選項 (核心邏輯) ---
+        window.nextQuestion = function(isManualNext = false) {
+            // 如果是手動按下一題，索引才 +1
+            if (isManualNext) {
+                window.currentIdx++;
+            }
+
+            // 檢查是否結束
             if (window.currentIdx >= window.quizList.length) {
                 return window.endQuiz();
             }
+
+            // UI 控制：隱藏下一題按鈕，如果是第一題隱藏上一題
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-prev').style.visibility = (window.currentIdx === 0) ? 'hidden' : 'visible';
 
             const herb = window.quizList[window.currentIdx];
             const qMode = document.getElementById('mode-question').value;
             const aMode = document.getElementById('mode-answer').value;
 
-            // 更新 UI 進度
+            // 更新進度條
             document.getElementById('q-current').innerText = window.currentIdx + 1;
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('progress-bar').style.width = `${((window.currentIdx) / window.quizList.length) * 100}%`;
 
             // -----------------------------------------
-            // 1. 產生題目 (Question)
+            // A. 產生題目 (Question)
             // -----------------------------------------
             let qHtml = "";
             let qRaw = window.getFieldData(herb, qMode);
-            let qText = ""; 
+            let qShow = "";
             
-            // 處理題目內容 (如果是陣列，隨機抽一個)
+            // 支援多基原/多成分隨機顯示
             if (Array.isArray(qRaw)) {
                 const rnd = qRaw[Math.floor(Math.random() * qRaw.length)];
                 if (typeof rnd === 'object' && rnd.image) {
-                    qText = rnd.name; 
+                    qShow = rnd.name; 
                     qHtml = `<img src="${rnd.image}" class="question-img">`; 
                 } else {
-                    qText = rnd;
+                    qShow = rnd;
                 }
             } else {
-                qText = qRaw;
+                qShow = qRaw;
             }
 
-            // 特殊模式處理
+            // 圖片模式處理
             if (qMode === 'image') {
                 qHtml = `<img src="${herb.image || 'images/placeholder.jpg'}" class="question-img" onerror="this.src='images/placeholder.jpg'">`;
             } else if (!qHtml) {
-                qHtml = `<div class="question-text">${qText}</div>`;
+                qHtml = `<div class="question-text">${qShow}</div>`;
             }
 
-            const modeMap = {
-                'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 
-                'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'
-            };
+            const modeMap = {'chinese_name':'中藥名', 'origin':'基原', 'chemistry':'成分', 'image':'外觀', 'effects':'功效', 'family':'科名', 'latin_name':'生藥名'};
             
             const content = `
-                <div class="question-area">
-                    <div class="question-tag">題目：${modeMap[qMode]}</div>
+                <div style="text-align:center;">
+                    <span style="background:#2C5E4F; color:white; padding:3px 10px; border-radius:20px; font-size:0.8rem;">題目：${modeMap[qMode]}</span>
                     ${qHtml}
-                    <div style="color:#666; font-size:0.9rem; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></div>
+                    <p style="color:#666; margin-top:10px;">請選擇正確的 <b>${modeMap[aMode]}</b></p>
                 </div>
             `;
 
             // -----------------------------------------
-            // 2. 產生選項 (Answer) - 支援圖文並茂 + 防撞
+            // B. 產生選項 (Answer) - 含防撞機制
             // -----------------------------------------
-            
-            // 內部小函式：解析資料並回傳 {label, image}
-            function parseOptionData(rawData, mode) {
-                let label = "";
-                let image = null;
-
-                if (Array.isArray(rawData)) {
-                    let rnd = rawData[Math.floor(Math.random() * rawData.length)];
-                    if (typeof rnd === 'object') {
-                        label = rnd.name;
-                        image = rnd.image;
-                    } else {
-                        label = rnd;
-                    }
-                } else {
-                    label = rawData;
-                }
-
-                // 如果考的是外觀圖，資料本身就是網址
-                if (mode === 'image') {
-                    image = label; 
-                    label = ""; 
-                }
-
+            function parseOptionData(data, mode) {
+                let label = ""; let image = null;
+                if (Array.isArray(data)) {
+                    let rnd = data[Math.floor(Math.random() * data.length)];
+                    if (typeof rnd === 'object') { label = rnd.name; image = rnd.image; }
+                    else label = rnd;
+                } else { label = data; }
+                if (mode === 'image') { image = label; label = ""; }
                 return { label, image };
             }
 
-            // A. 正確選項
-            // ★重點：保留原始完整資料 correctRaw 用來做防撞比對
+            // 1. 準備正確答案
             let correctRaw = window.getFieldData(herb, aMode);
             let correctObj = parseOptionData(correctRaw, aMode);
             let options = [{ ...correctObj, isCorrect: true }];
 
-            // B. 錯誤選項 (3個)
+            // 2. 準備錯誤選項 (防撞迴圈)
             let attempts = 0;
             while(options.length < 4 && attempts < 200) {
                 attempts++;
                 const rndHerb = window.allHerbs[Math.floor(Math.random() * window.allHerbs.length)];
                 
-                // 1. 基本避開：不能選到同一味藥
+                // (1) 不能跟題目同一味藥
                 if (rndHerb.id === herb.id) continue;
 
                 let wrongRaw = window.getFieldData(rndHerb, aMode);
@@ -627,23 +631,17 @@ window.batchSelectByGrade = function() {
                 
                 if (!wrongObj.label && !wrongObj.image) wrongObj.label = "無資料";
 
-                // ★★★ 2. 進階防撞機制 (關鍵修改) ★★★
+                // (2) ★★★ 進階防撞機制 ★★★
                 // 檢查這個錯誤選項，是否剛好包含在「正確答案的所有可能列表」裡？
                 let isCollision = false;
-                if (Array.isArray(correctRaw)) {
-                    // 如果正確答案是多基原/多成分，要把裡面每一個都拿出來比對
-                    // 例如 correctRaw = ["A", "B", "C"]，我們選了 A 當答案
-                    // 如果 wrongObj.label 剛好是 "B"，那也不行！
-                    const correctStrings = correctRaw.map(d => (typeof d === 'object') ? d.name : d);
-                    if (correctStrings.includes(wrongObj.label)) isCollision = true;
-                } else {
-                    // 單一答案比對
-                    if (correctRaw === wrongObj.label) isCollision = true;
-                }
+                const correctPool = Array.isArray(correctRaw) ? correctRaw.map(d => (typeof d === 'object' ? d.name : d)) : [correctRaw];
                 
+                // 如果正確答案池裡面包含了這個錯誤選項 -> 視為撞題
+                if (correctPool.includes(wrongObj.label)) isCollision = true;
+
                 if (isCollision) continue; // 撞到了，重抽！
 
-                // 3. 避免選項重複 (自己跟自己比)
+                // (3) 避免選項重複
                 const isDuplicate = options.some(o => 
                     (o.label && o.label === wrongObj.label) || 
                     (o.image && o.image === wrongObj.image)
@@ -655,22 +653,17 @@ window.batchSelectByGrade = function() {
             }
             options.sort(() => Math.random() - 0.5);
 
-            // C. 渲染按鈕
+            // 3. 渲染按鈕
             let btnsHtml = "";
             options.forEach(opt => {
                 let innerContent = "";
-                if (opt.image) {
-                    innerContent += `<img src="${opt.image}" style="max-height:100px; object-fit:contain; margin-bottom:5px;">`;
-                }
-                if (opt.label) {
-                    const safeLabel = opt.label.replace(/'/g, "&#39;");
-                    innerContent += `<span>${safeLabel}</span>`;
-                }
+                if (opt.image) innerContent += `<img src="${opt.image}" style="max-height:100px; object-fit:contain; margin-bottom:5px;">`;
+                if (opt.label) innerContent += `<span>${opt.label.replace(/'/g, "&#39;")}</span>`;
 
-                const recordText = opt.label || "圖片選項"; 
-                const safeRecord = recordText.replace(/'/g, "\\'"); 
+                const safeRecord = (opt.label || "圖片選項").replace(/'/g, "\\'"); 
 
-                btnsHtml += `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeRecord}')">
+                // 加入 data-is-correct 讓 checkAnswer 可以找到它
+                btnsHtml += `<button class="option-btn" data-is-correct="${opt.isCorrect}" onclick="window.checkAnswer(this, ${opt.isCorrect}, '${safeRecord}')">
                                 ${innerContent}
                              </button>`;
             });
@@ -678,6 +671,56 @@ window.batchSelectByGrade = function() {
             document.getElementById('quiz-content').innerHTML = content + `<div class="option-grid">${btnsHtml}</div>`;
         };
 
+        // --- 2. 上一題功能 ---
+        window.prevQuestion = function() {
+            if (window.currentIdx > 0) {
+                window.currentIdx--; // 索引倒退
+                window.nextQuestion(false); // 重新渲染 (false 代表不要再 +1)
+            }
+        };
+
+        // --- 3. 檢查答案 (含鞏固學習 + 顯示正解) ---
+        window.checkAnswer = function(btn, isCorrect, btnLabel) {
+            // 鎖定所有按鈕
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            const herb = window.quizList[window.currentIdx];
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                window.score += 10;
+            } else {
+                btn.classList.add('wrong');
+                
+                // ★ 1. 把正確答案亮出來 (綠色)
+                const correctBtn = document.querySelector('.option-btn[data-is-correct="true"]');
+                if (correctBtn) correctBtn.classList.add('correct');
+
+                // ★ 2. 記錄到錯題本
+                window.saveDetailedMistake(herb, document.getElementById('mode-question').value, btnLabel);
+
+                // ★ 3. 鞏固模式插隊
+                if (window.quizLogic === "reinforce") {
+                    let insertPos = window.currentIdx + 3;
+                    if (insertPos > window.quizList.length) insertPos = window.quizList.length;
+                    
+                    // 插隊
+                    window.quizList.splice(insertPos, 0, herb);
+                    
+                    // 更新總題數顯示
+                    document.getElementById('q-total').innerText = window.quizList.length;
+                    
+                    console.log(`已將 ${herb.chinese_name} 排入第 ${insertPos} 順位複習`);
+                }
+            }
+            
+            // 更新分數
+            document.getElementById('q-score').innerText = window.score;
+
+            // ★ 4. 顯示「下一題」按鈕 (不自動跳轉)
+            document.getElementById('btn-next').style.display = 'block';
+        };
         window.getFieldData = function(herb, mode) {
             if (mode === 'image') return herb.image;
             return herb[mode] || "無資料";
