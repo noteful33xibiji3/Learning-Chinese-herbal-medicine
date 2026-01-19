@@ -200,6 +200,9 @@
 
             <label>生藥名 (Latin Name)</label>
           <input type="text" id="latin_name" placeholder="例如：Ephedrae Herba">
+            
+            <label>藥用部位 (Medicinal Part)</label>
+<input type="text" id="part" placeholder="例如：乾燥草質莖 (Dried herbaceous stem)">
 
             <label>科名 (Family)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -528,6 +531,7 @@
                 }
 
                 document.getElementById('latin_name').value = h.latin_name || "";
+                document.getElementById('part').value = h.part || "";
                 document.getElementById('family_ch').value = h.family_ch || h.family || "";
                 document.getElementById('family_en').value = h.family_en || "";
                 document.getElementById('effects').value = (h.effects || []).join(', ');
@@ -797,6 +801,7 @@
                     origin: originData,
                     confusing_drugs: confusingData,
                     latin_name: document.getElementById('latin_name').value,
+                    part: document.getElementById('part').value.trim(),
                     family_ch: document.getElementById('family_ch').value,
                     family_en: document.getElementById('family_en').value,
                     chem_main: document.getElementById('chem_main').value,
