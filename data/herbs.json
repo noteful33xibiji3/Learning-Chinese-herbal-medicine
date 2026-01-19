@@ -118,5 +118,22 @@
     "indications": "中品藥\nsaponin\n",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 4,
+    "grade": "大二上",
+    "chinese_name": "甘草",
+    "origin": [],
+    "confusing_drugs": [],
+    "latin_name": "",
+    "family_ch": "",
+    "family_en": "",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "",
+    "image": "",
+    "isTrash": false
   }
 ]
