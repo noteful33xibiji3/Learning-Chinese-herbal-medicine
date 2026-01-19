@@ -90,5 +90,33 @@
     ],
     "indications": "用於水腫腳氣，風濕痺痛，濕疹瘡毒。",
     "image": ""
+  },
+  {
+    "id": 3,
+    "grade": "大二上",
+    "chinese_name": "知母",
+    "origin": [
+      {
+        "lat": "Anemarrhena asphodeloides Bunge",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Anemarrhenae Rhizoma",
+    "family_ch": "百合科",
+    "family_en": "Liliaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [
+      {
+        "name_en": "saponin",
+        "name_ch": "",
+        "image": ""
+      }
+    ],
+    "effects": [],
+    "indications": "中品藥\nsaponin\n",
+    "image": "",
+    "isTrash": false
   }
 ]
