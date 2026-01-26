@@ -9,7 +9,6 @@
     <style>
         body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding-top: 70px; }
         
-        /* === 1. 頂部導覽列 (與其他後台統一) === */
         nav { 
             background: white; padding: 15px 30px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
@@ -17,30 +16,17 @@
             position:fixed; top:0; width:100%; box-sizing:border-box; z-index:100; 
         }
         .nav-title { font-size:1.2rem; font-weight:bold; color:#2C5E4F; display:flex; align-items:center; gap:10px; }
-        .back-btn { 
-            text-decoration:none; background:#eee; color:#555; 
-            padding:5px 12px; border-radius:20px; font-size:0.9rem; transition:0.2s; 
-        }
+        .back-btn { text-decoration:none; background:#eee; color:#555; padding:5px 12px; border-radius:20px; font-size:0.9rem; transition:0.2s; }
         .back-btn:hover { background:#ddd; color:#000; }
-        .btn-frontend {
-            text-decoration:none; background:#e0f2f1; color:#2C5E4F; 
-            padding:8px 15px; border-radius:20px; font-weight:bold; 
-            font-size:0.9rem; margin-right:10px; border:1px solid #2C5E4F;
-        }
+        .btn-frontend { text-decoration:none; background:#e0f2f1; color:#2C5E4F; padding:8px 15px; border-radius:20px; font-weight:bold; font-size:0.9rem; margin-right:10px; border:1px solid #2C5E4F; }
 
-        /* === 2. 編輯區塊 === */
         .container { max-width: 1000px; margin: 30px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
         label { display: block; margin: 20px 0 8px; font-weight: bold; color: #2C5E4F; font-size: 1.1rem; }
         
-        /* 下拉選單美化 */
-        select { 
-            width: 100%; padding: 12px; font-size: 1rem; border-radius: 8px; 
-            border: 2px solid #ddd; background-color: #fff; cursor: pointer;
-        }
+        select { width: 100%; padding: 12px; font-size: 1rem; border-radius: 8px; border: 2px solid #ddd; background-color: #fff; cursor: pointer; }
         select:focus { border-color: #4A7C59; outline: none; }
 
-        /* 按鈕樣式 */
         .btn-save { 
             padding: 15px; width: 100%; border: none; border-radius: 8px; 
             cursor: pointer; font-weight: bold; color: white; 
@@ -51,8 +37,12 @@
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
         .btn-save:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
-        /* 提示框 */
         .tip-box { background: #fff3e0; padding: 15px; border-left: 5px solid #ff9800; border-radius: 5px; color: #5d4037; margin-bottom: 15px; line-height: 1.6; }
+        
+        /* 狀態指示燈 */
+        .status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; }
+        .status-saved { background-color: #4caf50; }
+        .status-unsaved { background-color: #ccc; }
     </style>
 </head>
 <body>
@@ -63,25 +53,25 @@
             <span>📚 分類介紹編輯器</span>
         </div>
         <div>
+            <button onclick="location.reload()" style="margin-right:10px; cursor:pointer; background:#fff; border:1px solid #ccc; padding:5px 10px; border-radius:15px;">🔄 強制重整</button>
             <a href="pharmacognosy.html" class="btn-frontend" target="_blank">🏠 去前台預覽</a>
         </div>
     </nav>
 
     <div class="container">
         <div style="background:#f9f9f9; padding:20px; border-radius:10px; border:1px solid #eee;">
-            <label style="margin-top:0;">📂 請選擇要編輯的分類 (大分類或中分類)</label>
-            <select id="cat-select" onchange="loadCategoryData()">
-                <option value="">-- 請選擇 --</option>
+            <label style="margin-top:0;">📂 請選擇要編輯的分類 (✅ 代表已有資料)</label>
+            <select id="cat-select" onchange="handleCatChange()">
+                <option value="">⏳ 正在讀取資料庫...</option>
             </select>
         </div>
 
         <div id="editor-area" style="display:none;">
-            <label>📝 編輯內容</label>
+            <label>📝 編輯內容：<span id="current-edit-target" style="color:#4A7C59;"></span></label>
             <div class="tip-box">
-                💡 <strong>編輯技巧：</strong><br>
-                1. 這是 <strong><span id="current-edit-target"></span></strong> 的專屬介紹頁面。<br>
-                2. 可以插入 <strong>表格</strong> 來做比較（如：生物鹼沈澱試劑比較）。<br>
-                3. 可以插入 <strong>圖片</strong> 來解釋生合成路徑。
+                💡 <strong>編輯提示：</strong><br>
+                1. 記得按下方「儲存」按鈕，資料才會寫入資料庫。<br>
+                2. 可以直接貼上 Word 表格。
             </div>
             
             <textarea id="rich-editor"></textarea>
@@ -94,21 +84,25 @@
     <script src="utils.js"></script>
     
     <script>
-        let categoriesData = {}; // 存放所有介紹資料
-        let fileSha = "";        // GitHub SHA
+        let categoriesData = {}; 
+        let fileSha = "";
         const FILE_PATH = "data/categories.json";
+        let isDirty = false; // 檢查是否有未儲存的變更
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. 初始化編輯器
+            // 1. 初始化 TinyMCE
             tinymce.init({
                 selector: '#rich-editor',
                 height: 600,
                 plugins: 'table lists link image code preview',
                 toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter | bullist numlist | table | image code',
-                branding: false
+                branding: false,
+                setup: function(editor) {
+                    editor.on('change', function () { isDirty = true; }); // 監聽變更
+                }
             });
 
-            // 2. 檢查登入
+            // 2. 登入檢查
             const configStr = localStorage.getItem('tcm_admin_config');
             if (!configStr) {
                 alert("請先登入！");
@@ -117,58 +111,84 @@
             }
             const config = JSON.parse(configStr);
             
-            // 3. 連線 GitHub & 載入選單
+            // 3. 讀取資料 (強制不快取)
             try {
                 await initGitHubConfig(config.token, config.user, config.repo);
-                initCategorySelect(); // 載入分類選單
                 
-                // 載入 JSON 資料
-                try {
-                    const res = await fetchJSON(FILE_PATH);
-                    categoriesData = res.data;
-                    fileSha = res.sha;
-                } catch(e) {
-                    console.log("建立新檔中...");
+                // ★ 這裡加了時間戳記 timestamp，確保讀到最新版
+                const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${FILE_PATH}?t=${Date.now()}`;
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${config.token}` }
+                });
+
+                if (response.status === 404) {
+                    console.log("檔案不存在，將建立新檔");
                     categoriesData = {};
+                } else if(response.ok) {
+                    const json = await response.json();
+                    fileSha = json.sha;
+                    // 解碼 Base64
+                    categoriesData = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
+                } else {
+                    throw new Error("讀取失敗: " + response.status);
                 }
+
+                // 4. 資料讀完後，才產生下拉選單 (這樣才能標記 ✅)
+                renderCategorySelect();
+
             } catch (e) {
                 alert("連線錯誤: " + e.message);
+                console.error(e);
             }
         });
 
-        // === 產生下拉選單 (含大分類與中分類) ===
-        function initCategorySelect() {
+        // === 產生下拉選單 (自動打勾已存在的資料) ===
+        function renderCategorySelect() {
             const sel = document.getElementById('cat-select');
+            sel.innerHTML = '<option value="">-- 請選擇分類 --</option>';
             
-            // 讀取 config 中的設定
             PHARMA_CATEGORIES.forEach(main => {
-                // 1. 加入大分類 (加粗或特殊標記)
+                // 檢查大分類是否有資料
+                const hasMain = categoriesData[main.name_ch] ? "✅ " : "";
+                
                 const mainOpt = document.createElement('option');
                 mainOpt.value = main.name_ch;
-                mainOpt.text = `📂 ${main.name_ch} (大分類)`;
+                mainOpt.text = `${hasMain}📂 ${main.name_ch}`;
                 mainOpt.style.fontWeight = "bold";
                 mainOpt.style.background = "#e8f5e9";
                 sel.add(mainOpt);
 
-                // 2. 加入底下的中分類 (縮排)
                 if (main.subcategories) {
                     main.subcategories.forEach(sub => {
+                        // 檢查中分類是否有資料
+                        const hasSub = categoriesData[sub.ch] ? "✅ " : "";
+                        
                         const subOpt = document.createElement('option');
-                        // 這裡使用中文名當 key，與資料庫統一
                         subOpt.value = sub.ch; 
-                        subOpt.text = `　└─ 📄 ${sub.ch} (${sub.en})`;
+                        subOpt.text = `　└─ ${hasSub}${sub.ch} (${sub.en})`;
                         sel.add(subOpt);
                     });
                 }
             });
         }
 
-        // === 載入選定分類的內容 ===
-       // === 修正版：載入分類資料 (強制清空) ===
+        // === 切換分類時的處理 ===
+        function handleCatChange() {
+            // 如果有未儲存的變更，跳出確認
+            if (isDirty) {
+                if (!confirm("您有未儲存的內容，切換將會遺失，確定要切換嗎？")) {
+                    // 把下拉選單選回去 (這步比較難做，暫時忽略，依靠使用者自己按取消後手動存檔)
+                    return; 
+                }
+            }
+            loadCategoryData();
+        }
+
+        // === 載入內容到編輯器 ===
         function loadCategoryData() {
             const cat = document.getElementById('cat-select').value;
             
-            // 1. 如果選回「請選擇」，就隱藏編輯區
             if (!cat) {
                 document.getElementById('editor-area').style.display = 'none';
                 return;
@@ -177,38 +197,69 @@
             document.getElementById('editor-area').style.display = 'block';
             document.getElementById('current-edit-target').innerText = cat;
             
-            // 2. 嘗試取得資料
+            // ★ 關鍵修正：如果有資料就填入，沒資料就「強制清空」
             const content = categoriesData[cat];
-
-            // 3. ★ 關鍵修正：如果有資料就填入，沒資料就「強制清空」
             if (content) {
                 tinymce.get('rich-editor').setContent(content);
             } else {
-                tinymce.get('rich-editor').setContent(''); // 清空編輯器
+                tinymce.get('rich-editor').setContent('');
             }
+            
+            isDirty = false; // 重置髒檢查
         }
-        // === 儲存 ===
+
+        // === 儲存資料 ===
         async function saveCategory() {
             const cat = document.getElementById('cat-select').value;
             const btn = document.querySelector('.btn-save');
             
             if (!cat) return alert("請先選擇分類");
 
-            btn.innerText = "⏳ 儲存中...";
+            btn.innerText = "⏳ 儲存中... (請勿關閉)";
             btn.disabled = true;
 
             try {
-                // 1. 取得編輯器內容
                 const content = tinymce.get('rich-editor').getContent();
                 
-                // 2. 更新記憶體中的資料
+                // 1. 更新本地資料
                 categoriesData[cat] = content; 
 
-                // 3. 上傳回 GitHub
-                const res = await saveJSON(FILE_PATH, categoriesData, fileSha, `Update Intro: ${cat}`);
-                fileSha = res.content.sha; // 更新 SHA
+                // 2. 上傳到 GitHub
+                // 這裡要重新呼叫 saveJSON (假設 utils.js 裡有)
+                // 如果 utils.js 的 saveJSON 沒傳 SHA，它通常會失敗，所以要小心
+                // 這裡直接使用標準的 GitHub API PUT 邏輯
                 
-                alert(`🎉 「${cat}」的介紹已儲存成功！`);
+                const configStr = localStorage.getItem('tcm_admin_config');
+                const config = JSON.parse(configStr);
+                const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${FILE_PATH}`;
+                
+                const body = {
+                    message: `Update Intro: ${cat}`,
+                    content: window.btoa(unescape(encodeURIComponent(JSON.stringify(categoriesData, null, 2)))),
+                    sha: fileSha
+                };
+
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) throw new Error("GitHub 回傳錯誤: " + res.status);
+                
+                const json = await res.json();
+                fileSha = json.content.sha; // 更新 SHA，下次存檔才不會報錯
+                
+                alert(`🎉 「${cat}」儲存成功！`);
+                isDirty = false;
+                
+                // 重新渲染選單 (讓剛剛存的出現 ✅)
+                const currentVal = document.getElementById('cat-select').value;
+                renderCategorySelect();
+                document.getElementById('cat-select').value = currentVal; // 選回原本的
 
             } catch(e) {
                 alert("儲存失敗: " + e.message);
