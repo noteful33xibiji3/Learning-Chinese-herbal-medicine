@@ -521,6 +521,14 @@
             const idVal = document.getElementById('edit-id').value;
             const name_ch = document.getElementById('name-ch').value.trim();
             if (!name_ch) return alert("中文藥名必填！");
+            const sameNameItem = pharmaList.find(i => i.name_ch === name_ch && i.id != idVal);
+    
+    if (sameNameItem) {
+        if(confirm(`⚠️ 發現重複：資料庫已有「${name_ch}」(ID: ${sameNameItem.id})。\n\n要直接覆蓋更新它嗎？`)) {
+            // 偷天換日：把 ID 改成舊的，這樣就會變成更新操作
+            document.getElementById('edit-id').value = sameNameItem.id;
+        }
+    }
 
             btn.disabled = true; 
             btn.innerText = "⏳ 儲存中...";
@@ -746,7 +754,7 @@
                         const aliasArr = row["別名"] ? row["別名"].split(/[,，、]/).map(s => s.trim()) : [];
 
                         const newItem = {
-                            id: row["ID"] ? parseInt(row["ID"]) : Date.now() + Math.floor(Math.random()*1000),
+                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random()*1000)),
                             name_ch: row["中文名"] || "",
                             name_en: row["英文名"] || "",
                             category_main: row["大分類"] || "",
@@ -770,35 +778,35 @@
                             updated_at: new Date().toISOString()
                         };
 
-                        const existingIdx = newList.findIndex(item => item.id == newItem.id);
-                        
+                        const existingIdx = newList.findIndex(item => 
+                            (row["ID"] && item.id == row["ID"]) || // 情況 1: Excel 有填 ID 且吻合
+                            (!row["ID"] && item.name_ch === newItem.name_ch) // 情況 2: Excel 沒 ID 但中文名吻合
+                        );
+
                         if (existingIdx !== -1) {
-                            // 更新邏輯：保留舊圖片
+                            // 找到舊資料 -> 更新模式
                             const oldItem = newList[existingIdx];
                             
-                            // ★ 進階：嘗試保留舊成分的圖片
-                            // 如果新匯入的成分名字跟舊的一樣，就把舊圖片抓回來
+                            // 1. 強制沿用舊 ID (這樣就不會變成新產生的亂數 ID)
+                            newItem.id = oldItem.id; 
+
+                            // 2. 保留舊圖片 (生藥沒有最上層 image 欄位，但我們保留成分圖片)
+                            // (這段您原本就有，保持原樣即可)
                             if (oldItem.components) {
                                 newItem.components = newItem.components.map(newC => {
                                     const oldC = oldItem.components.find(oc => oc.name === newC.name);
-                                    if (oldC && oldC.image) {
-                                        newC.image = oldC.image; // 救回圖片！
-                                    }
+                                    if (oldC && oldC.image) newC.image = oldC.image;
                                     return newC;
                                 });
                             }
-
-                            newList[existingIdx] = {
-                                ...oldItem,
-                                ...newItem
-                            };
+                            
+                            newList[existingIdx] = { ...oldItem, ...newItem }; 
                             updateCount++;
-                        } else {
-                            newList.push(newItem);
-                            addCount++;
+                        } else { 
+                            // 沒找到 -> 新增模式
+                            newList.push(newItem); 
+                            addCount++; 
                         }
-                    });
-
                     await uploadToGitHub(newList, `Import Excel: ${addCount} added, ${updateCount} updated`);
                     pharmaList = newList;
                     renderList();
