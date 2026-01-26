@@ -422,5 +422,34 @@
     "indications": "<p>忍冬-凌冬不凋</p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 16,
+    "grade": "大二上",
+    "chinese_name": "洋金花",
+    "origin": [
+      {
+        "lat": "Datura metel",
+        "ch": "白花曼陀羅，南洋金花"
+      },
+      {
+        "lat": "Datura innoxia Mill.",
+        "ch": "毛曼陀羅、北洋金花"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Daturae Folium",
+    "part": "",
+    "family_ch": "茄科",
+    "family_en": "Solanaceae",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "托烷類 (Tropane alkaloid)",
+    "chemistry": [],
+    "effects": [
+      "麻沸散"
+    ],
+    "indications": "<ul>\n<li>\n<p>麻沸散</p>\n<p>Tropane alkaloids</p>\n<p>廣西遍生原野，蒙汗藥</p>\n</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
