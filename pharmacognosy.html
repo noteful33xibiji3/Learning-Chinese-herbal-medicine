@@ -684,35 +684,45 @@
         }
     }
 
-    // === 3. 執行篩選與渲染 ===
+    // === 3. 執行篩選與渲染 (超級搜尋版) ===
     function filterData() {
-        const term = document.getElementById('search-input').value.toLowerCase();
+        // 取得使用者輸入的關鍵字，並轉小寫 (為了不分大小寫)
+        const term = document.getElementById('search-input').value.toLowerCase().trim();
         
         const filtered = allData.filter(item => {
-            // A. 關鍵字搜尋
-            const matchText = (item.name_ch || "").includes(term) || 
-                              (item.name_en || "").toLowerCase().includes(term) ||
-                              (item.origin || "").toLowerCase().includes(term) ||
-                              (item.components || []).some(c => c.name.toLowerCase().includes(term));
+            // === A. 智慧搜尋邏輯 (只要符合其中一項就算數) ===
+            const matchText = 
+                // 1. 中文名
+                (item.name_ch || "").includes(term) || 
+                // 2. 英文名 (轉小寫比對)
+                (item.name_en || "").toLowerCase().includes(term) ||
+                // 3. 基原/學名
+                (item.origin || "").toLowerCase().includes(term) ||
+                // 4. ★ 成分 (掃描陣列中的每一個成分名)
+                (item.components || []).some(c => c.name.toLowerCase().includes(term)) ||
+                // 5. ★ [新增] 科名 (中文或英文)
+                (item.family_ch || "").includes(term) ||
+                (item.family_en || "").toLowerCase().includes(term) ||
+                // 6. ★ [新增] 功效/適應症 (例如搜 "止痛")
+                (item.efficacy || "").includes(term) ||
+                // 7. ★ [新增] 別名 (掃描別名陣列)
+                (item.aliases || []).some(a => a.includes(term));
             
-            // B. 分類篩選
+            // === B. 分類篩選邏輯 (不變) ===
             let matchCat = true;
             if (currentMainCat !== 'all') {
-                // 必須符合大分類
                 matchCat = (item.category_main || "").includes(currentMainCat);
-                
-                // 如果有選子分類，必須同時符合子分類
                 if (currentSubCat) {
                     matchCat = matchCat && (item.category_sub || "").includes(currentSubCat);
                 }
             }
 
+            // 兩個條件都要符合 (文字有對到 AND 分類有對到)
             return matchText && matchCat;
         });
 
         renderGrid(filtered);
     }
-
     // 3. 渲染卡片網格 (已修改：直接顯示成分名稱)
     function renderGrid(data) {
         const grid = document.getElementById('pharma-grid');
