@@ -67,6 +67,48 @@
             print-color-adjust: exact !important;
         }
     }
+        /* === ⬇️ 請複製貼上這段 CSS 到 style 最下方 ⬇️ === */
+
+    /* 1. 手機版 RWD 優化 (表格變卡片) */
+    @media (max-width: 768px) {
+        nav { flex-direction: column; gap: 10px; padding: 10px; }
+        /* 隱藏原本的表頭 */
+        thead { display: none; }
+        
+        /* 每一行變成一張卡片 */
+        tr { 
+            display: block; 
+            margin-bottom: 15px; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+        
+        /* 每個格子變成橫向排列 (左標題、右內容) */
+        td { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 5px; 
+            border-bottom: 1px solid #f0f0f0; 
+            text-align: right;
+        }
+        
+        /* 最後一格(按鈕區)去框線 */
+        td:last-child { border-bottom: none; justify-content: flex-end; gap: 5px; }
+        
+        /* ★ 關鍵：利用 data-label 屬性顯示標題 */
+        td::before {
+            content: attr(data-label); /* 會抓取 HTML 裡的 data-label */
+            font-weight: bold; 
+            color: #4A7C59; 
+            margin-right: 15px;
+            text-align: left;
+        }
+    }
+
     </style>
 </head>
 <body>
