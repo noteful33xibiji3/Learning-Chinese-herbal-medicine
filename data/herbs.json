@@ -583,12 +583,18 @@
     ],
     "confusing_drugs": [],
     "latin_name": "Piperis Nigri Fructus",
-    "part": "",
+    "part": "未成熟果實",
     "family_ch": "胡椒科",
     "family_en": "Piperaceae",
-    "chem_main": "",
-    "chem_sub": "",
-    "chemistry": [],
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "吡啶-哌啶類 (Pyridine-Piperidine alkaloid)",
+    "chemistry": [
+      {
+        "name_en": "Pepper",
+        "name_ch": "胡椒",
+        "image": ""
+      }
+    ],
     "effects": [],
     "indications": "<ul>\n<li><strong>別名: </strong>昧履支 <strong>&nbsp;</strong></li>\n</ul>",
     "image": "",
