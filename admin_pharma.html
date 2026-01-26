@@ -108,7 +108,45 @@
             text-align: left;
         }
     }
+/* === 📱 手機版 Modal 視窗適配優化 === */
+    @media (max-width: 768px) {
+        /* 1. 讓 Modal 視窗寬度適應手機螢幕，不要超出邊界 */
+        .modal-content {
+            width: 95% !important; /* 強制寬度為螢幕的 95% */
+            max-width: none !important;
+            margin: 10px auto !important; /* 上下留一點邊距 */
+            padding: 20px !important; /* 內距縮小一點，爭取空間 */
+            border-radius: 12px !important;
+        }
 
+        /* 2. 讓原本並排的欄位 (grid) 變成直式堆疊 */
+        .modal-content div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important; /* 強制變單欄 */
+            gap: 15px !important;
+        }
+
+        /* 3. 讓成分編輯區塊也變成直式 */
+        .chem-card div[style*="display:flex"] {
+            flex-direction: column !important; /* 讓輸入框和按鈕變直排 */
+            align-items: stretch !important;
+        }
+        
+        .chem-name {
+            width: 100% !important; /* 成分名稱輸入框填滿 */
+            margin-bottom: 10px;
+        }
+
+        /* 4. 調整按鈕大小，手指好點擊 */
+        .modal-footer button {
+            padding: 12px !important;
+            font-size: 1rem !important;
+        }
+        
+        /* 5. 確保 TinyMCE 編輯器不會爆版 */
+        .tox-tinymce {
+            width: 100% !important;
+        }
+    }
     </style>
 </head>
 <body>
