@@ -556,40 +556,115 @@
         function handleImagePreview() { const f=document.getElementById('img-input').files[0]; if(!f)return; const r=new FileReader(); r.onload=e=>{ const i=new Image(); i.src=e.target.result; i.onload=()=>{ const c=document.createElement('canvas'); const s=800/i.width; c.width=800; c.height=i.height*s; c.getContext('2d').drawImage(i,0,0,c.width,c.height); newImageBase64=c.toDataURL('image/jpeg',0.7); const p=document.getElementById('preview-img'); p.src=newImageBase64; p.style.display='block'; document.getElementById('img-status').innerText="✅ 準備上傳"; }}; r.readAsDataURL(f); }
         function handleChemImg(ip,id) { const f=ip.files[0]; if(!f)return; const r=new FileReader(); r.onload=e=>{ const i=new Image(); i.src=e.target.result; i.onload=()=>{ const c=document.createElement('canvas'); const s=500/i.width; c.width=500; c.height=i.height*s; c.getContext('2d').drawImage(i,0,0,c.width,c.height); const b=c.toDataURL('image/jpeg',0.7); document.getElementById(id).src=b; document.getElementById(id).style.display='block'; ip.parentElement.nextElementSibling.nextElementSibling.nextElementSibling.value=b; }}; r.readAsDataURL(f); }
 
+        // === ✅ 修正版：儲存並上傳 (含成分圖片自動上傳) ===
         async function saveAndUpload() {
-            const name=document.getElementById('chinese_name').value.trim(); if(!name)return alert("請輸入中藥名");
-            // --- ⬇️ 新增這段檢查邏輯 ⬇️ ---
-    // 檢查是否已有相同名稱的藥材 (且不是正在編輯的那一個)
-    const idVal = document.getElementById('edit-id').value;
-    const sameNameItem = allHerbs.find(h => h.chinese_name === name && h.id != idVal);
-    
-    if (sameNameItem) {
-        if(!confirm(`⚠️ 警告：資料庫中已經有「${name}」(ID: ${sameNameItem.id}) 了！\n\n按「確定」將會覆蓋更新舊資料。\n按「取消」則建立一筆新的重複資料。`)) {
-            // 如果按取消，繼續執行原本的新增邏輯 (會有兩筆)
-        } else {
-            // 如果按確定，偷天換日，把目標 ID 改成舊的那筆，變成更新模式
-            document.getElementById('edit-id').value = sameNameItem.id;
-        }
-    }
-            const btn=document.querySelector('#edit-modal .btn-primary'); btn.innerText="⏳ 處理中..."; btn.disabled=true;
+            const name = document.getElementById('chinese_name').value.trim();
+            if (!name) return alert("請輸入中藥名");
+
+            // 1. 檢查重複名稱
+            const idVal = document.getElementById('edit-id').value;
+            const sameNameItem = allHerbs.find(h => h.chinese_name === name && h.id != idVal);
+            if (sameNameItem) {
+                if (!confirm(`⚠️ 警告：資料庫中已經有「${name}」(ID: ${sameNameItem.id}) 了！\n\n按「確定」將會覆蓋更新舊資料。\n按「取消」則建立一筆新的重複資料。`)) {
+                    // 取消則建立新資料
+                } else {
+                    // 確定則覆蓋
+                    document.getElementById('edit-id').value = sameNameItem.id;
+                }
+            }
+
+            const btn = document.querySelector('#edit-modal .btn-primary');
+            btn.innerText = "⏳ 處理中... (上傳圖片可能需要時間)";
+            btn.disabled = true;
+
             try {
-                let fImg=document.getElementById('old-image-path').value; if(newImageBase64) fImg=await uploadBase64(newImageBase64,'herbs');
-                const cData=[]; document.querySelectorAll('.chem-row').forEach(r=>{ const en=r.querySelector('.chem-en').value; const ch=r.querySelector('.chem-ch').value; let ci=r.querySelector('.chem-old-img').value; const cn=r.querySelector('.chem-new-base64').value; if(cn) ci=cn; /*這裡其實要上傳但簡化邏輯*/ if(en||ch) cData.push({name_en:en,name_ch:ch,image:ci}); }); 
-                // 注意：上方化學圖片上傳邏輯簡化了，完整版請參考之前，這邊主要示範 RWD
+                // 2. 上傳主圖片
+                let fImg = document.getElementById('old-image-path').value;
+                if (newImageBase64) {
+                    fImg = await uploadBase64(newImageBase64, 'herbs'); // 上傳主圖
+                }
+
+                // 3. ★★★ 關鍵修正：上傳成分圖片 ★★★
+                const cData = [];
+                const chemRows = document.querySelectorAll('.chem-row');
                 
-                const oData=[]; document.querySelectorAll('.origin-row').forEach(r=>{ const l=r.querySelector('.origin-lat').value; const c=r.querySelector('.origin-ch').value; if(l||c) oData.push({lat:l,ch:c}); });
-                const confData=[]; document.querySelectorAll('.confusing-row').forEach(r=>{ const c=r.querySelector('.conf-ch').value; const e=r.querySelector('.conf-en').value; const n=r.querySelector('.conf-note').value; if(c||e||n) confData.push({name_ch:c,name_en:e,note:n}); });
+                // 使用 for...of 迴圈以支援 await
+                for (const r of chemRows) {
+                    const en = r.querySelector('.chem-en').value.trim();
+                    const ch = r.querySelector('.chem-ch').value.trim();
+                    let ci = r.querySelector('.chem-old-img').value; // 舊圖連結
+                    const cn = r.querySelector('.chem-new-base64').value; // 新圖 Base64
+
+                    // 如果有新選的圖片 (Base64)，就上傳
+                    if (cn) {
+                        try {
+                            // 上傳到 GitHub images/chem/ 資料夾
+                            ci = await uploadBase64(cn, 'chem'); 
+                        } catch (err) {
+                            console.error("成分圖片上傳失敗:", err);
+                            alert(`成分 ${en || ch} 的圖片上傳失敗，將不會顯示圖片。`);
+                        }
+                    }
+
+                    if (en || ch) {
+                        cData.push({ name_en: en, name_ch: ch, image: ci });
+                    }
+                }
+
+                // 4. 收集其他資料
+                const oData = [];
+                document.querySelectorAll('.origin-row').forEach(r => {
+                    const l = r.querySelector('.origin-lat').value;
+                    const c = r.querySelector('.origin-ch').value;
+                    if (l || c) oData.push({ lat: l, ch: c });
+                });
+
+                const confData = [];
+                document.querySelectorAll('.confusing-row').forEach(r => {
+                    const c = r.querySelector('.conf-ch').value;
+                    const e = r.querySelector('.conf-en').value;
+                    const n = r.querySelector('.conf-note').value;
+                    if (c || e || n) confData.push({ name_ch: c, name_en: e, note: n });
+                });
+
+                const finalId = document.getElementById('edit-id').value ? parseInt(document.getElementById('edit-id').value) : (allHerbs.reduce((m, h) => Math.max(m, h.id || 0), 0) + 1);
                 
-                const finalId=document.getElementById('edit-id').value?parseInt(document.getElementById('edit-id').value):(allHerbs.reduce((m,h)=>Math.max(m,h.id||0),0)+1);
-                const newItem={ id:finalId, grade:document.getElementById('edit-grade').value, chinese_name:name, origin:oData, confusing_drugs:confData, latin_name:document.getElementById('latin_name').value, part:document.getElementById('part').value, family_ch:document.getElementById('family_ch').value, family_en:document.getElementById('family_en').value, chem_main:document.getElementById('chem_main').value, chem_sub:document.getElementById('chem_sub').value, chemistry:cData, effects:document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s), indications:tinymce.get('indications').getContent(), image:fImg, isTrash:false };
-                
-                const eid=document.getElementById('edit-id').value; if(eid) allHerbs[allHerbs.findIndex(h=>h.id==eid)]=newItem; else allHerbs.push(newItem);
-                await syncToGitHub(`Update ${name}`); hasUnsavedChanges=false; document.getElementById('edit-modal').style.display='none';
-            } catch(e) { alert("錯誤: "+e.message); } finally { btn.innerText="💾 儲存並上傳"; btn.disabled=false; }
+                const newItem = {
+                    id: finalId,
+                    grade: document.getElementById('edit-grade').value,
+                    chinese_name: name,
+                    origin: oData,
+                    confusing_drugs: confData,
+                    latin_name: document.getElementById('latin_name').value,
+                    part: document.getElementById('part').value,
+                    family_ch: document.getElementById('family_ch').value,
+                    family_en: document.getElementById('family_en').value,
+                    chem_main: document.getElementById('chem_main').value,
+                    chem_sub: document.getElementById('chem_sub').value,
+                    chemistry: cData, // 這裡已經包含上傳好的圖片連結了
+                    effects: document.getElementById('effects').value.split(/[,，]/).map(s => s.trim()).filter(s => s),
+                    indications: tinymce.get('indications').getContent(),
+                    image: fImg,
+                    isTrash: false
+                };
+
+                const eid = document.getElementById('edit-id').value;
+                if (eid) allHerbs[allHerbs.findIndex(h => h.id == eid)] = newItem;
+                else allHerbs.push(newItem);
+
+                await syncToGitHub(`Update ${name}`);
+                hasUnsavedChanges = false;
+                document.getElementById('edit-modal').style.display = 'none';
+
+            } catch (e) {
+                alert("錯誤: " + e.message);
+            } finally {
+                btn.innerText = "💾 儲存並上傳";
+                btn.disabled = false;
+            }
         }
         
         async function uploadBase64(b,f) { const n=`images/${f}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`; const u=`https://api.github.com/repos/${JSON.parse(localStorage.getItem('tcm_admin_config')).user}/${JSON.parse(localStorage.getItem('tcm_admin_config')).repo}/contents/${n}`; const r=await fetch(u,{method:'PUT',headers:{'Authorization':`token ${JSON.parse(localStorage.getItem('tcm_admin_config')).token}`,'Content-Type':'application/json'},body:JSON.stringify({message:"Upload img",content:b.split(',')[1]})}); if(!r.ok)throw new Error("圖傳失敗"); return (await r.json()).content.download_url; }
-        
         async function softDelete(id) { if(confirm("移至垃圾桶？")){ allHerbs.find(h=>h.id==id).isTrash=true; syncToGitHub(`Trash ${id}`); } }
         async function restoreHerb(id) { allHerbs.find(h=>h.id==id).isTrash=false; syncToGitHub(`Restore ${id}`); }
         async function hardDelete(id) { if(confirm("永久刪除？")){ allHerbs=allHerbs.filter(h=>h.id!=id); syncToGitHub(`Delete ${id}`); } }
