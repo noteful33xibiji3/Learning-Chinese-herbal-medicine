@@ -15,7 +15,7 @@
     "components": [
       {
         "name": "Ephedrine",
-        "note": "-可天然或人工合成  -結構屬於(-)-Erythro(非對掌異構物),具有兩個不對稱碳  ☆-前驅物 Phenylalanine  特性  -具有 Sympathomimetic(擬交感神經)作用,可活化 ɑ1, β1, β2 (活化ẞ2→cAMP↑,支氣管平滑肌鬆弛,可治療氣喘、枯草熱等)  Ephedra 屬於裸子植物",
+        "note": "<ul>\n<li>-可天然或人工合成</li>\n<li>-結構屬於(-)-Erythro(非對掌異構物),具有兩個不對稱碳</li>\n<li>☆-前驅物 Phenylalanine 特性 -具有 Sympathomimetic(擬交感神經)作用,可活化 ɑ1, &beta;1, &beta;2</li>\n</ul>\n<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(活化ẞ2&rarr;cAMP&uarr;,支氣管平滑肌鬆弛,可治療氣喘、枯草熱等)&nbsp;</p>",
         "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/pharma/1769423490504_156.jpg"
       }
     ],
@@ -24,7 +24,7 @@
     "treatment": "",
     "mnemonic": "",
     "note": "",
-    "updated_at": "2026-01-26T10:31:31.562Z"
+    "updated_at": "2026-01-26T10:36:24.309Z"
   },
   {
     "id": 1769412657580,
