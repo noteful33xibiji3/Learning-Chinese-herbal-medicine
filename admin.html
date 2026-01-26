@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>後台管理系統 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
         /* === 樣式區 (保留原樣) === */
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; }
@@ -153,7 +154,7 @@
                 <button type="button" onclick="addConfusingRow()" class="btn btn-sm" style="background:#e57373; color:white; width:100%;">+ 新增易混淆藥材</button>
             </div>
 
-            <label>備註 (Indications)</label>
+            <label>備註 (Indications) - 支援圖文編輯</label>
             <textarea id="indications"></textarea>
 
             <div style="border:2px dashed #ddd; padding:15px; border-radius:10px; text-align:center; margin-top:15px;">
@@ -182,7 +183,6 @@
         let currentView = 'active';
         
         // 分類資料
-      // 分類資料 (依據生藥成分分類表更新 - 含中英文)
         const categories = {
             "配糖體 (Glycoside)": [
                 "強心配醣體 (Cardiac Glycosides)",
@@ -243,11 +243,24 @@
             ]
         };
 
-        // === 2. 初始化 (修正版) ===
+        // === 2. 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
+            // 3. 初始化 TinyMCE 編輯器 (掛載在 #indications)
+            tinymce.init({
+                selector: '#indications',
+                height: 300,
+                plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
+                toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | ' +
+                         'bold italic underline strikethrough forecolor backcolor | ' +
+                         'alignleft aligncenter alignright alignjustify | ' +
+                         'bullist numlist outdent indent | table image link | removeformat code fullscreen',
+                content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; color: #333; }',
+                branding: false,
+                menubar: true
+            });
+
             initCategories();
             
-            // 檢查是否從 admin_menu 登入過
             const savedConfig = localStorage.getItem('tcm_admin_config');
             if (!savedConfig) {
                 alert("請先從主選單登入！");
@@ -255,10 +268,8 @@
                 return;
             }
             
-            // 載入設定並讀取資料
             const config = JSON.parse(savedConfig);
             try {
-                // 初始化 utils.js
                 await initGitHubConfig(config.token, config.user, config.repo);
                 await loadData();
             } catch (e) {
@@ -271,17 +282,15 @@
             if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
         });
 
-        // === 3. 資料存取 (改用 utils.js) ===
+        // === 3. 資料存取 ===
         async function loadData() {
             try {
-                // 使用 utils.js 的 fetchJSON
                 const result = await fetchJSON('data/herbs.json');
                 allHerbs = result.data;
                 sha = result.sha;
                 updateDisplayCount();
                 renderTable();
             } catch (e) {
-                // 如果是 404，可能是第一次使用，初始化為空陣列
                 if (e.message.includes('404')) {
                     allHerbs = [];
                     renderTable();
@@ -294,7 +303,6 @@
         async function syncToGitHub(message) {
             try {
                 document.getElementById('status-text').innerText = "⏳ 同步中...";
-                // 使用 utils.js 的 saveJSON
                 const res = await saveJSON('data/herbs.json', allHerbs, sha, message);
                 sha = res.content.sha;
                 
@@ -427,6 +435,9 @@
             document.getElementById('confusing-rows-wrapper').innerHTML = "";
             document.getElementById('chem-rows-wrapper').innerHTML = "";
 
+            // 清空編輯器
+            tinymce.get('indications').setContent("");
+
             if (id) {
                 const h = allHerbs.find(i => i.id === id);
                 document.getElementById('modal-title').innerText = "編輯藥材";
@@ -441,7 +452,10 @@
                 document.getElementById('family_ch').value = h.family_ch || "";
                 document.getElementById('family_en').value = h.family_en || "";
                 document.getElementById('effects').value = (h.effects || []).join(', ');
-                document.getElementById('indications').value = h.indications || "";
+                
+                // 4. 讀取舊的 indications 到編輯器中 (如果是 HTML 格式會自動渲染)
+                tinymce.get('indications').setContent(h.indications || "");
+
                 document.getElementById('chem_main').value = h.chem_main || ""; updateSubCats();
                 document.getElementById('chem_sub').value = h.chem_sub || "";
 
@@ -522,12 +536,9 @@
             btn.innerText = "⏳ 處理中..."; btn.disabled = true;
 
             try {
-                // 上傳主圖 (使用 utils.js 提供的 compressAndUploadImage 邏輯的變體，這裡為了維持邏輯直接用 fetch)
-                // 為了方便，這裡我們直接用 utils.js 裡面類似的邏輯，但因為我們已經在 preview 做完壓縮了，所以直接上傳 base64
                 let finalImg = document.getElementById('old-image-path').value;
                 if(newImageBase64) finalImg = await uploadBase64(newImageBase64, 'herbs');
 
-                // 上傳成分圖
                 const chemData=[]; const rows=document.querySelectorAll('.chem-row');
                 for(let row of rows){
                     const en=row.querySelector('.chem-en').value; const ch=row.querySelector('.chem-ch').value;
@@ -536,18 +547,22 @@
                     if(en||ch) chemData.push({name_en:en, name_ch:ch, image:cImg});
                 }
                 
-                // 收集其他資料
                 const originData=[]; document.querySelectorAll('.origin-row').forEach(r=>{ const l=r.querySelector('.origin-lat').value; const c=r.querySelector('.origin-ch').value; if(l||c) originData.push({lat:l,ch:c}) });
                 const confData=[]; document.querySelectorAll('.confusing-row').forEach(r=>{ const c=r.querySelector('.conf-ch').value; const e=r.querySelector('.conf-en').value; const n=r.querySelector('.conf-note').value; if(c||e||n) confData.push({name_ch:c,name_en:e,note:n}) });
 
                 let finalId = idVal ? parseInt(idVal) : (allHerbs.reduce((max,h)=>Math.max(max,h.id||0),0)+1);
+                
+                // 5. 取得編輯器內容 (HTML 格式)
+                const indicationsHTML = tinymce.get('indications').getContent();
+
                 const newItem = {
                     id: finalId, grade: document.getElementById('edit-grade').value, chinese_name: name,
                     origin: originData, confusing_drugs: confData, latin_name: document.getElementById('latin_name').value,
                     part: document.getElementById('part').value, family_ch: document.getElementById('family_ch').value, family_en: document.getElementById('family_en').value,
                     chem_main: document.getElementById('chem_main').value, chem_sub: document.getElementById('chem_sub').value,
                     chemistry: chemData, effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
-                    indications: document.getElementById('indications').value, image: finalImg, isTrash: false
+                    indications: indicationsHTML, // 存入 HTML
+                    image: finalImg, isTrash: false
                 };
 
                 if(idVal) allHerbs[allHerbs.findIndex(h=>h.id==idVal)] = newItem; else allHerbs.push(newItem);
@@ -559,11 +574,9 @@
             finally { btn.innerText = "💾 儲存並上傳"; btn.disabled = false; }
         }
 
-        // 內部使用的上傳 (因為我們已經有 Base64，不需再壓縮)
         async function uploadBase64(b64, folder) {
             const fileName = `images/${folder}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
             const content = b64.split(',')[1];
-            // 使用 config
             const url = `https://api.github.com/repos/${JSON.parse(localStorage.getItem('tcm_admin_config')).user}/${JSON.parse(localStorage.getItem('tcm_admin_config')).repo}/contents/${fileName}`;
             const res = await fetch(url, {
                 method: 'PUT', headers: {'Authorization': `token ${JSON.parse(localStorage.getItem('tcm_admin_config')).token}`, 'Content-Type': 'application/json'},
