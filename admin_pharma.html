@@ -6,66 +6,73 @@
     <title>生藥資料庫管理 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+    
     <style>
-        body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding-top: 70px; }
+        /* === 樣式區 === */
+        body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
         
         /* 導覽列 */
-        nav { 
-            background: white; padding: 15px 30px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-            display:flex; justify-content:space-between; align-items:center; 
-            position:fixed; top:0; width:100%; box-sizing:border-box; z-index:100; 
-        }
-        .nav-title { font-size:1.2rem; font-weight:bold; color:#2C5E4F; display:flex; align-items:center; gap:10px; }
-        .back-btn { text-decoration:none; background:#eee; color:#555; padding:5px 12px; border-radius:20px; font-size:0.9rem; transition:0.2s; }
-        .back-btn:hover { background:#ddd; color:#000; }
-        .btn-primary { background:#4A7C59; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold; }
-        .btn-primary:hover { background:#38614A; }
+        nav { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .nav-title { font-size: 1.2rem; font-weight: bold; color: #2C5E4F; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .back-btn { background: #e0e0e0; color: #333; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .back-btn:hover { background: #d0d0d0; }
 
+        /* 主容器 */
+        main { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        
         /* 列表區 */
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .pharma-item { 
-            background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
-            transition: 0.2s; border: 1px solid transparent;
+        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
+        
+        /* 卡片樣式 (含刪除按鈕) */
+        .pharma-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border-left: 5px solid #4A7C59; position: relative; }
+        .pharma-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-name { font-size: 1.3rem; font-weight: bold; color: #333; margin: 0; }
+        .card-cat { background: #e8f5e9; color: #2C5E4F; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .card-en { color: #666; font-size: 0.9rem; font-style: italic; }
+        
+        /* 垃圾桶按鈕 (絕對定位在卡片右下角) */
+        .card-delete-btn {
+            position: absolute; bottom: 15px; right: 15px;
+            background: #ffebee; color: #c62828; border: none;
+            width: 35px; height: 35px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; cursor: pointer; transition: 0.2s;
+            z-index: 2; /* 確保浮在上面 */
         }
-        .pharma-item:hover { transform: translateY(-3px); border-color: #4A7C59; }
-        
-        .item-info h3 { margin: 0 0 5px 0; color: #2C5E4F; }
-        .item-meta { font-size: 0.9rem; color: #666; }
-        .item-tag { background: #e8f5e9; color: #4A7C59; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-right: 5px; }
+        .card-delete-btn:hover { background: #ffcdd2; transform: scale(1.1); }
 
-        /* 按鈕群 */
-        .btn-group { display: flex; gap: 10px; }
-        .btn-icon { width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: 0.2s; }
-        .btn-edit { background: #e3f2fd; color: #1976d2; }
-        .btn-edit:hover { background: #bbdefb; }
-        .btn-delete { background: #ffebee; color: #c62828; }
-        .btn-delete:hover { background: #ffcdd2; }
-
-        /* 編輯彈窗 */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: flex-start; padding-top: 50px; z-index: 200; overflow-y: auto; }
-        .modal { background: white; width: 90%; max-width: 900px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; margin-bottom: 50px; }
-        .modal h2 { margin-top: 0; color: #2C5E4F; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        /* 編輯視窗 (Modal) */
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 20px 0; }
+        .modal-content { background: white; width: 95%; max-width: 900px; margin: 0 auto 50px auto; padding: 30px; border-radius: 15px; position: relative; }
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        .form-group textarea { height: 100px; resize: vertical; }
+        /* 表單元件 */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #444; }
+        input[type="text"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         
-        .row { display: flex; gap: 15px; }
-        .col { flex: 1; }
-
-        .modal-footer { margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 20px; }
-        .btn-save:disabled { background-color: #ccc; cursor: not-allowed; }
+        .section-title { font-size: 1.1rem; color: #2C5E4F; border-bottom: 2px solid #eee; padding-bottom: 5px; margin: 30px 0 15px 0; font-weight: bold; }
 
         /* 動態列表 */
         .dynamic-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
-        .btn-add { background: #607d8b; width: 100%; margin-top: 5px; padding: 10px; border:none; color:white; border-radius:8px; cursor:pointer; }
-        .btn-danger { background: #e57373; padding: 5px 10px; border:none; color:white; border-radius:5px; cursor:pointer;}
+        
+        /* 按鈕 */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-primary { background: #4A7C59; }
+        .btn-add { background: #607d8b; width: 100%; margin-top: 5px; }
+        .btn-danger { background: #e57373; padding: 5px 10px; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; } /* 防呆樣式 */
+        
+        /* 載入遮罩 */
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:2000; display:flex; justify-content:center; align-items:center; flex-direction:column; }
     </style>
 </head>
 <body>
+
+    <div id="loading-overlay">
+        <div style="font-size:2rem;">⏳</div>
+        <p id="loading-text">正在連接 GitHub 資料庫...</p>
+    </div>
 
     <nav>
         <div class="nav-title">
@@ -73,17 +80,24 @@
             <a href="pharmacognosy.html" class="back-btn" style="background:#e8f5e9; color:#2C5E4F; margin-left:5px;" target="_blank">🏠 去前台看</a>
             <span style="margin-left:10px;">🔬 生藥資料庫管理</span>
         </div>
-        <button onclick="openModal()" class="btn-primary">＋ 新增生藥</button>
+        <button onclick="openModal()" class="btn btn-primary">＋ 新增生藥</button>
     </nav>
 
-    <div class="container" id="list-container">
-        <p style="text-align:center; color:#999;">資料載入中...</p>
-    </div>
+    <main>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="search-input" placeholder="🔍 搜尋生藥名稱、學名、成分..." oninput="renderList()">
+            <select id="filter-cat" onchange="renderList()" style="width:150px;">
+                <option value="">所有分類</option>
+            </select>
+        </div>
 
-    <div id="modal" class="modal-overlay">
-        <div class="modal">
+        <div id="pharma-list" class="card-container"></div>
+    </main>
+
+    <div id="edit-modal">
+        <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 id="modal-title" style="margin:0; border:none;">新增生藥</h2>
+                <h2 style="margin:0; color:#2C5E4F;">編輯生藥資料</h2>
                 <button onclick="closeModalDirect()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">✕</button>
             </div>
             
@@ -97,75 +111,86 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="form-group col"><label>中文藥名</label><input type="text" id="name-ch" placeholder="例如：麻黃"></div>
-                <div class="form-group col"><label>英文藥名</label><input type="text" id="name-en" placeholder="例如：Ephedra"></div>
+            <div class="section-title">基本資料</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div><label>生藥名稱 (中文)</label><input type="text" id="name-ch" placeholder="例如：麻黃"></div>
+                <div><label>生藥名稱 (英文)</label><input type="text" id="name-en" placeholder="例如：Ephedra"></div>
             </div>
             
-            <label>別名 (Alias)</label>
+            <label style="margin-top:10px;">別名 (Alias)</label>
             <div id="alias-list"></div>
-            <button class="btn-add" onclick="addAliasRow()">+ 新增別名</button>
+            <button class="btn btn-add" onclick="addAliasRow()">+ 新增別名</button>
 
-            <div class="form-group" style="margin-top:20px;">
-                <label>基原 (Origin)</label>
-                <input type="text" id="origin" placeholder="學名">
+            <div class="section-title">基原與科別</div>
+            <div class="form-group"><label>基原 (Origin)</label><input type="text" id="origin" placeholder="例如：Ephedra sinica Stapf"></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div><label>科名 (中文)</label><input type="text" id="family-ch" placeholder="麻黃科"></div>
+                <div><label>科名 (英文)</label><input type="text" id="family-en" placeholder="Ephedraceae"></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
+                <div><label>使用部位 (中文)</label><input type="text" id="part-ch" placeholder="乾燥草質莖"></div>
+                <div><label>使用部位 (英文)</label><input type="text" id="part-en" placeholder="Stem"></div>
             </div>
 
-            <div class="row">
-                <div class="form-group col"><label>科別 (中文)</label><input type="text" id="family-ch"></div>
-                <div class="form-group col"><label>科別 (英文)</label><input type="text" id="family-en"></div>
-            </div>
-            <div class="row">
-                <div class="form-group col"><label>使用部位 (中文)</label><input type="text" id="part-ch"></div>
-                <div class="form-group col"><label>使用部位 (英文)</label><input type="text" id="part-en"></div>
-            </div>
-
-            <h3 style="color:#2C5E4F; border-bottom:1px solid #eee; padding-bottom:5px; margin-top:30px;">⚗️ 化學成分 (Components)</h3>
+            <div class="section-title">⚗️ 化學成分 (Components)</div>
             <div id="chem-list"></div>
-            <button class="btn-add" style="background:#4A7C59;" onclick="addChemRow()">+ 新增成分與結構圖</button>
+            <button class="btn btn-add" style="background:#4A7C59;" onclick="addChemRow()">+ 新增成分與結構圖</button>
 
-            <h3 style="color:#2C5E4F; border-bottom:1px solid #eee; padding-bottom:5px; margin-top:30px;">⚖️ 比較 (Comparison)</h3>
+            <div class="section-title">⚖️ 比較 (Comparison)</div>
             <div id="compare-list"></div>
-            <button class="btn-add" onclick="addCompareRow()">+ 新增比較項目</button>
+            <button class="btn btn-add" onclick="addCompareRow()">+ 新增比較項目</button>
 
-            <div class="form-group" style="margin-top:20px;"><label>性狀/特性</label><textarea id="characteristics" rows="2"></textarea></div>
-            <div class="form-group"><label>功效</label><textarea id="efficacy" rows="2"></textarea></div>
-            <div class="form-group"><label>適應症</label><textarea id="treatment" rows="2"></textarea></div>
-            <div class="form-group"><label>記法</label><input type="text" id="mnemonic"></div>
+            <div class="section-title">特性與功效</div>
+            <div class="form-group"><label>性狀/特性</label><textarea id="characteristics" rows="3"></textarea></div>
+            <div class="form-group"><label>功效 (Efficacy)</label><textarea id="efficacy" rows="3"></textarea></div>
+            <div class="form-group"><label>適應症/治療</label><textarea id="treatment" rows="2"></textarea></div>
+            <div class="form-group"><label>記法 (Mnemonic)</label><input type="text" id="mnemonic" placeholder="口訣..."></div>
 
-            <h3 style="color:#2C5E4F; border-bottom:1px solid #eee; padding-bottom:5px; margin-top:30px;">📝 詳細備註</h3>
+            <div class="section-title">📝 詳細備註</div>
             <textarea id="rich-note"></textarea>
 
-            <div class="modal-footer">
-                <button onclick="closeModalDirect()" style="background:transparent; border:none; color:#666; cursor:pointer; margin-right:10px; font-size:1rem;">取消</button>
-                <button onclick="saveData()" id="btn-save" class="btn-primary btn-save" style="font-size:1rem; padding:10px 30px;">💾 儲存</button>
+            <div class="modal-footer" style="margin-top:30px; display:flex; gap:10px;">
+                <button onclick="closeModalDirect()" style="flex:1; background:#eee; color:#333; border:none; border-radius:8px; cursor:pointer;">取消</button>
+                <button onclick="saveData()" id="btn-save" class="btn btn-primary" style="flex:2; padding:15px; font-size:1.1rem;">💾 儲存資料</button>
             </div>
         </div>
     </div>
 
     <script src="pharma_config.js"></script>
     <script src="utils.js"></script>
-    
+
     <script>
+        // === 全域變數 ===
         let pharmaList = [];
         let fileSha = "";
         const FILE_PATH = "data/pharma.json";
         let ghConfig = null;
 
+        // === 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
+            // 1. 初始化 TinyMCE
             tinymce.init({
                 selector: '#rich-note', height: 400,
                 plugins: 'table lists link image code preview',
                 toolbar: 'undo redo | blocks | bold italic forecolor | bullist numlist | table | image code'
             });
 
+            // 2. 登入檢查
             const configStr = localStorage.getItem('tcm_admin_config');
-            if (!configStr) return location.href = 'admin_menu.html';
+            if (!configStr) {
+                alert("請先登入！");
+                return location.href = 'admin_menu.html';
+            }
             ghConfig = JSON.parse(configStr);
             
-            await initGitHubConfig(ghConfig.token, ghConfig.user, ghConfig.repo);
-            await loadData();
-            initCatSelects();
+            try {
+                await initGitHubConfig(ghConfig.token, ghConfig.user, ghConfig.repo);
+                await loadData();
+                initCatSelects();
+                document.getElementById('loading-overlay').style.display = 'none';
+            } catch (e) {
+                alert("連線錯誤: " + e.message);
+            }
         });
 
         // 1. 讀取資料
@@ -183,33 +208,45 @@
                     pharmaList = [];
                 }
                 renderList();
-            } catch (e) { alert("讀取失敗: " + e.message); }
+            } catch (e) { console.error("讀取失敗", e); }
         }
 
-        // 2. 渲染列表 (含刪除按鈕)
+        // 2. 渲染列表 (★ 關鍵修正：加入垃圾桶按鈕)
         function renderList() {
-            const container = document.getElementById('list-container');
-            const search = document.getElementById('search-input') ? document.getElementById('search-input').value.toLowerCase() : "";
-            container.innerHTML = "";
+            const container = document.getElementById('pharma-list');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filter = document.getElementById('filter-cat').value;
             
-            const filtered = pharmaList.filter(item => (item.name_ch||"").includes(search) || (item.name_en||"").toLowerCase().includes(search));
+            container.innerHTML = "";
+
+            const filtered = pharmaList.filter(item => {
+                const matchSearch = (item.name_ch || "").includes(search) || (item.name_en || "").toLowerCase().includes(search);
+                const matchCat = filter ? item.category_main === filter : true;
+                return matchSearch && matchCat;
+            });
+            
+            // ID 倒序排列 (新資料在前)
             const sortedList = [...filtered].sort((a,b) => b.id - a.id);
 
             sortedList.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'pharma-item';
+                div.className = 'pharma-card';
+                // 點擊卡片本體 -> 編輯
+                div.onclick = () => openModal(item.id);
+                
                 div.innerHTML = `
-                    <div class="item-info">
-                        <h3>${item.name_ch} <small style="color:#999; font-size:0.9rem;">${item.name_en || ''}</small></h3>
-                        <div class="item-meta">
-                            <span class="item-tag">${item.category_main || '未分類'}</span>
-                            <span>${item.origin || ''}</span>
-                        </div>
+                    <div class="card-header">
+                        <span class="card-name">${item.name_ch}</span>
+                        <span class="card-cat">${item.category_sub || item.category_main}</span>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn-icon btn-edit" onclick="openModal(${item.id})" title="編輯">✏️</button>
-                        <button class="btn-icon btn-delete" onclick="deleteItem(${item.id})" title="刪除">🗑️</button>
+                    <div class="card-en">${item.name_en}</div>
+                    <div style="font-size:0.85rem; color:#888; margin-top:5px;">
+                        ${item.family_ch || ""} / ${item.part_ch || ""}
                     </div>
+                    
+                    <button class="card-delete-btn" onclick="event.stopPropagation(); deleteItem(${item.id})" title="刪除此資料">
+                        🗑️
+                    </button>
                 `;
                 container.appendChild(div);
             });
@@ -217,20 +254,28 @@
 
         // 3. 刪除功能
         async function deleteItem(id) {
-            if (!confirm("⚠️ 確定刪除？")) return;
+            if (!confirm("⚠️ 警告：確定要刪除這筆生藥資料嗎？")) return;
+            
             const newArr = pharmaList.filter(item => item.id !== id);
+            
+            // 樂觀更新
+            const oldArr = [...pharmaList];
+            pharmaList = newArr;
+            renderList();
+
             try {
                 await uploadToGitHub(newArr, `Delete ID: ${id}`);
-                pharmaList = newArr;
-                renderList();
                 alert("🗑️ 刪除成功！");
-            } catch (e) { alert("刪除失敗"); }
+            } catch (e) {
+                alert("刪除失敗，還原資料");
+                pharmaList = oldArr;
+                renderList();
+            }
         }
 
         // 4. 編輯視窗邏輯
         function openModal(id = null) {
-            const modal = document.getElementById('modal');
-            const title = document.getElementById('modal-title');
+            const modal = document.getElementById('edit-modal');
             document.querySelectorAll('input, select, textarea').forEach(i => i.value = '');
             document.getElementById('alias-list').innerHTML = "";
             document.getElementById('chem-list').innerHTML = "";
@@ -240,18 +285,19 @@
             if (id) {
                 const item = pharmaList.find(i => i.id === id);
                 if (item) {
-                    title.innerText = "編輯生藥";
                     document.getElementById('edit-id').value = item.id;
                     document.getElementById('name-ch').value = item.name_ch || '';
                     document.getElementById('name-en').value = item.name_en || '';
                     document.getElementById('cat-main').value = item.category_main || '';
                     updateSubCats();
                     document.getElementById('cat-sub').value = item.category_sub || '';
+                    
                     document.getElementById('origin').value = item.origin || '';
                     document.getElementById('family-ch').value = item.family_ch || '';
                     document.getElementById('family-en').value = item.family_en || '';
                     document.getElementById('part-ch').value = item.part_ch || '';
                     document.getElementById('part-en').value = item.part_en || '';
+                    
                     document.getElementById('characteristics').value = item.characteristics || '';
                     document.getElementById('efficacy').value = item.efficacy || '';
                     document.getElementById('treatment').value = item.treatment || '';
@@ -263,39 +309,41 @@
                     (item.comparisons || []).forEach(v => addCompareRow(v));
                 }
             } else {
-                title.innerText = "新增生藥";
                 document.getElementById('edit-id').value = "";
-                addChemRow(); // 預設給一行
+                addChemRow(); // 預設給一行成分
             }
-            modal.style.display = 'flex';
+            modal.style.display = 'block';
         }
 
-        function closeModalDirect() { document.getElementById('modal').style.display = 'none'; }
+        function closeModalDirect() { document.getElementById('edit-modal').style.display = 'none'; }
+        function closeModal() { if(confirm("確定關閉？未儲存變更將遺失")) closeModalDirect(); }
 
         // 5. 動態欄位
         function addAliasRow(val = "") {
             const div = document.createElement('div'); div.className = 'dynamic-row';
-            div.innerHTML = `<input type="text" class="alias-input" value="${val}" placeholder="別名"><button class="btn-danger" onclick="this.parentElement.remove()">✕</button>`;
+            div.innerHTML = `<input type="text" class="alias-input" value="${val}" placeholder="別名"><button class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>`;
             document.getElementById('alias-list').appendChild(div);
         }
         function addCompareRow(data = {}) {
             const div = document.createElement('div'); div.className = 'dynamic-row';
-            div.innerHTML = `<input type="text" class="comp-target" value="${data.target||''}" placeholder="對象"><input type="text" class="comp-diff" value="${data.diff||''}" placeholder="差異"><button class="btn-danger" onclick="this.parentElement.remove()">✕</button>`;
+            div.innerHTML = `<input type="text" class="comp-target" value="${data.target||''}" placeholder="對象"><input type="text" class="comp-diff" value="${data.diff||''}" placeholder="差異"><button class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>`;
             document.getElementById('compare-list').appendChild(div);
         }
         function addChemRow(data = {}) {
             const div = document.createElement('div'); div.className = 'dynamic-row'; div.style.flexDirection = 'column';
             const imgId = `chem-img-${Date.now()}-${Math.random()}`;
             const imgVal = data.image || "";
+            const noteVal = data.note || ""; // 讀取備註
+            
             div.innerHTML = `
                 <div style="display:flex; gap:5px; width:100%;">
-                    <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名">
-                    <input type="text" class="chem-note" value="${data.note||''}" placeholder="備註">
-                    <button class="btn-danger" onclick="this.closest('.dynamic-row').remove()">✕</button>
+                    <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名 (如: Ephedrine)">
+                    <input type="text" class="chem-note" value="${noteVal}" placeholder="備註 (如: 毒性)">
+                    <button class="btn btn-danger" onclick="this.closest('.dynamic-row').remove()">✕</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="background:#eee; padding:5px; border-radius:5px; cursor:pointer;">📸 上傳 <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')"></label>
-                    <img id="${imgId}" src="${imgVal}" style="max-height:60px; display:${imgVal?'block':'none'};">
+                    <label style="background:#eee; padding:5px; border-radius:5px; cursor:pointer;">📸 上傳結構 <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')"></label>
+                    <img id="${imgId}" src="${imgVal}" style="max-height:60px; display:${imgVal?'block':'none'}; border:1px solid #ccc;">
                     <input type="hidden" class="chem-img-url" value="${imgVal}">
                 </div>`;
             document.getElementById('chem-list').appendChild(div);
@@ -312,32 +360,34 @@
             reader.readAsDataURL(file);
         }
 
-        // 6. 儲存邏輯 (防連點 + 自動關閉)
+        // 6. 儲存邏輯 (★ 防呆 + 自動關閉 + SHA處理)
         async function saveData() {
             const btn = document.getElementById('btn-save');
             const idVal = document.getElementById('edit-id').value;
             const name_ch = document.getElementById('name-ch').value.trim();
             if (!name_ch) return alert("中文藥名必填！");
 
-            btn.disabled = true;
+            btn.disabled = true; // ★ 鎖定按鈕
             btn.innerText = "⏳ 儲存中...";
 
             try {
-                // 處理成分圖片
+                // A. 處理圖片
                 const chemRows = document.querySelectorAll('#chem-list .dynamic-row');
                 const components = [];
                 for (let row of chemRows) {
                     const name = row.querySelector('.chem-name').value.trim();
+                    const note = row.querySelector('.chem-note').value.trim();
                     if (!name) continue;
+                    
                     let imgUrl = row.querySelector('.chem-img-url').value;
                     const fileInput = row.querySelector('input[type="file"]');
                     if (fileInput.fileObj) {
                         imgUrl = await compressAndUploadImage(fileInput.fileObj, 'images/pharma');
                     }
-                    components.push({ name: name, note: row.querySelector('.chem-note').value.trim(), image: imgUrl });
+                    components.push({ name, note, image: imgUrl });
                 }
 
-                // 建立物件
+                // B. 建立物件
                 const newItem = {
                     id: idVal ? parseInt(idVal) : Date.now(),
                     name_ch, name_en: document.getElementById('name-en').value.trim(),
@@ -355,7 +405,8 @@
                     efficacy: document.getElementById('efficacy').value,
                     treatment: document.getElementById('treatment').value,
                     mnemonic: document.getElementById('mnemonic').value,
-                    note: tinymce.get('rich-note').getContent()
+                    note: tinymce.get('rich-note').getContent(),
+                    updated_at: new Date().toISOString()
                 };
 
                 let newList = [...pharmaList];
@@ -366,17 +417,20 @@
                     newList.unshift(newItem);
                 }
 
+                // C. 上傳
                 await uploadToGitHub(newList, `Update: ${name_ch}`);
+                
+                // D. 成功處理
                 pharmaList = newList;
                 renderList();
-                closeModalDirect(); // 成功後關閉
+                closeModalDirect(); // ★ 自動關閉
                 alert("🎉 儲存成功！");
 
             } catch (e) {
                 alert("儲存失敗: " + e.message);
             } finally {
-                btn.disabled = false;
-                btn.innerText = "💾 儲存";
+                btn.disabled = false; // ★ 解鎖按鈕
+                btn.innerText = "💾 儲存資料";
             }
         }
 
@@ -392,7 +446,7 @@
                 headers: { 'Authorization': `token ${ghConfig.token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            if (!res.ok) throw new Error("GitHub Error");
+            if (!res.ok) throw new Error("GitHub API Error");
             const json = await res.json();
             fileSha = json.content.sha;
         }
@@ -400,8 +454,13 @@
         // 分類選單
         function initCatSelects() {
             const mainSel = document.getElementById('cat-main');
+            const filterSel = document.getElementById('filter-cat');
             if (typeof PHARMA_CATEGORIES !== 'undefined') {
-                PHARMA_CATEGORIES.forEach(cat => mainSel.add(new Option(cat.name_ch, cat.name_ch)));
+                PHARMA_CATEGORIES.forEach(cat => {
+                    const opt = new Option(cat.name_ch, cat.name_ch);
+                    mainSel.add(opt);
+                    filterSel.add(opt.cloneNode(true));
+                });
             }
         }
         function updateSubCats() {
