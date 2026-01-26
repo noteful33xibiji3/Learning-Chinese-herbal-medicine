@@ -357,11 +357,11 @@
 
     <div id="sub-filter-container" class="filter-tags" style="margin-top:10px; min-height:10px;"></div>
 
-    <div style="text-align:center; margin: 15px 0; height: 40px;">
-        <button id="btn-cat-info" onclick="openCategoryModal()" style="display:none; background: linear-gradient(135deg, #4A7C59, #2C5E4F); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition:0.3s; align-items:center; gap:8px;">
-            📖 查看「<span id="current-cat-name"></span>」詳細介紹
-        </button>
-    </div>
+    <div style="text-align:center; margin: 15px 0; height: 40px; position: relative; z-index: 20;">
+    <button id="btn-cat-info" onclick="openCategoryModal()" style="display:none; background: linear-gradient(135deg, #4A7C59, #2C5E4F); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition:0.3s; align-items:center; gap:8px;">
+        📖 查看「<span id="current-cat-name"></span>」詳細介紹
+    </button>
+</div>
 
     <div id="cat-modal" class="modal-overlay" onclick="closeCategoryModal(event)">
         <div class="modal-content" style="max-width:800px;">
@@ -666,7 +666,7 @@
         }
     }
 
-    // === ✅ 修正版：打開分類介紹視窗 ===
+    // === ✅ 最終修正版：打開分類介紹視窗 ===
     function openCategoryModal() {
         const btn = document.getElementById('btn-cat-info');
         
@@ -674,19 +674,24 @@
         const realKey = btn.getAttribute('data-real-key');
         
         if (!realKey) {
-            alert("❌ 系統錯誤：找不到分類 Key");
+            console.error("❌ 找不到分類 Key");
             return;
         }
         
-        // 2. 填入內容
-        document.getElementById('cat-modal-title').innerText = `${realKey} - 詳細介紹`;
+        // 2. 填入標題與內容
+        // ★ 注意：這裡的 ID 要跟您 HTML 裡的 <div id="cat-modal"> 對應
+        const modal = document.getElementById('cat-modal'); 
+        const titleEl = document.getElementById('cat-modal-title');
+        const bodyEl = document.getElementById('cat-modal-body');
+
+        if(titleEl) titleEl.innerText = `${realKey} - 詳細介紹`;
         
-        // 3. 取得 HTML 內容 (如果有就顯示，沒有就顯示預設文字)
+        // 3. 取得 HTML 內容
         const content = categoryData[realKey] || "<p>暫無介紹資料</p>";
-        document.getElementById('cat-modal-body').innerHTML = content;
+        if(bodyEl) bodyEl.innerHTML = content;
         
-        // 4. 顯示視窗 (確保 ID 是 cat-modal)
-        document.getElementById('cat-modal').style.display = 'flex';
+        // 4. 顯示視窗
+        if(modal) modal.style.display = 'flex';
     }
     // === 3. 執行篩選與渲染 (超級搜尋版) ===
     function filterData() {
