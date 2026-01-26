@@ -637,12 +637,18 @@
     ],
     "confusing_drugs": [],
     "latin_name": "Arecae Semen",
-    "part": "",
+    "part": "成熟種子",
     "family_ch": "棕櫚科",
     "family_en": "Arecaceae/ Palmae",
-    "chem_main": "",
-    "chem_sub": "",
-    "chemistry": [],
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "吡啶-哌啶類 (Pyridine-Piperidine alkaloid)",
+    "chemistry": [
+      {
+        "name_en": "Arecoline",
+        "name_ch": "檳榔鹼",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/chem/1769452356364_573.jpg"
+      }
+    ],
     "effects": [],
     "indications": "<p>花檳榔-錯入組織</p>",
     "image": "",
