@@ -164,8 +164,11 @@
         }
 
         // === 載入選定分類的內容 ===
+       // === 修正版：載入分類資料 (強制清空) ===
         function loadCategoryData() {
             const cat = document.getElementById('cat-select').value;
+            
+            // 1. 如果選回「請選擇」，就隱藏編輯區
             if (!cat) {
                 document.getElementById('editor-area').style.display = 'none';
                 return;
@@ -174,11 +177,16 @@
             document.getElementById('editor-area').style.display = 'block';
             document.getElementById('current-edit-target').innerText = cat;
             
-            // 從 JSON 物件中取出該分類的 HTML，如果沒有則為空
-            const content = categoriesData[cat] || "";
-            tinymce.get('rich-editor').setContent(content);
-        }
+            // 2. 嘗試取得資料
+            const content = categoriesData[cat];
 
+            // 3. ★ 關鍵修正：如果有資料就填入，沒資料就「強制清空」
+            if (content) {
+                tinymce.get('rich-editor').setContent(content);
+            } else {
+                tinymce.get('rich-editor').setContent(''); // 清空編輯器
+            }
+        }
         // === 儲存 ===
         async function saveCategory() {
             const cat = document.getElementById('cat-select').value;
