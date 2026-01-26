@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>後台管理入口 | 本草學園</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 { color: #2C5E4F; margin-bottom: 30px; font-size: 2rem; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: #333;
+            border: 2px solid transparent;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-color: #4A7C59;
+        }
+
+        .icon { font-size: 3rem; display: block; margin-bottom: 15px; }
+        .card-title { font-size: 1.5rem; font-weight: bold; color: #2C5E4F; display: block; margin-bottom: 10px; }
+        .card-desc { color: #666; font-size: 0.95rem; line-height: 1.5; }
+
+        /* 登入視窗 */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 20px;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        
+        input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ccc; border-radius: 8px;
+            box-sizing: border-box; font-size: 1rem;
+        }
+        
+        .btn {
+            background: #4A7C59; color: white; border: none;
+            padding: 12px 25px; border-radius: 50px; font-size: 1rem;
+            cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;
+        }
+        .btn:hover { background: #3a6346; }
+        
+        #loading-msg { color: #666; margin-top: 10px; display: none; }
+        .error-msg { color: #dc3545; margin-top: 10px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-menu" style="display:none;">
+        <h1>🌿 本草學園後台管理</h1>
+        <div class="menu-grid">
+            <a href="admin.html" class="menu-card">
+                <span class="icon">💊</span>
+                <span class="card-title">中藥資料庫</span>
+                <span class="card-desc">管理傳統中藥材資料、圖片、基原、性味歸經與功效。</span>
+            </a>
+
+            <a href="admin_pharma.html" class="menu-card">
+                <span class="icon">🔬</span>
+                <span class="card-title">生藥資料庫</span>
+                <span class="card-desc">管理詳細生藥化學成分、分類簡介 (配醣體/生物鹼等) 與比較表。</span>
+            </a>
+        </div>
+        
+        <button onclick="logout()" style="background:transparent; border:1px solid #999; color:#666; padding:8px 20px; border-radius:20px; margin-top:40px; cursor:pointer;">
+            登出系統
+        </button>
+    </div>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="color:#2C5E4F; margin-top:0;">🔐 管理員驗證</h2>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">請輸入 GitHub 設定以解鎖後台</p>
+            
+            <input type="text" id="gh-user" placeholder="GitHub 帳號">
+            <input type="text" id="gh-repo" placeholder="倉庫名稱 (Repository)">
+            <input type="password" id="gh-token" placeholder="Token (ghp_...)">
+            
+            <button class="btn" onclick="performLogin()">🚀 連線並登入</button>
+            <div id="loading-msg">⏳ 連線驗證中...</div>
+            <div id="login-msg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+
+    <script>
+        // 頁面載入時檢查是否已登入
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedConfig = localStorage.getItem('tcm_admin_config');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                // 自動填入欄位 (方便重新登入)
+                document.getElementById('gh-user').value = config.user;
+                document.getElementById('gh-repo').value = config.repo;
+                document.getElementById('gh-token').value = config.token;
+                
+                // 嘗試自動驗證
+                verifyAndUnlock(config.token, config.user, config.repo);
+            }
+        });
+
+        function performLogin() {
+            const user = document.getElementById('gh-user').value.trim();
+            const repo = document.getElementById('gh-repo').value.trim();
+            const token = document.getElementById('gh-token').value.trim();
+
+            if (!user || !repo || !token) {
+                showError("請填寫完整資訊");
+                return;
+            }
+
+            verifyAndUnlock(token, user, repo);
+        }
+
+        // 使用 utils.js 的功能來驗證
+        function verifyAndUnlock(token, user, repo) {
+            const loading = document.getElementById('loading-msg');
+            const errorDiv = document.getElementById('login-msg');
+            
+            loading.style.display = 'block';
+            errorDiv.innerText = "";
+
+            // 呼叫 utils.js 裡的 initGitHubConfig
+            initGitHubConfig(token, user, repo)
+                .then(() => {
+                    // 驗證成功：存檔並切換畫面
+                    const config = { token, user, repo };
+                    localStorage.setItem('tcm_admin_config', JSON.stringify(config));
+                    
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('main-menu').style.display = 'block';
+                })
+                .catch(err => {
+                    showError(err.message);
+                })
+                .finally(() => {
+                    loading.style.display = 'none';
+                });
+        }
+
+        function showError(msg) {
+            document.getElementById('login-msg').innerText = msg;
+        }
+
+        function logout() {
+            if(confirm("確定要登出嗎？")) {
+                localStorage.removeItem('tcm_admin_config');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
