@@ -500,13 +500,7 @@
                 });
             }
         }
-        function updateSubCats() {
-            const val = document.getElementById('cat-main').value;
-            const sub = document.getElementById('cat-sub');
-            sub.innerHTML = '<option value="">- 中分類 -</option>';
-            const found = PHARMA_CATEGORIES.find(c => c.name_ch === val);
-            if(found && found.subcategories) found.subcategories.forEach(s => sub.add(new Option(s.ch, s.ch)));
-        }
+    
     </script>
 </body>
 </html>
