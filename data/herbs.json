@@ -298,5 +298,28 @@
     "indications": "",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 11,
+    "grade": "大二上",
+    "chinese_name": "土茯苓",
+    "origin": [
+      {
+        "lat": "Smilax glabra",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Smilacis Glabrae Rhizoma",
+    "part": "",
+    "family_ch": "百合科",
+    "family_en": "Liliaceae",
+    "chem_main": "配糖體 (Glycoside)",
+    "chem_sub": "皂素配醣體 (Saponin Glycosides)",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">刺豬苓</span></li>\n<li class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽;\">diosgenin </span><span style=\"font-size: 9.0pt; font-family: 芫荽;\">配糖體</span></li>\n<li><span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽; mso-font-kerning: 0pt; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">saponin</span></li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
