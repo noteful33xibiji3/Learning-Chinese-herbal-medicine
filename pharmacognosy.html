@@ -354,6 +354,34 @@
     .rich-content tr:nth-child(even) { background-color: #fafafa; }
     .rich-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
     .rich-content h1, .rich-content h2, .rich-content h3 { color: var(--primary-dark); margin-top: 20px; }
+
+        /* === 🚑 修正：強制彈窗內容顯示黑字 === */
+    
+    /* 1. 針對所有彈窗內容區域 */
+    .modal-body {
+        color: #333 !important; /* 強制深灰色 */
+    }
+
+    /* 2. 針對分類介紹的富文本區域 */
+    .rich-content, 
+    .rich-content p, 
+    .rich-content li, 
+    .rich-content span {
+        color: #333 !important;
+    }
+
+    /* 3. 針對生藥詳情的筆記區域 */
+    #modal-note, 
+    #modal-note p {
+        color: #333 !important;
+    }
+
+    /* 4. 確保標題依然是白字 (不被影響) */
+    .modal-header, 
+    .modal-header h2, 
+    .modal-header h3 {
+        color: white !important;
+    }
     </style>
 </head>
 <body>
@@ -685,6 +713,7 @@
         renderGrid(filtered);
     }
 
+    // 3. 渲染卡片網格 (已修改：直接顯示成分名稱)
     function renderGrid(data) {
         const grid = document.getElementById('pharma-grid');
         grid.innerHTML = "";
@@ -702,6 +731,14 @@
             const family = item.family_ch || item.family_en || "未分類";
             const part = item.part_ch || "-";
 
+            // ★ 修改重點：處理成分名稱
+            let compText = "無";
+            if (item.components && item.components.length > 0) {
+                // 把所有成分的名字抓出來，用頓號串接
+                // 例如： "Morphine、Codeine、Thebaine"
+                compText = item.components.map(c => c.name).join('、');
+            }
+
             card.innerHTML = `
                 <div class="card-body">
                     <div class="card-category">${item.category_main} / ${item.category_sub || ""}</div>
@@ -715,7 +752,10 @@
                         <span class="info-label">部位</span> <span>${part}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">成分</span> <span>${item.components ? item.components.length : 0} 種</span>
+                        <span class="info-label">成分</span> 
+                        <span style="display:inline-block; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; vertical-align:bottom;" title="${compText}">
+                            ${compText}
+                        </span>
                     </div>
                 </div>
                 <div class="card-footer">查看詳情 ➔</div>
@@ -723,7 +763,6 @@
             grid.appendChild(card);
         });
     }
-
     // === 4. 生藥詳情 Modal ===
     function openDetail(item) {
         const modal = document.getElementById('detail-modal');
