@@ -176,6 +176,7 @@
         let currentConfig = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('footer-year').innerText = new Date().getFullYear();
             // 1. 初始化下方的大編輯器
             tinymce.init({
                 selector: '#rich-note', 
