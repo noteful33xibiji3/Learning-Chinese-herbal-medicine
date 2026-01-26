@@ -6,156 +6,339 @@
     <title>後台管理入口 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* === 1. 全局設定 === */
+        :root {
+            --primary: #4A7C59;
+            --primary-dark: #2C5E4F;
+            --accent: #E8F5E9;
+            --text-dark: #333;
+            --text-light: #666;
+            --danger: #dc3545;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             font-family: 'Noto Sans TC', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column; /* 讓頁尾置底的關鍵 */
+        }
+
+        /* === 2. 導覽列 (Navbar) === */
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0;
+            gap: 8px;
         }
 
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-home {
+            background: var(--accent);
+            color: var(--primary-dark);
+            border-color: var(--primary);
+        }
+        .btn-home:hover { background: #d0e8d4; }
+
+        .btn-logout {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-logout:hover { background: #c82333; }
+
+        /* === 3. 主內容區 === */
         .container {
-            width: 90%;
-            max-width: 800px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 100px auto 40px; /* 避開 navbar */
+            padding: 0 20px;
+            flex: 1; /* 佔據剩餘空間 */
             text-align: center;
+            /* 登入前隱藏，登入後顯示 */
+            display: none; 
+            animation: fadeIn 0.5s ease-out;
         }
 
-        h1 { color: #2C5E4F; margin-bottom: 30px; font-size: 2rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        /* === 4. 選單卡片網格 === */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
 
         .menu-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
             text-decoration: none;
-            color: #333;
-            border: 2px solid transparent;
+            color: var(--text-dark);
+            border: 2px solid white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            border-color: #4A7C59;
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(74, 124, 89, 0.2);
+            border-color: var(--primary);
         }
 
-        .icon { font-size: 3rem; display: block; margin-bottom: 15px; }
-        .card-title { font-size: 1.5rem; font-weight: bold; color: #2C5E4F; display: block; margin-bottom: 10px; }
-        .card-desc { color: #666; font-size: 0.95rem; line-height: 1.5; }
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 20px;
+            transition: 0.3s;
+        }
 
-        /* 登入視窗 */
+        .menu-card:hover .icon-box {
+            transform: scale(1.1) rotate(5deg);
+            background: #dcedc8;
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .card-desc {
+            color: var(--text-light);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* === 5. 登入視窗 (Modal) === */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            background: rgba(44, 94, 79, 0.9); /* 深綠色背景 */
+            backdrop-filter: blur(8px);
             z-index: 9999;
             display: flex; align-items: center; justify-content: center;
+            padding: 20px;
         }
+
         .login-box {
-            background: white; padding: 40px; border-radius: 20px;
-            width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: white;
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        .login-box h2 { color: var(--primary-dark); font-size: 1.8rem; margin-bottom: 10px; }
+        .login-box p { color: var(--text-light); margin-bottom: 30px; }
+
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.9rem; font-weight: bold; color: var(--primary-dark); margin-bottom: 5px; margin-left: 5px; }
         
-        input {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid #ccc; border-radius: 8px;
-            box-sizing: border-box; font-size: 1rem;
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 14px;
+            border: 2px solid #eee; border-radius: 12px;
+            font-size: 1rem; transition: 0.2s;
+            background: #f9f9f9;
         }
-        
-        .btn {
-            background: #4A7C59; color: white; border: none;
-            padding: 12px 25px; border-radius: 50px; font-size: 1rem;
-            cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;
+        input:focus { border-color: var(--primary); outline: none; background: white; }
+
+        .btn-login {
+            background: var(--primary); color: white; border: none;
+            padding: 15px; border-radius: 12px; font-size: 1.1rem;
+            cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px;
+            transition: 0.2s; box-shadow: 0 5px 15px rgba(74, 124, 89, 0.3);
         }
-        .btn:hover { background: #3a6346; }
-        
-        #loading-msg { color: #666; margin-top: 10px; display: none; }
-        .error-msg { color: #dc3545; margin-top: 10px; font-size: 0.9rem; }
+        .btn-login:hover { background: #3a6346; transform: translateY(-2px); }
+
+        #loading-msg { color: var(--primary); margin-top: 15px; font-weight: bold; display: none; }
+        .error-msg { color: var(--danger); margin-top: 15px; font-size: 0.95rem; font-weight: bold; }
+
+        /* === 6. 頁尾 === */
+        footer {
+            background: #333;
+            color: #ccc;
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 60px;
+        }
+
+        /* === 7. 手機版優化 (Mobile Responsive) === */
+        @media (max-width: 600px) {
+            nav { padding: 12px 15px; }
+            .nav-logo span { display: none; } /* 手機版隱藏 "後台管理系統" 文字，只留圖示，避免擁擠 */
+            .nav-logo::before { content: '⚙️ 後台'; display: block; } /* 改用簡短文字 */
+            
+            .container { margin-top: 80px; padding: 0 15px; }
+            h1 { font-size: 1.8rem; }
+            
+            .menu-grid { grid-template-columns: 1fr; gap: 15px; } /* 手機版強制單欄 */
+            .menu-card { padding: 30px 20px; display: flex; align-items: center; text-align: left; gap: 20px; }
+            
+            /* 手機版卡片改為橫式排列 */
+            .icon-box { margin: 0; width: 60px; height: 60px; font-size: 2rem; flex-shrink: 0; }
+            .card-content { flex: 1; }
+            .card-title { font-size: 1.3rem; margin-bottom: 5px; }
+            .card-desc { font-size: 0.9rem; }
+
+            .login-box { padding: 30px 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <nav style="background: white; padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; position:fixed; top:0; width:100%; box-sizing:border-box; z-index:100;">
-        <div style="font-size:1.2rem; font-weight:bold; color:#2C5E4F;">
-            🛠️ 後台管理系統
+    <nav>
+        <div class="nav-logo">
+            <span>🛠️ 後台管理系統</span>
         </div>
-        <div>
-            <a href="index.html" style="text-decoration:none; background:#e0f2f1; color:#2C5E4F; padding:8px 15px; border-radius:20px; font-weight:bold; font-size:0.9rem; margin-right:10px; border:1px solid #2C5E4F;">
-                🏠 回前台首頁
+        <div class="nav-actions">
+            <a href="index.html" class="nav-btn btn-home">
+                🏠 <span class="desktop-only">回前台</span>
             </a>
-            <button onclick="logout()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:0.9rem;">
-                登出
+            <button onclick="logout()" class="nav-btn btn-logout">
+                🚪 <span class="desktop-only">登出</span>
             </button>
         </div>
     </nav>
 
-    <div class="container" id="main-menu" style="display:none; margin-top: 80px;">
-        <h1 style="margin-bottom:30px;">請選擇管理項目</h1>
+    <div class="container" id="main-menu">
+        <h1>請選擇管理項目</h1>
         <div class="menu-grid">
             <a href="admin.html" class="menu-card">
-                <span class="icon">💊</span>
-                <span class="card-title">中藥資料庫</span>
-                <span class="card-desc">管理傳統中藥材資料、圖片、基原、性味歸經與功效。</span>
+                <div class="icon-box">💊</div>
+                <div class="card-content">
+                    <span class="card-title">中藥資料庫</span>
+                    <span class="card-desc">管理傳統中藥材資料、圖片、基原、性味歸經與功效。</span>
+                </div>
             </a>
 
             <a href="admin_pharma.html" class="menu-card">
-                <span class="icon">🔬</span>
-                <span class="card-title">生藥資料庫</span>
-                <span class="card-desc">管理詳細生藥化學成分、結構圖與比較表。</span>
+                <div class="icon-box">🔬</div>
+                <div class="card-content">
+                    <span class="card-title">生藥資料庫</span>
+                    <span class="card-desc">管理詳細生藥化學成分、結構圖與比較表。</span>
+                </div>
             </a>
 
             <a href="admin_category.html" class="menu-card">
-                <span class="icon">📚</span>
-                <span class="card-title">分類介紹編輯</span>
-                <span class="card-desc">編輯生藥各大分類的詳細介紹、合成路徑與比較表格。</span>
+                <div class="icon-box">📚</div>
+                <div class="card-content">
+                    <span class="card-title">分類介紹編輯</span>
+                    <span class="card-desc">編輯生藥各大分類的詳細介紹、合成路徑與比較表格。</span>
+                </div>
             </a>
         </div>
         
-        </div>
-        
-        <button onclick="logout()" style="background:transparent; border:1px solid #999; color:#666; padding:8px 20px; border-radius:20px; margin-top:40px; cursor:pointer;">
+        <button onclick="logout()" style="background:transparent; border:1px solid #ccc; color:#888; padding:10px 25px; border-radius:30px; margin-top:50px; cursor:pointer; font-size:0.9rem; transition:0.2s;">
             登出系統
         </button>
     </div>
 
     <div id="login-overlay">
         <div class="login-box">
-            <h2 style="color:#2C5E4F; margin-top:0;">🔐 管理員驗證</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">請輸入 GitHub 設定以解鎖後台</p>
+            <h2>🔐 管理員驗證</h2>
+            <p>請輸入 GitHub 設定以解鎖後台</p>
             
-            <input type="text" id="gh-user" placeholder="GitHub 帳號">
-            <input type="text" id="gh-repo" placeholder="倉庫名稱 (Repository)">
-            <input type="password" id="gh-token" placeholder="Token (ghp_...)">
+            <div class="input-group">
+                <label>GitHub 帳號</label>
+                <input type="text" id="gh-user" placeholder="例如：username">
+            </div>
+            <div class="input-group">
+                <label>倉庫名稱 (Repository)</label>
+                <input type="text" id="gh-repo" placeholder="例如：my-tcm-db">
+            </div>
+            <div class="input-group">
+                <label>Token (Personal Access Token)</label>
+                <input type="password" id="gh-token" placeholder="ghp_...">
+            </div>
             
-            <button class="btn" onclick="performLogin()">🚀 連線並登入</button>
+            <button class="btn-login" onclick="performLogin()">🚀 連線並登入</button>
             <div id="loading-msg">⏳ 連線驗證中...</div>
             <div id="login-msg" class="error-msg"></div>
         </div>
     </div>
-    </div>
-<footer style="background: #333; color: #ccc; padding: 40px 20px; text-align: center; font-size: 0.9rem; margin-top: 50px;">
+
+    <footer style="background: #333; color: #ccc; padding: 40px 20px; text-align: center; font-size: 0.9rem; margin-top: auto;">
         <div style="max-width: 800px; margin: 0 auto; line-height: 1.8;">
-            
             <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 15px;">
                 <span id="footer-year"></span> © 本草學園 (Pharma Garden)
             </div>
-
             <p style="margin-bottom: 20px;">
                 本網站內容由學生練習製作，<br>
                 <strong>僅供學術交流、國考複習與教育用途使用</strong>。
             </p>
-
             <hr style="border: 0; border-top: 1px solid #555; margin: 20px 0;">
-
             <div style="text-align: left; font-size: 0.85rem; color: #aaa;">
                 <p style="color: #ddd; margin-bottom: 8px;"><strong>⚠️ 免責與著作權聲明：</strong></p>
                 <ul style="padding-left: 20px; margin: 0;">
@@ -164,9 +347,8 @@
                     <li><strong>非醫療建議：</strong>本站資訊僅供學習參考，不構成醫療建議或診斷，用藥問題請諮詢專業醫師藥師。</li>
                 </ul>
             </div>
-
             <div style="margin-top: 30px; font-size: 0.8rem; color: #666;">
-                Designed with ❤️ by Pharmacy Student Lucas
+                Designed with ❤️ by Pharmacy Student
             </div>
         </div>
     </footer>
@@ -180,12 +362,12 @@
             const savedConfig = localStorage.getItem('tcm_admin_config');
             if (savedConfig) {
                 const config = JSON.parse(savedConfig);
-                // 自動填入欄位 (方便重新登入)
+                // 自動填入欄位
                 document.getElementById('gh-user').value = config.user;
                 document.getElementById('gh-repo').value = config.repo;
                 document.getElementById('gh-token').value = config.token;
                 
-                // 嘗試自動驗證
+                // 自動驗證
                 verifyAndUnlock(config.token, config.user, config.repo);
             }
         });
@@ -199,11 +381,9 @@
                 showError("請填寫完整資訊");
                 return;
             }
-
             verifyAndUnlock(token, user, repo);
         }
 
-        // 使用 utils.js 的功能來驗證
         function verifyAndUnlock(token, user, repo) {
             const loading = document.getElementById('loading-msg');
             const errorDiv = document.getElementById('login-msg');
@@ -211,18 +391,32 @@
             loading.style.display = 'block';
             errorDiv.innerText = "";
 
-            // 呼叫 utils.js 裡的 initGitHubConfig
+            // 呼叫 utils.js
+            if (typeof initGitHubConfig === 'undefined') {
+                showError("找不到 utils.js，請檢查檔案");
+                loading.style.display = 'none';
+                return;
+            }
+
             initGitHubConfig(token, user, repo)
                 .then(() => {
-                    // 驗證成功：存檔並切換畫面
+                    // 驗證成功
                     const config = { token, user, repo };
                     localStorage.setItem('tcm_admin_config', JSON.stringify(config));
                     
-                    document.getElementById('login-overlay').style.display = 'none';
-                    document.getElementById('main-menu').style.display = 'block';
+                    // 淡出登入框，淡入主選單
+                    document.getElementById('login-overlay').style.transition = 'opacity 0.5s';
+                    document.getElementById('login-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('login-overlay').style.display = 'none';
+                        const menu = document.getElementById('main-menu');
+                        menu.style.display = 'block';
+                    }, 500);
                 })
                 .catch(err => {
-                    showError(err.message);
+                    showError("驗證失敗：" + err.message);
+                    // 失敗也要顯示登入框 (如果是自動登入失敗的情況)
+                    document.getElementById('login-overlay').style.display = 'flex';
                 })
                 .finally(() => {
                     loading.style.display = 'none';
