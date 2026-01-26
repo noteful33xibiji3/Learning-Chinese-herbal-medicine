@@ -451,5 +451,28 @@
     "indications": "<ul>\n<li>\n<p>麻沸散</p>\n<p>Tropane alkaloids</p>\n<p>廣西遍生原野，蒙汗藥</p>\n</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 17,
+    "grade": "大二上",
+    "chinese_name": "益母草",
+    "origin": [
+      {
+        "lat": "Leonurus heterophuus",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Leonuri Herba",
+    "part": "",
+    "family_ch": "脣形科",
+    "family_en": "Lamiaceae/Labiatae",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "托烷類 (Tropane alkaloid)",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>茺蔚-果實</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
