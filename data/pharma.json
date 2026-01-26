@@ -27,5 +27,39 @@
     "mnemonic": "",
     "note": "",
     "updated_at": "2026-01-26T07:47:41.685Z"
+  },
+  {
+    "id": 1769418635452,
+    "category_main": "配醣體",
+    "category_sub": "強心配醣體",
+    "name_ch": "長夜毛地黃",
+    "name_en": "Digitalis Lanata",
+    "aliases": [
+      "Grecian foxglove"
+    ],
+    "origin": "Digitalis Lanata",
+    "family_ch": "玄參科",
+    "family_en": "Scrophulariaceae",
+    "part_ch": "乾燥葉",
+    "part_en": "",
+    "components": [
+      {
+        "name": "Dixgoxin",
+        "image": "",
+        "note": ""
+      },
+      {
+        "name": "Digitoxin",
+        "image": "",
+        "note": ""
+      }
+    ],
+    "comparisons": [],
+    "characteristics": "",
+    "efficacy": "",
+    "treatment": "",
+    "mnemonic": "別名口訣：希臘狐狸手套。",
+    "note": "",
+    "updated_at": "2026-01-26T09:10:35.456Z"
   }
 ]
