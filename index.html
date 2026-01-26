@@ -139,6 +139,24 @@
             .search-select { border-right: none; border-bottom: 1px solid #eee; width: 100%; border-radius: 0; padding: 10px; }
             .search-btn { width: 100%; margin-top: 10px; }
         }
+        /* 讓備註區塊的 HTML 內容正常排版 */
+#modal-indications {
+    line-height: 1.6;
+    color: #333;
+}
+#modal-indications ul, #modal-indications ol {
+    margin-left: 20px;
+    padding-left: 0;
+}
+#modal-indications table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+#modal-indications th, #modal-indications td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
     </style>
 </head>
 <body>
@@ -419,8 +437,8 @@
             }
             // 功效備註
             document.getElementById('modal-effects').innerText = Array.isArray(item.effects) ? item.effects.join('、') : (item.effects||'-');
-            document.getElementById('modal-indications').innerText = item.indications || '-';
-
+          // 改成 innerHTML 才能顯示加粗、變色等效果
+document.getElementById('modal-indications').innerHTML = item.indications || '-';
             // 易混淆
             const confBox = document.getElementById('modal-confusing');
             const confSec = document.getElementById('confusing-section');
