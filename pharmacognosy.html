@@ -486,7 +486,6 @@
 
 </div>
     <script src="pharma_config.js"></script>
-
 <script>
     // === 全域變數 ===
     let allData = [];
@@ -500,15 +499,15 @@
         
         // 使用 Promise.all 同時載入兩份資料
         Promise.all([
-            // A. 載入生藥列表
-            fetch('data/pharma.json').then(r => r.ok ? r.json() : []).then(json => {
+            // A. 載入生藥列表 (加時間戳記避免快取)
+            fetch('data/pharma.json?t=' + Date.now()).then(r => r.ok ? r.json() : []).then(json => {
                 if (json.content && json.encoding === 'base64') {
                     return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
                 }
                 return json;
             }),
-            // B. 載入分類介紹
-            fetch('data/categories.json').then(r => r.ok ? r.json() : {}).then(json => {
+            // B. 載入分類介紹 (★ 加時間戳記，解決前台沒更新的問題)
+            fetch('data/categories.json?t=' + Date.now()).then(r => r.ok ? r.json() : {}).then(json => {
                 if (json.content && json.encoding === 'base64') {
                     return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
                 }
@@ -519,19 +518,20 @@
             allData = pharmaList || [];
             categoryData = catInfo || {};
             
+            console.log("已載入分類資料:", Object.keys(categoryData)); // 方便除錯
+
             document.getElementById('loading').style.display = 'none';
             renderGrid(allData);
 
-            // C. 檢查網址參數 (中藥庫跳轉邏輯)
+            // C. 檢查網址參數
             const urlParams = new URLSearchParams(window.location.search);
             const query = urlParams.get('q');
             
             if (query) {
                 const input = document.getElementById('search-input');
                 input.value = query;
-                filterData(); // 執行搜尋
+                filterData();
 
-                // 如果精確匹配到只有一筆，自動點開詳情
                 const filtered = allData.filter(item => 
                     (item.name_en||"").toLowerCase().includes(query.toLowerCase()) || 
                     (item.components||[]).some(c => c.name.toLowerCase().includes(query.toLowerCase()))
@@ -547,12 +547,10 @@
         });
     });
 
-    // === 2. 分類篩選邏輯 (雙層選單核心) ===
+    // === 2. 分類篩選邏輯 ===
 
-    // 初始化：只產生大分類按鈕
     function initFilters() {
         const container = document.getElementById('filter-container');
-        // 清空並加入"全部"
         container.innerHTML = '<div class="filter-tag active" onclick="resetFilter(this)">全部</div>';
         
         if (typeof PHARMA_CATEGORIES !== 'undefined') {
@@ -566,42 +564,35 @@
         }
     }
 
-    // 點擊「全部」
     function resetFilter(el) {
         currentMainCat = 'all';
         currentSubCat = '';
         updateActiveTag(el, 'filter-tag');
-        document.getElementById('sub-filter-container').innerHTML = ""; // 清空子分類
+        document.getElementById('sub-filter-container').innerHTML = ""; 
         checkIntroButton();
         filterData();
     }
 
-    // 點擊「大分類」
     function selectMainCategory(mainCatName, el) {
         currentMainCat = mainCatName;
-        currentSubCat = ''; // 重置子分類
+        currentSubCat = ''; 
         updateActiveTag(el, 'filter-tag');
 
-        // 產生子分類按鈕
         renderSubCategories(mainCatName);
-        
-        checkIntroButton(); // 檢查是否有介紹文
+        checkIntroButton(); 
         filterData();
     }
 
-    // 產生子分類按鈕 UI
     function renderSubCategories(mainName) {
         const container = document.getElementById('sub-filter-container');
         container.innerHTML = ""; 
 
-        // 從 config 找該分類的子分類
         const catConfig = PHARMA_CATEGORIES.find(c => c.name_ch === mainName);
         
         if (catConfig && catConfig.subcategories) {
             catConfig.subcategories.forEach(sub => {
                 const btn = document.createElement('div');
                 btn.className = 'sub-tag';
-                // 顯示 中文 (英文)
                 btn.innerText = sub.ch; 
                 btn.onclick = () => selectSubCategory(sub.ch, btn);
                 container.appendChild(btn);
@@ -609,30 +600,38 @@
         }
     }
 
-    // 點擊「中分類」
     function selectSubCategory(subName, el) {
         currentSubCat = subName;
         updateActiveTag(el, 'sub-tag');
-        
         checkIntroButton(); 
         filterData();
     }
 
-    // 檢查並顯示「📖 查看介紹」按鈕 (模糊比對 Key)
+    // ★ 核心修正：檢查並顯示「📖 查看介紹」按鈕
     function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
         
-        // 優先找中分類的 Key，沒有才找大分類的 Key
+        // 1. 決定現在要找誰的介紹 (有選子分類就找子分類，否則找大分類)
         let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
         
-        // 只要後台的 Key 包含前台選的 Key，就算匹配 (解決括號問題)
-        const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
+        if (!targetKey) {
+            btnInfo.style.display = 'none';
+            return;
+        }
 
-        if (targetKey && matchKey && categoryData[matchKey]) {
-            spanName.innerText = matchKey; // 顯示完整名稱
+        // 2. ★ 修正邏輯：改成「精準比對」或「嚴格前綴比對」
+        // 我們要找的 key 必須完全等於 targetKey
+        // 或者是 targetKey + " ("  <-- 這樣可以匹配 "配糖體 (Glycoside)" 但不會匹配 "異硫氰酸配糖體"
+        
+        const matchKey = Object.keys(categoryData).find(k => {
+            return k === targetKey || k.startsWith(targetKey + " (") || k.startsWith(targetKey + "(");
+        });
+
+        if (matchKey && categoryData[matchKey]) {
+            spanName.innerText = matchKey; 
             btnInfo.style.display = 'inline-flex';
-            btnInfo.dataset.realKey = matchKey; // 存真實 Key 供彈窗用
+            btnInfo.dataset.realKey = matchKey; 
         } else {
             btnInfo.style.display = 'none';
         }
@@ -643,24 +642,18 @@
         const term = document.getElementById('search-input').value.toLowerCase();
         
         const filtered = allData.filter(item => {
-            // A. 關鍵字搜尋
             const matchText = (item.name_ch || "").includes(term) || 
                               (item.name_en || "").toLowerCase().includes(term) ||
                               (item.origin || "").toLowerCase().includes(term) ||
                               (item.components || []).some(c => c.name.toLowerCase().includes(term));
             
-            // B. 分類篩選
             let matchCat = true;
             if (currentMainCat !== 'all') {
-                // 必須符合大分類
                 matchCat = (item.category_main || "").includes(currentMainCat);
-                
-                // 如果有選子分類，必須同時符合子分類
                 if (currentSubCat) {
                     matchCat = matchCat && (item.category_sub || "").includes(currentSubCat);
                 }
             }
-
             return matchText && matchCat;
         });
 
@@ -689,16 +682,9 @@
                     <div class="card-category">${item.category_main} / ${item.category_sub || ""}</div>
                     <h3 class="card-title">${item.name_ch}</h3>
                     <div class="card-subtitle">${item.name_en}</div>
-                    
-                    <div class="info-row">
-                        <span class="info-label">科別</span> <span>${family}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">部位</span> <span>${part}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">成分</span> <span>${item.components ? item.components.length : 0} 種</span>
-                    </div>
+                    <div class="info-row"><span class="info-label">科別</span> <span>${family}</span></div>
+                    <div class="info-row"><span class="info-label">部位</span> <span>${part}</span></div>
+                    <div class="info-row"><span class="info-label">成分</span> <span>${item.components ? item.components.length : 0} 種</span></div>
                 </div>
                 <div class="card-footer">查看詳情 ➔</div>
             `;
@@ -709,14 +695,12 @@
     // === 4. 生藥詳情 Modal ===
     function openDetail(item) {
         const modal = document.getElementById('detail-modal');
-        
         document.getElementById('modal-title').innerText = item.name_ch;
         document.getElementById('modal-subtitle').innerText = item.name_en;
         document.getElementById('modal-origin').innerText = item.origin || "-";
         document.getElementById('modal-family').innerText = `${item.family_ch || ""} (${item.family_en || ""})`;
         document.getElementById('modal-part').innerText = `${item.part_ch || ""} (${item.part_en || ""})`;
 
-        // 標籤雲
         const tagContainer = document.getElementById('modal-tags');
         tagContainer.innerHTML = "";
         [item.category_main, ...(item.aliases || [])].forEach(tagText => {
@@ -727,7 +711,6 @@
             }
         });
 
-        // 成分網格 (點擊開啟小視窗)
         const chemGrid = document.getElementById('modal-chem-grid');
         chemGrid.innerHTML = "";
         if (item.components && item.components.length > 0) {
@@ -735,29 +718,20 @@
                 const div = document.createElement('div');
                 div.className = 'chem-item';
                 div.style.cursor = "pointer"; 
-                
-                // 點擊呼叫 showChemDetail
                 div.onclick = () => showChemDetail(c);
-
                 const imgSrc = c.image || 'https://via.placeholder.com/150x100?text=No+Structure';
-                div.innerHTML = `
-                    <img src="${imgSrc}" alt="${c.name}">
-                    <div class="chem-name">${c.name}</div>
-                    ${c.note ? '<span style="font-size:0.8rem; color:#ff9800;">(有備註)</span>' : ''}
-                `;
+                div.innerHTML = `<img src="${imgSrc}" alt="${c.name}"><div class="chem-name">${c.name}</div>${c.note ? '<span style="font-size:0.8rem; color:#ff9800;">(有備註)</span>' : ''}`;
                 chemGrid.appendChild(div);
             });
         } else {
             chemGrid.innerHTML = "<span style='color:#999'>無成分資料</span>";
         }
 
-        // 文字區塊
         document.getElementById('modal-char').innerText = item.characteristics || "暫無";
         document.getElementById('modal-efficacy').innerText = item.efficacy || "暫無";
         document.getElementById('modal-treat').innerText = item.treatment || "-";
         document.getElementById('modal-mnemonic').innerText = item.mnemonic || "-";
 
-        // 比較表
         const compBody = document.getElementById('modal-compare-body');
         compBody.innerHTML = "";
         if (item.comparisons && item.comparisons.length > 0) {
@@ -771,9 +745,7 @@
             document.getElementById('compare-section').style.display = 'none';
         }
 
-        // 筆記
         document.getElementById('modal-note').innerHTML = item.note || "<p style='color:#ccc'>無詳細筆記</p>";
-
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -786,14 +758,11 @@
         if (event.target.id === 'detail-modal') closeModalDirect();
     }
 
-    // === 5. 成分詳情小視窗 (Popup) ===
+    // === 5. 成分詳情小視窗 ===
     function showChemDetail(c) {
-        // 填入資料 (使用正確的 ID)
         document.getElementById('chem-popup-name').innerText = c.name;
-        
         const img = document.getElementById('chem-popup-img');
         img.src = c.image || 'https://via.placeholder.com/300x200?text=No+Image';
-        
         const noteBox = document.getElementById('chem-popup-note-box');
         if (c.note && c.note.trim() !== "") {
             document.getElementById('chem-popup-note').innerText = c.note;
@@ -801,16 +770,11 @@
         } else {
             noteBox.style.display = 'none';
         }
-
-        // 顯示彈窗
         document.getElementById('chem-detail-modal').style.display = 'flex';
     }
+    function closeChemModal() { document.getElementById('chem-detail-modal').style.display = 'none'; }
 
-    function closeChemModal() {
-        document.getElementById('chem-detail-modal').style.display = 'none';
-    }
-
-    // === 6. 分類介紹視窗 (Intro Modal) ===
+    // === 6. 分類介紹視窗 ===
     function openCategoryModal() {
         const btn = document.getElementById('btn-cat-info');
         const realKey = btn.dataset.realKey;
@@ -820,14 +784,10 @@
         document.getElementById('cat-modal-body').innerHTML = categoryData[realKey] || "載入失敗";
         document.getElementById('cat-modal').style.display = 'flex';
     }
-
     function closeCategoryModal(e) {
-        if (e.target.id === 'cat-modal') {
-            document.getElementById('cat-modal').style.display = 'none';
-        }
+        if (e.target.id === 'cat-modal') document.getElementById('cat-modal').style.display = 'none';
     }
 
-    // 輔助：更新按鈕樣式
     function updateActiveTag(el, className) {
         document.querySelectorAll('.' + className).forEach(e => e.classList.remove('active'));
         if(el) el.classList.add('active');
