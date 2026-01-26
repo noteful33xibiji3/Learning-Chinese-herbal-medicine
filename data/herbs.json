@@ -376,5 +376,28 @@
     "indications": "<p><span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">馬屁包</span></p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 14,
+    "grade": "大二上",
+    "chinese_name": "牛黃",
+    "origin": [
+      {
+        "lat": "Bos taurus L. var. domesticus Gmellin",
+        "ch": "牛膽囊中的結石"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Bezoar Bovis",
+    "part": "",
+    "family_ch": "Bovidae",
+    "family_en": "牛科",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "",
+    "image": "",
+    "isTrash": false
   }
 ]
