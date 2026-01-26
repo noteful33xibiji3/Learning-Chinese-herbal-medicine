@@ -570,5 +570,28 @@
     "indications": "<ul>\n<li>\n<p class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">有瀉下功用</span></p>\n<span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">「牛溲」馬勃，指的就是車前草</span></li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 22,
+    "grade": "大二上",
+    "chinese_name": "胡椒",
+    "origin": [
+      {
+        "lat": "Piper nigrum",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Piperis Nigri Fructus",
+    "part": "",
+    "family_ch": "胡椒科",
+    "family_en": "Piperaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li><strong>別名: </strong>昧履支 <strong>&nbsp;</strong></li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
