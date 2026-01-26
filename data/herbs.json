@@ -693,5 +693,32 @@
     "indications": "<ul>\n<li>木棉</li>\n<li>沒有瀉下功用</li>\n<li>折斷有絲</li>\n<li>一科一屬、雌雄異株、樹皮強壯藥</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 27,
+    "grade": "大二上",
+    "chinese_name": "厚朴 (ㄆㄛˋ)",
+    "origin": [
+      {
+        "lat": "Magnolia officinalis",
+        "ch": "厚朴"
+      },
+      {
+        "lat": "Magnolia biloba ",
+        "ch": "凹葉厚朴"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Magnolia Cortex",
+    "part": "乾燥樹皮",
+    "family_ch": "木蘭科",
+    "family_en": "Magnoliaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>烈赤</li>\n<li>lignans and alkaloid</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
