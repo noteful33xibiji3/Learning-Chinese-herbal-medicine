@@ -16,7 +16,8 @@
     "components": [
       {
         "name": "Digitalis",
-        "image": ""
+        "image": "",
+        "note": "脂溶性、血漿蛋白結合率高、分布體積小、具有毒性與蓄積性"
       }
     ],
     "comparisons": [],
@@ -25,6 +26,6 @@
     "treatment": "",
     "mnemonic": "",
     "note": "",
-    "updated_at": "2026-01-26T07:30:57.583Z"
+    "updated_at": "2026-01-26T07:47:41.685Z"
   }
 ]
