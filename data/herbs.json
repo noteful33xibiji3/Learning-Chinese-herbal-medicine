@@ -321,5 +321,34 @@
     "indications": "<ul>\n<li class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">刺豬苓</span></li>\n<li class=\"MsoNormal\"><span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽;\">diosgenin </span><span style=\"font-size: 9.0pt; font-family: 芫荽;\">配糖體</span></li>\n<li><span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽; mso-font-kerning: 0pt; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">saponin</span></li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 12,
+    "grade": "大二上",
+    "chinese_name": "茯苓",
+    "origin": [
+      {
+        "lat": "Pori cocos",
+        "ch": "茯苓的乾燥菌核"
+      },
+      {
+        "lat": "Pachyma hoelen",
+        "ch": "茯苓菌(除去松根皮外層之菌核)"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Poria",
+    "part": "乾燥菌核",
+    "family_ch": "多孔菌科",
+    "family_en": "Polyporaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [
+      "久服安魂、養神"
+    ],
+    "indications": "<p>千年之松</p>",
+    "image": "",
+    "isTrash": false
   }
 ]
