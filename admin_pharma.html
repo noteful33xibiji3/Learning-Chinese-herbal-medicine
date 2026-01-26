@@ -158,6 +158,7 @@
     </div>
 
     <nav>
+        <button onclick="resetAllIDs()" class="btn" style="background:#607d8b; color:white;">🔢 重整 ID</button>
         <div class="nav-title">
             <a href="admin_menu.html" class="back-btn">⬅ 回選單</a>
             <a href="pharmacognosy.html" class="back-btn" style="background:#e8f5e9; color:#2C5E4F; margin-left:5px;" target="_blank">🏠 去前台看</a>
@@ -815,6 +816,47 @@
             };
             
             reader.readAsArrayBuffer(file);
+        }
+        // === 🔢 一鍵重整 ID 功能 (從 1 開始) ===
+        async function resetAllIDs() {
+            if (pharmaList.length === 0) return alert("目前沒有資料可以重整。");
+
+            const msg = "⚠️ 危險操作警告！\n\n這將會把資料庫中「所有」生藥的 ID 全部重新編號 (變成 1, 2, 3...)。\n\n確定要執行嗎？";
+            if (!confirm(msg)) return;
+
+            // 再次確認，避免誤按
+            if (!confirm("再次確認：您真的要重置所有 ID 嗎？這動作無法復原喔！")) return;
+
+            const btn = document.querySelector('button[onclick="resetAllIDs()"]');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "⏳ 重整中...";
+
+            try {
+                // 1. 先排序：依照舊 ID (Timestamp) 由小到大排序
+                // 這樣「最早建立」的資料會變成 ID 1，「最新」的會是最後一號
+                let sortedList = [...pharmaList].sort((a, b) => a.id - b.id);
+
+                // 2. 重新發號碼牌 (Re-index)
+                sortedList = sortedList.map((item, index) => {
+                    return { ...item, id: index + 1 }; // 索引從 0 開始，所以要 +1
+                });
+
+                // 3. 上傳回 GitHub
+                await uploadToGitHub(sortedList, "Reset IDs to sequential numbers");
+                
+                // 4. 更新畫面
+                pharmaList = sortedList;
+                renderList();
+                alert(`🎉 重整成功！\n\n現在資料庫共有 ${sortedList.length} 筆資料，\nID 已重新編號為 1 ~ ${sortedList.length}。`);
+
+            } catch(e) {
+                alert("重整失敗: " + e.message);
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
         }
     </script>
 </body>
