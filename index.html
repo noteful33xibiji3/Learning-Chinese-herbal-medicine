@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中藥智慧查詢 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
+<style>
     /* === 1. 全局變數 === */
     :root {
         --primary: #4A7C59;
@@ -14,8 +14,8 @@
         --text-dark: #333;
         --text-light: #666;
         --bg-color: #f4f7f6;
-        --card-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        --card-hover: 0 10px 20px rgba(0,0,0,0.1);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
     * { box-sizing: border-box; }
@@ -31,11 +31,10 @@
         line-height: 1.6;
     }
 
-    /* === 2. 導覽列 (美觀優化) === */
+    /* === 2. 導覽列 (電腦版維持原樣) === */
     nav {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 0.8rem 2rem;
+        background: white;
+        padding: 1rem 2rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         display: flex;
         justify-content: space-between;
@@ -49,18 +48,17 @@
     /* === 3. 搜尋區 === */
     .hero-section {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        padding: 4rem 1rem 5rem 1rem;
+        padding: 3rem 1rem 4rem 1rem;
         text-align: center;
         color: white;
-        margin-bottom: -40px;
-        border-radius: 0 0 30px 30px;
+        margin-bottom: -30px;
     }
-    .hero-title { font-size: 2rem; margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 1px; }
+    .hero-title { font-size: 2rem; margin-bottom: 1.5rem; font-weight: 300; }
     
     .search-container {
         max-width: 800px; margin: 0 auto; position: relative;
         background: white; border-radius: 50px; padding: 5px;
-        display: flex; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        display: flex; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
     .search-select {
         border: none; background: transparent; padding: 0 20px;
@@ -87,50 +85,51 @@
     }
     .suggestion-item:hover { background-color: var(--accent); }
 
-    /* === 4. 卡片網格區 === */
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; z-index: 10; position: relative; }
+    /* === 4. 卡片網格區 (電腦版設定) === */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; position: relative; z-index: 10; }
+    
+    /* ★ 電腦版：維持原本邏輯，寬度夠時自動排 3-4 欄 ★ */
     .grid {
         display: grid;
-        /* 電腦版：自動填滿，每張卡片最少 280px */
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
+        gap: 25px;
         margin-top: 20px;
     }
 
-    /* === 5. 藥材卡片 (維持原本直式，但加入效能優化) === */
+    /* === 5. 藥材卡片 (電腦版樣式) === */
     .card {
         background: white; border-radius: 16px; overflow: hidden;
         box-shadow: var(--card-shadow); transition: all 0.3s ease;
         position: relative; cursor: pointer; border: 1px solid #eee;
         display: flex; flex-direction: column;
         
-        /* ★ 記憶體優化：這是關鍵！讓沒看到的卡片不佔用記憶體 */
+        /* 記憶體優化 (不影響外觀，只影響效能) */
         content-visibility: auto; 
         contain-intrinsic-size: 0 350px; 
     }
     .card:hover { transform: translateY(-5px); box-shadow: var(--card-hover); border-color: var(--primary); }
     .card::before {
-        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--primary);
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--primary);
     }
 
     .card-img-top {
         height: 180px; width: 100%; object-fit: cover; background: #f9f9f9;
         border-bottom: 1px solid #eee;
     }
-    .card-body { padding: 15px; flex: 1; }
-    .card-title { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); margin: 0 0 5px 0; }
-    .card-subtitle { font-size: 0.9rem; color: #888; font-family: 'Roboto Mono', monospace; margin-bottom: 10px; display: block;}
+    .card-body { padding: 20px; flex: 1; }
+    .card-title { font-size: 1.5rem; font-weight: 700; color: var(--text-dark); margin: 0; line-height: 1.2; }
+    .card-subtitle { font-size: 0.95rem; color: #888; font-family: 'Roboto Mono', monospace; margin-bottom: 15px; display: block; }
     
-    .info-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 6px; color: var(--text-light); border-bottom: 1px dashed #eee; padding-bottom: 2px; }
-    .card-footer { padding: 10px 15px; background: #fafafa; border-top: 1px solid #eee; text-align: right; font-size: 0.85rem; color: var(--primary); font-weight: bold; }
+    .info-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 8px; color: var(--text-light); border-bottom: 1px dashed #eee; padding-bottom: 4px; }
+    .card-footer { padding: 15px 20px; background: #fafafa; border-top: 1px solid #eee; text-align: right; font-size: 0.9rem; color: var(--primary); font-weight: bold; }
 
-    /* === 6. 彈窗樣式 (通用) === */
+    /* === 6. 彈窗樣式 (共用) === */
     .modal-overlay, .chem-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
         z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px;
     }
-    .chem-modal-overlay { z-index: 2000; background: rgba(0,0,0,0.5); }
+    .chem-modal-overlay { z-index: 2000; background: rgba(0,0,0,0.6); }
 
     .modal-content {
         background: white; width: 100%; max-width: 900px; max-height: 90vh;
@@ -146,46 +145,46 @@
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    .modal-header { background: var(--primary); color: white; padding: 15px 25px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 25px; }
-    .section-title { font-size: 1.1rem; font-weight: bold; color: var(--primary-dark); border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin: 20px 0 10px; }
-    .section-title:first-child { margin-top: 0; }
+    .modal-header { background: var(--primary); color: white; padding: 20px 30px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 30px; }
+    .section-title { font-size: 1.2rem; font-weight: bold; color: var(--primary-dark); border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px; }
 
-    /* 其他元件 */
+    /* 其他細節樣式 */
     .confusing-box { background: #fff3e0; padding: 15px; border-radius: 10px; border-left: 5px solid #ff9800; }
-    .chem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+    .chem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
     .chem-item { text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
     .chem-item:hover { border-color: var(--primary); box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
     .chem-item img { max-width: 100%; max-height: 80px; object-fit: contain; }
     .chem-detail-img { max-width: 100%; max-height: 200px; object-fit: contain; margin-bottom: 10px; }
     .chem-detail-note { background: #fffde7; color: #f57f17; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem; text-align: left; }
 
-    /* 備註 HTML 排版 */
     #modal-indications { line-height: 1.6; color: #333; }
     #modal-indications ul { margin-left: 20px; padding-left: 0; }
     #modal-indications table { width: 100%; border-collapse: collapse; margin: 10px 0; }
     #modal-indications th, #modal-indications td { border: 1px solid #ddd; padding: 8px; }
 
-    /* === 7. 手機版專屬設定 (維持直式卡片，但改為雙欄) === */
+    /* === 7. 手機版 RWD 優化 (只針對小螢幕修改) === */
     @media (max-width: 768px) {
+        /* 導覽列調整 */
         nav { padding: 10px 15px; flex-wrap: wrap; }
         .nav-links { width: 100%; display: flex; justify-content: space-around; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
         .nav-links a { margin: 0; font-size: 0.9rem; }
 
-        .hero-title { font-size: 1.5rem; }
+        /* 搜尋框調整 */
         .search-container { flex-direction: column; border-radius: 20px; padding: 10px; }
         .search-select { width: 100%; border-radius: 15px; border-right: none; border-bottom: 1px solid #eee; text-align: center; padding: 10px; }
         .search-btn { width: 100%; margin-top: 10px; }
 
+        /* 外框調整 */
         .container { padding: 10px; }
         
-        /* ★ 關鍵修改：手機版改成並排雙欄 (2 Columns) ★ */
+        /* ★ 關鍵：手機版強制變雙欄 ★ */
         .grid {
             grid-template-columns: repeat(2, 1fr); /* 強制兩欄 */
-            gap: 10px; /* 間距縮小一點 */
+            gap: 10px; /* 間距縮小 */
         }
 
-        /* 卡片維持直式 (圖在上，字在下)，但縮小字體以適應雙欄 */
+        /* ★ 卡片微調：字體縮小以適應雙欄，但維持直式排版 ★ */
         .card-img-top {
             height: 120px; /* 圖片高度縮小 */
         }
@@ -203,8 +202,9 @@
         .info-row {
             font-size: 0.75rem; /* 資訊字縮小 */
         }
+        /* 隱藏底部按鈕，直接點卡片即可，節省空間 */
         .card-footer {
-            display: none; /* 手機版雙欄很擠，隱藏底部按鈕，直接點卡片即可 */
+            display: none; 
         }
     }
 </style>
