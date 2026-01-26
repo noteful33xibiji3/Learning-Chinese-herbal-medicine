@@ -350,5 +350,31 @@
     "indications": "<p>千年之松</p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 13,
+    "grade": "大二上",
+    "chinese_name": "馬勃",
+    "origin": [
+      {
+        "lat": "Calvaia gigiantea",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "puffballs",
+    "part": "",
+    "family_ch": "馬勃科",
+    "family_en": "Lycoperdaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [
+      "內服可治喉嚨痛",
+      "外用止血"
+    ],
+    "indications": "<p><span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">馬屁包</span></p>",
+    "image": "",
+    "isTrash": false
   }
 ]
