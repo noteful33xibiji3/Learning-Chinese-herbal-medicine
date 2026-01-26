@@ -78,12 +78,18 @@
     </style>
 </head>
 <body>
-
-    <nav>
-        <a href="index.html" class="logo">🌿 本草學園</a>
-        <div class="nav-links">
-            <a href="index.html">回首頁</a>
+<nav>
+        <div class="nav-left">
+            <button class="back-btn" onclick="location.href='quiz.html'">❮</button>
+            
+            <a href="index.html" class="logo">🌿 本草學園 (中藥測驗)</a>
         </div>
+        <div class="burger" onclick="window.toggleMenu()">☰</div>
+        <ul class="menu" id="nav-menu">
+            <li><a href="index.html">中藥查詢</a></li>
+            <li><a href="pharmacognosy.html">生藥分類</a></li>
+            <li><a href="quiz.html" class="active">自我測驗</a></li> <li><a href="mistakes.html">錯題複習</a></li>
+        </ul>
     </nav>
 
     <div id="menu-view" class="quiz-menu">
@@ -124,17 +130,17 @@
         <h2>測驗結束！</h2>
         <p id="final-comment">做得不錯喔！</p>
         
-        <div id="mistake-area" class="mistake-list"></div>
-        <div class="nav-left">
-    <button class="back-btn" onclick="location.href='quiz.html'">❮</button>
-    <a href="index.html" class="logo">🌿 本草學園 (中藥測驗)</a>
-</div>
-        <button onclick="location.reload()" style="background:#4A7C59; color:white; border:none; padding:12px 30px; border-radius:50px; font-size:1.1rem; cursor:pointer; margin-top:20px;">
-            🔄 再測一次
-        </button>
-        <button onclick="location.href='index.html'" style="background:transparent; border:2px solid #999; color:#666; padding:10px 30px; border-radius:50px; font-size:1rem; cursor:pointer; margin-top:10px; margin-left:10px;">
-            回首頁
-        </button>
+     <div id="mistake-area" class="mistake-list"></div>
+        
+        <div style="margin-top:20px;">
+            <button onclick="location.reload()" style="background:#4A7C59; color:white; border:none; padding:12px 30px; border-radius:50px; font-size:1.1rem; cursor:pointer;">
+                🔄 再測一次
+            </button>
+            
+            <button onclick="location.href='quiz.html'" style="background:transparent; border:2px solid #999; color:#666; padding:10px 30px; border-radius:50px; font-size:1rem; cursor:pointer; margin-left:10px;">
+                回測驗大廳
+            </button>
+        </div>
     </div>
 
     <script>
