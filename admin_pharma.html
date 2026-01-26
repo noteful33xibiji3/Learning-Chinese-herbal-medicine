@@ -329,35 +329,38 @@
             document.getElementById('compare-list').appendChild(div);
         }
 
-        // 成分 (含圖片上傳)
-        function addChemRow(data = {}) {
-            const div = document.createElement('div'); 
-            div.className = 'dynamic-row';
-            div.style.flexDirection = 'column';
-            div.style.alignItems = 'stretch';
-            
-            const imgId = `chem-img-${Date.now()}-${Math.random()}`;
-            const imgVal = data.image || "";
+        // === 修改版：新增成分 (含備註欄) ===
+function addChemRow(data = {}) {
+    const div = document.createElement('div'); 
+    div.className = 'dynamic-row';
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'stretch';
+    
+    const imgId = `chem-img-${Date.now()}-${Math.random()}`;
+    const imgVal = data.image || "";
+    // ★ 新增：讀取備註資料
+    const noteVal = data.note || "";
 
-            div.innerHTML = `
-                <div style="display:flex; gap:5px;">
-                    <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名稱 (如: Ephedrine)">
-                    <button class="btn btn-danger" onclick="this.closest('.dynamic-row').remove()">✕</button>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
-                    <label style="background:#eee; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.9rem;">
-                        📸 上傳結構
-                        <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')">
-                    </label>
-                    <span class="chem-status" style="font-size:0.8rem; color:#666;">${imgVal ? '已存圖片' : '無圖片'}</span>
-                </div>
-                <img id="${imgId}" src="${imgVal}" style="display:${imgVal?'block':'none'}; max-height:80px; margin-top:5px; border:1px solid #ccc;">
-                <input type="hidden" class="chem-img-url" value="${imgVal}">
-                <input type="hidden" class="chem-new-base64">
-            `;
-            document.getElementById('chem-list').appendChild(div);
-        }
-
+    div.innerHTML = `
+        <div style="display:flex; gap:5px; align-items:center;">
+            <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名稱 (如: Ephedrine)" style="flex:1;">
+            <input type="text" class="chem-note" value="${noteVal}" placeholder="備註 (如: 具毒性)" style="flex:1;">
+            <button class="btn btn-danger" onclick="this.closest('.dynamic-row').remove()">✕</button>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+            <label style="background:#eee; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.9rem;">
+                📸 上傳結構
+                <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')">
+            </label>
+            <span class="chem-status" style="font-size:0.8rem; color:#666;">${imgVal ? '已存圖片' : '無圖片'}</span>
+        </div>
+        <img id="${imgId}" src="${imgVal}" style="display:${imgVal?'block':'none'}; max-height:80px; margin-top:5px; border:1px solid #ccc;">
+        <input type="hidden" class="chem-img-url" value="${imgVal}">
+        <input type="hidden" class="chem-new-base64">
+    `;
+    document.getElementById('chem-list').appendChild(div);
+}
         // 處理成分圖片 (預覽)
         function handleChemUpload(input, viewId) {
             const file = input.files[0];
@@ -378,33 +381,34 @@
         }
 
         // === 5. 儲存邏輯 (核心) ===
-        async function saveData() {
-            const idVal = document.getElementById('edit-id').value;
-            const btn = document.querySelector('.btn-primary');
-            btn.innerText = "⏳ 處理圖片與存檔中...";
-            btn.disabled = true;
+async function saveData() {
+    const idVal = document.getElementById('edit-id').value;
+    const btn = document.querySelector('.btn-primary');
+    btn.innerText = "⏳ 處理圖片與存檔中...";
+    btn.disabled = true;
 
-            try {
-                // A. 處理圖片上傳
-                // 找出所有標記為 PENDING 的成分圖片
-                const chemRows = document.querySelectorAll('#chem-list .dynamic-row');
-                const components = [];
+    try {
+        // A. 處理圖片上傳與成分收集
+        const chemRows = document.querySelectorAll('#chem-list .dynamic-row');
+        const components = [];
 
-                for (let row of chemRows) {
-                    const name = row.querySelector('.chem-name').value.trim();
-                    if (!name) continue;
+        for (let row of chemRows) {
+            const name = row.querySelector('.chem-name').value.trim();
+            // ★ 新增：抓取備註
+            const note = row.querySelector('.chem-note').value.trim();
+            
+            if (!name) continue;
 
-                    let imgUrl = row.querySelector('.chem-img-url').value;
-                    const fileInput = row.querySelector('input[type="file"]');
-                    
-                    // 如果有新圖片待上傳
-                    if (fileInput.fileObj) {
-                        // 使用 utils.js 的壓縮上傳功能
-                        imgUrl = await compressAndUploadImage(fileInput.fileObj, 'images/pharma');
-                    }
+            let imgUrl = row.querySelector('.chem-img-url').value;
+            const fileInput = row.querySelector('input[type="file"]');
+            
+            if (fileInput.fileObj) {
+                imgUrl = await compressAndUploadImage(fileInput.fileObj, 'images/pharma');
+            }
 
-                    components.push({ name: name, image: imgUrl });
-                }
+            // ★ 將 note 加入存檔物件
+            components.push({ name: name, image: imgUrl, note: note });
+        }
 
                 // B. 收集一般資料
                 const aliases = Array.from(document.querySelectorAll('.alias-input')).map(i => i.value.trim()).filter(v => v);
