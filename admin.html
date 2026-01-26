@@ -4,106 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>後台管理系統 | 本草學園</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* =========================================
-           ✨ 樣式區 (完全保留您的原版樣式)
-           ========================================= */
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            font-family: 'Noto Sans TC', sans-serif;
-        }
-        
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        /* 表格樣式 */
+        /* === 樣式區 (保留原樣) === */
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); margin-bottom: 20px; position: relative; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { background: #4A7C59; color: white; font-weight: bold; white-space: nowrap; }
         tr:hover { background-color: #f1f8e9; }
-        
-        /* 輸入框與表單 */
-        input, select, textarea {
-            padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; width: 100%; box-sizing: border-box; margin-bottom: 10px;
-        }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         textarea { height: 80px; resize: vertical; }
-
-        .btn {
-            padding: 8px 15px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-        }
+        .btn { padding: 8px 15px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-primary { background: #4A7C59; color: white; }
-        .btn-primary:hover { background: #2C5E4F; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-edit { background: #ffc107; color: #333; }
-        .btn-info { background: #607d8b; color: white; } /* 新增：垃圾桶按鈕顏色 */
-        .btn-success { background: #4caf50; color: white; } /* 新增：還原按鈕顏色 */
+        .btn-info { background: #607d8b; color: white; }
+        .btn-success { background: #4caf50; color: white; }
         .btn-sm { padding: 5px 10px; font-size: 0.9rem; }
-        
-        /* 登入視窗 */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            z-index: 9999; display: flex; align-items: center; justify-content: center;
-        }
-        .login-box {
-            background: white; padding: 40px; border-radius: 20px; width: 400px; max-width: 90%;
-            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        /* 編輯視窗 (Modal) */
-        #edit-modal {
-            display: none; 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); 
-            z-index: 1000; 
-            overflow-y: auto;
-            align-items: flex-start; 
-            justify-content: center; 
-            padding-top: 50px; 
-            padding-bottom: 100px;
-        }
-        .modal-content {
-            background: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;
-            margin-bottom: 50px;
-        }
-
-        /* 動態列表樣式 */
+        #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; align-items: flex-start; justify-content: center; padding-top: 50px; padding-bottom: 100px; }
+        .modal-content { background: white; width: 600px; max-width: 90%; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; margin-bottom: 50px; }
         .dynamic-list-container { border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px; background: #fafafa; margin-bottom: 15px; }
-        .dynamic-row { 
-            display: flex; gap: 10px; align-items: center; margin-bottom: 10px; 
-            background: white; padding: 5px; border: 1px solid #ddd; border-radius: 8px;
-        }
+        .dynamic-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: white; padding: 5px; border: 1px solid #ddd; border-radius: 8px; }
         .dynamic-row input { margin: 0; flex: 1; border: none; outline: none; }
-        
-        /* 化學成分專用樣式 */
         .chem-container { border: 2px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #fafafa; }
         .chem-row { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        .chem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
         .chem-img-preview { max-height: 100px; display: block; margin-top: 10px; border: 1px solid #eee; padding: 5px; background: white; border-radius: 5px; }
-        
-        /* 圖片預覽 */
         #preview-img { max-height: 200px; border-radius: 8px; display: none; margin: 10px auto; border: 1px solid #ddd; }
-
-        /* 搜尋建議 */
         .search-box-wrapper { position: relative; }
-        .suggestions-list {
-            position: absolute; top: 100%; left: 0; width: 100%;
-            background: white; border: 1px solid #ddd; border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
-            max-height: 200px; overflow-y: auto; display: none;
-        }
+        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10; max-height: 200px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
         .suggestion-item:hover { background: #f5f5f5; }
     </style>
@@ -112,7 +41,9 @@
 
     <nav style="background: white; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
         <div class="nav-left">
-            <a href="index.html" style="text-decoration:none; font-size:1.2rem; font-weight:bold; color:#2C5E4F;">🌿 後台管理系統</a>
+            <a href="admin_menu.html" style="text-decoration:none; font-size:1.2rem; font-weight:bold; color:#2C5E4F;">⬅ 回主選單</a>
+            <span style="color:#ddd; margin:0 10px;">|</span>
+            <span style="font-weight:bold; color:#4A7C59;">中藥資料庫管理</span>
         </div>
         <div>
             <span id="status-text" style="font-size:0.9rem; color:#666; margin-right:10px;"></span>
@@ -121,11 +52,10 @@
     </nav>
 
     <main style="max-width: 1000px; margin: 30px auto; padding: 0 15px;">
-        
         <div class="glass-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
                 <h2 style="margin:0; color:#2C5E4F;">
-                    <span id="view-title">藥材資料庫管理</span>
+                    <span id="view-title">藥材清單</span>
                     <span id="herb-total-count" style="background:#2C5E4F; color:white; padding:2px 12px; border-radius:20px; font-size:0.9rem; margin-left:10px; vertical-align:middle;">載入中...</span>
                 </h2>
                 <div class="search-box-wrapper" style="flex:1; max-width: 300px; margin-left: 20px;">
@@ -156,21 +86,6 @@
         </div>
     </main>
 
-    <div id="login-overlay" style="display:none;">
-        <div class="login-box">
-            <h2 style="color:#2C5E4F;">🔐 管理員登入</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">請輸入 GitHub 設定</p>
-            
-            <input type="text" id="gh-user" placeholder="GitHub 帳號">
-            <input type="text" id="gh-repo" placeholder="倉庫名稱 (Repository)">
-            <input type="password" id="gh-token" placeholder="Token (ghp_...)">
-            <input type="text" id="gh-path" placeholder="檔案路徑" value="data/herbs.json">
-            
-            <button class="btn btn-primary" style="width:100%; padding:12px;" onclick="login()">🚀 連線並登入</button>
-            <div id="login-msg" style="color:red; margin-top:10px;"></div>
-        </div>
-    </div>
-
     <div id="edit-modal">
         <div class="modal-content">
             <h3 id="modal-title" style="margin-top:0; color:#2C5E4F;">編輯藥材</h3>
@@ -199,15 +114,15 @@
             </div>
 
             <label>生藥名 (Latin Name)</label>
-          <input type="text" id="latin_name" placeholder="例如：Ephedrae Herba">
+            <input type="text" id="latin_name" placeholder="例如：Ephedrae Herba">
             
             <label>藥用部位 (Medicinal Part)</label>
-<input type="text" id="part" placeholder="例如：乾燥草質莖 (Dried herbaceous stem)">
+            <input type="text" id="part" placeholder="例如：乾燥草質莖">
 
             <label>科名 (Family)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-               <input type="text" id="family_ch" placeholder="中文 (例如：麻黃科)">
-<input type="text" id="family_en" placeholder="英文 (例如：Ephedraceae)">
+                <input type="text" id="family_ch" placeholder="中文 (例如：麻黃科)">
+                <input type="text" id="family_en" placeholder="英文 (例如：Ephedraceae)">
             </div>
 
             <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:10px;">
@@ -225,7 +140,7 @@
             </div>
 
             <label style="margin-top:15px;">功效 (Effects)</label>
-          <input type="text" id="effects" placeholder="請用逗號分隔 (例如：發汗, 平喘)">
+            <input type="text" id="effects" placeholder="請用逗號分隔 (例如：發汗, 平喘)">
             
             <label style="color:#d32f2f;">⚠️ 易混淆 (Confusing Drugs)</label>
             <div class="dynamic-list-container" style="border-color:#ffcdd2; background:#ffebee;">
@@ -245,28 +160,23 @@
             </div>
 
             <div style="display:flex; gap:15px; margin-top:30px; padding-top:20px; border-top:1px solid #eee;">
-                <button onclick="closeEditModal()" class="btn" style="background:#90a4ae; color:white; flex:1; padding:12px;">
-                    取消
-                </button>
-                 <button onclick="saveAndUpload()" class="btn btn-primary" style="flex:1; padding:12px;">
-                    💾 儲存並上傳
-                </button>
+                <button onclick="closeEditModal()" class="btn" style="background:#90a4ae; color:white; flex:1; padding:12px;">取消</button>
+                <button onclick="saveAndUpload()" class="btn btn-primary" style="flex:1; padding:12px;">💾 儲存並上傳</button>
             </div>
         </div>
     </div>
 
+    <script src="utils.js"></script>
+
     <script>
-        // === 1. 全域變數 & 分類資料 ===
+        // === 1. 全域變數 ===
         let allHerbs = [];
         let sha = ""; 
-        let config = {};
         let newImageBase64 = null; 
-        
-        // ★ 追蹤是否有未儲存的變更
         let hasUnsavedChanges = false;
-        // ★ 追蹤目前視圖 ('active' 正常 / 'trash' 垃圾桶)
         let currentView = 'active';
-
+        
+        // 分類資料
         const categories = {
             "配糖體": ["強心配醣體", "蔥醌類配醣體", "皂素配醣體", "氰苷配醣體", "異硫氰配醣體", "醇類配醣體", "醛類配醣體", "酚類配醣體", "其他配醣體"],
             "生物鹼": ["吡啶-哌啶類", "托烷類", "喹啉類", "異喹啉類", "吲哚類", "咪唑類", "嘌呤類", "甾體類", "其他生物鹼"],
@@ -281,26 +191,73 @@
             "脂質": ["脂肪油", "蠟"]
         };
 
-        // === 2. 初始化 ===
-        document.addEventListener('DOMContentLoaded', () => {
+        // === 2. 初始化 (修正版) ===
+        document.addEventListener('DOMContentLoaded', async () => {
             initCategories();
+            
+            // 檢查是否從 admin_menu 登入過
             const savedConfig = localStorage.getItem('tcm_admin_config');
-            if (savedConfig) {
-                config = JSON.parse(savedConfig);
-                loadFromGitHub();
-            } else {
-                showLogin();
+            if (!savedConfig) {
+                alert("請先從主選單登入！");
+                window.location.href = 'admin_menu.html';
+                return;
+            }
+            
+            // 載入設定並讀取資料
+            const config = JSON.parse(savedConfig);
+            try {
+                // 初始化 utils.js
+                await initGitHubConfig(config.token, config.user, config.repo);
+                await loadData();
+            } catch (e) {
+                alert("連線失敗：" + e.message);
+                window.location.href = 'admin_menu.html';
             }
         });
 
-        // ★ 防止誤關網頁
         window.addEventListener('beforeunload', (e) => {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                e.returnValue = ''; 
-            }
+            if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
         });
 
+        // === 3. 資料存取 (改用 utils.js) ===
+        async function loadData() {
+            try {
+                // 使用 utils.js 的 fetchJSON
+                const result = await fetchJSON('data/herbs.json');
+                allHerbs = result.data;
+                sha = result.sha;
+                updateDisplayCount();
+                renderTable();
+            } catch (e) {
+                // 如果是 404，可能是第一次使用，初始化為空陣列
+                if (e.message.includes('404')) {
+                    allHerbs = [];
+                    renderTable();
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        async function syncToGitHub(message) {
+            try {
+                document.getElementById('status-text').innerText = "⏳ 同步中...";
+                // 使用 utils.js 的 saveJSON
+                const res = await saveJSON('data/herbs.json', allHerbs, sha, message);
+                sha = res.content.sha;
+                
+                updateDisplayCount();
+                renderTable();
+                alert("🎉 操作成功！");
+                document.getElementById('status-text').innerText = `✅ 已連線 (${allHerbs.length}筆)`;
+                return true;
+            } catch(e) { 
+                alert("同步失敗: " + e.message); 
+                return false; 
+            }
+        }
+
+        // === 4. 輔助函式 ===
         function initCategories() {
             const mainSel = document.getElementById('chem_main');
             for(let key in categories) {
@@ -321,102 +278,47 @@
                 });
             }
         }
-
-        // === 3. 登入/GitHub 相關 ===
-        function showLogin() { document.getElementById('login-overlay').style.display = 'flex'; }
-        
-        function login() {
-            const token = document.getElementById('gh-token').value.trim();
-            const user = document.getElementById('gh-user').value.trim();
-            const repo = document.getElementById('gh-repo').value.trim();
-            const path = document.getElementById('gh-path').value.trim();
-            if (!token || !user || !repo) return alert("請填寫完整資訊");
-            
-            config = { token, user, repo, path };
-            document.getElementById('login-msg').innerText = "連線中...";
-            loadFromGitHub(true);
-        }
-
-        function logout() {
-            if(confirm("確定要登出？")) {
-                localStorage.removeItem('tcm_admin_config');
-                location.reload();
-            }
-        }
-
-        async function loadFromGitHub(isLoginCheck = false) {
-            const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.path}`;
-            try {
-                const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-                if (!res.ok) throw new Error(res.status);
-                const data = await res.json();
-                sha = data.sha;
-                const content = decodeURIComponent(escape(window.atob(data.content)));
-                
-                try {
-                    allHerbs = JSON.parse(content);
-                } catch(e) { throw new Error("JSON 格式錯誤"); }
-
-                if (isLoginCheck) {
-                    localStorage.setItem('tcm_admin_config', JSON.stringify(config));
-                    document.getElementById('login-overlay').style.display = 'none';
-                }
-                updateDisplayCount(); // 更新數量
-                renderTable();
-            } catch (err) {
-                console.error(err);
-                if (isLoginCheck) document.getElementById('login-msg').innerText = "連線失敗: " + err.message;
-                else { alert("連線錯誤: " + err.message); }
-            }
-        }
-
-        // ★ 更新畫面總數
         function updateDisplayCount() {
             const countLabel = document.getElementById('herb-total-count');
-            const statusText = document.getElementById('status-text');
             const activeCount = allHerbs.filter(h => !h.isTrash).length;
             const trashCount = allHerbs.filter(h => h.isTrash).length;
-            
             if (countLabel) countLabel.innerText = `正常: ${activeCount} | 桶: ${trashCount}`;
-            if (statusText) statusText.innerText = `✅ 已連線: ${config.repo}`;
+        }
+        
+        function logout() {
+            if(confirm("確定要登出並返回主選單？")) {
+                localStorage.removeItem('tcm_admin_config');
+                window.location.href = 'admin_menu.html';
+            }
         }
 
-        // ★ 切換垃圾桶/正常視圖
+        // === 5. 表格與搜尋 ===
         function toggleTrashView() {
             const btn = document.getElementById('toggle-trash-btn');
             const title = document.getElementById('view-title');
-            
             if (currentView === 'active') {
                 currentView = 'trash';
                 btn.innerText = "🔙 回到清單";
-                btn.style.background = "#455a64"; // 灰色
-                title.innerText = "🗑️ 垃圾桶管理";
+                btn.style.background = "#455a64";
+                title.innerText = "🗑️ 垃圾桶";
             } else {
                 currentView = 'active';
                 btn.innerText = "🗑️ 查看垃圾桶";
-                btn.style.background = "#607d8b"; // 藍灰色
-                title.innerText = "藥材資料庫管理";
+                btn.style.background = "#607d8b";
+                title.innerText = "藥材清單";
             }
             renderTable();
         }
 
-        // === 4. 表格與搜尋 (修改版) ===
         function renderTable(filterList = null) {
             const list = filterList || allHerbs;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
             
-            // ★ 過濾邏輯：正常視圖不顯示垃圾，垃圾視圖只顯示垃圾
-            const displayList = list.filter(h => {
-                if (currentView === 'trash') return h.isTrash === true;
-                return !h.isTrash; 
-            });
+            const displayList = list.filter(h => currentView === 'trash' ? h.isTrash : !h.isTrash);
 
-            // 排序 (ID 大到小)
             [...displayList].sort((a,b) => b.id - a.id).forEach(herb => {
                 const tr = document.createElement('tr');
-                
-                // 基原顯示
                 let originPrev = '-';
                 if (herb.origin) {
                     if (Array.isArray(herb.origin) && herb.origin.length > 0) {
@@ -427,37 +329,15 @@
                         originPrev = herb.origin;
                     }
                 }
+                
+                let confusingPrev = herb.confusing_drugs && herb.confusing_drugs.length > 0 
+                    ? `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>` : '-';
 
-                // 易混淆顯示
-                let confusingPrev = '-';
-                if (herb.confusing_drugs && Array.isArray(herb.confusing_drugs) && herb.confusing_drugs.length > 0) {
-                    confusingPrev = `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>`;
-                }
+                let actionButtons = currentView === 'active' 
+                    ? `<button class="btn btn-edit btn-sm" onclick="openEditModal(${herb.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="softDelete(${herb.id})">🗑️</button>`
+                    : `<button class="btn btn-success btn-sm" onclick="restoreHerb(${herb.id})">⏪ 還原</button> <button class="btn btn-danger btn-sm" onclick="hardDelete(${herb.id})">🔥 永久刪除</button>`;
 
-                // ★ 操作按鈕根據視圖改變
-                let actionButtons = "";
-                if (currentView === 'active') {
-                    // 正常模式：編輯 & 移至垃圾桶
-                    actionButtons = `
-                        <button class="btn btn-edit btn-sm" onclick="openEditModal(${herb.id})">✏️</button>
-                        <button class="btn btn-danger btn-sm" onclick="softDelete(${herb.id})">🗑️</button>
-                    `;
-                } else {
-                    // 垃圾桶模式：還原 & 永久刪除
-                    actionButtons = `
-                        <button class="btn btn-success btn-sm" onclick="restoreHerb(${herb.id})">⏪ 還原</button>
-                        <button class="btn btn-danger btn-sm" onclick="hardDelete(${herb.id})">🔥 永久刪除</button>
-                    `;
-                }
-
-                tr.innerHTML = `
-                    <td>${herb.id}</td>
-                    <td><span style="background:#e8f5e9; color:#2C5E4F; padding:2px 8px; border-radius:10px; font-size:0.85rem;">${herb.grade}</span></td>
-                    <td style="font-weight:bold;">${herb.chinese_name}</td>
-                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${originPrev}">${originPrev}</td>
-                    <td>${confusingPrev}</td>
-                    <td>${actionButtons}</td>
-                `;
+                tr.innerHTML = `<td>${herb.id}</td><td><span style="background:#e8f5e9; color:#2C5E4F; padding:2px 8px; border-radius:10px; font-size:0.85rem;">${herb.grade}</span></td><td style="font-weight:bold;">${herb.chinese_name}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${originPrev}">${originPrev}</td><td>${confusingPrev}</td><td>${actionButtons}</td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -465,42 +345,23 @@
         function handleSearchInput() {
             const term = document.getElementById('admin-search').value.trim().toLowerCase();
             const suggestionsDiv = document.getElementById('suggestions');
+            if (!term) { suggestionsDiv.style.display = 'none'; renderTable(); return; }
             
-            if (!term) {
-                suggestionsDiv.style.display = 'none';
-                renderTable(); 
-                return;
-            }
-
-            // 搜尋所有藥材 (不管有沒有在垃圾桶)，但在 renderTable 時會自動過濾
             const matches = allHerbs.filter(h => {
-                if (h.chinese_name && h.chinese_name.includes(term)) return true;
-                if (h.latin_name && h.latin_name.toLowerCase().includes(term)) return true;
-                if (h.origin) {
-                    if (Array.isArray(h.origin)) {
-                        return h.origin.some(o => (o.lat && o.lat.toLowerCase().includes(term)));
-                    } else if (typeof h.origin === 'string') {
-                        return h.origin.toLowerCase().includes(term);
-                    }
-                }
-                return false;
+                return (h.chinese_name && h.chinese_name.includes(term)) ||
+                       (h.latin_name && h.latin_name.toLowerCase().includes(term));
             });
-
             renderTable(matches);
             
             if (matches.length > 0) {
-                suggestionsDiv.innerHTML = matches.slice(0,5).map(h => `
-                    <div class="suggestion-item" onclick="openEditModal(${h.id})">
-                        <span>${h.chinese_name}</span> <small style="color:#888;">${h.latin_name||''}</small>
-                    </div>
-                `).join('');
+                suggestionsDiv.innerHTML = matches.slice(0,5).map(h => `<div class="suggestion-item" onclick="openEditModal(${h.id})"><span>${h.chinese_name}</span> <small style="color:#888;">${h.latin_name||''}</small></div>`).join('');
                 suggestionsDiv.style.display = 'block';
             } else {
                 suggestionsDiv.style.display = 'none';
             }
         }
 
-        // === 5. 編輯視窗邏輯 ===
+        // === 6. 編輯、刪除、圖片處理 ===
         function openEditModal(id = null) {
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'flex';
@@ -508,10 +369,8 @@
             document.getElementById('img-input').value = "";
             document.getElementById('suggestions').style.display = 'none'; 
             newImageBase64 = null;
+            hasUnsavedChanges = false;
 
-            hasUnsavedChanges = false; // 重置
-
-            // 清空列表
             document.getElementById('origin-rows-wrapper').innerHTML = "";
             document.getElementById('confusing-rows-wrapper').innerHTML = "";
             document.getElementById('chem-rows-wrapper').innerHTML = "";
@@ -522,339 +381,149 @@
                 document.getElementById('edit-grade').value = h.grade;
                 document.getElementById('chinese_name').value = h.chinese_name;
                 
-                if(Array.isArray(h.origin)) h.origin.forEach(o => addOriginRow(o));
-                else if(h.origin) addOriginRow(h.origin);
-                else addOriginRow();
-
-                if(h.confusing_drugs && Array.isArray(h.confusing_drugs)) {
-                    h.confusing_drugs.forEach(c => addConfusingRow(c));
-                }
+                if(Array.isArray(h.origin)) h.origin.forEach(o => addOriginRow(o)); else addOriginRow(h.origin);
+                if(h.confusing_drugs) h.confusing_drugs.forEach(c => addConfusingRow(c));
 
                 document.getElementById('latin_name').value = h.latin_name || "";
                 document.getElementById('part').value = h.part || "";
-                document.getElementById('family_ch').value = h.family_ch || h.family || "";
+                document.getElementById('family_ch').value = h.family_ch || "";
                 document.getElementById('family_en').value = h.family_en || "";
                 document.getElementById('effects').value = (h.effects || []).join(', ');
                 document.getElementById('indications').value = h.indications || "";
-                
-                document.getElementById('chem_main').value = h.chem_main || "";
-                updateSubCats();
+                document.getElementById('chem_main').value = h.chem_main || ""; updateSubCats();
                 document.getElementById('chem_sub').value = h.chem_sub || "";
 
                 document.getElementById('old-image-path').value = h.image || "";
-                document.getElementById('preview-img').src = h.image || "";
-                document.getElementById('preview-img').style.display = h.image ? 'block' : 'none';
+                const preview = document.getElementById('preview-img');
+                preview.src = h.image || "";
+                preview.style.display = h.image ? 'block' : 'none';
+                document.getElementById('img-status').innerText = h.image ? "✅ 既有圖片" : "";
 
                 if (h.chemistry) {
-                    let list = Array.isArray(h.chemistry) ? h.chemistry : h.chemistry.split(',').map(s=>({name_en:s}));
+                    let list = Array.isArray(h.chemistry) ? h.chemistry : (typeof h.chemistry === 'string' ? h.chemistry.split(/[,，]/).map(s=>({name_en:s})) : []);
                     list.forEach(c => addChemRow(c));
+                } else {
+                    addChemRow();
                 }
-                // ★ 核心修復：讀取成分
-        const chemWrapper = document.getElementById('chem-rows-wrapper');
-        chemWrapper.innerHTML = ""; // 先清空，避免重複出現
-        
-        if (h.chemistry && Array.isArray(h.chemistry) && h.chemistry.length > 0) {
-            h.chemistry.forEach(c => addChemRow(c));
-        } else if (h.chemistry && typeof h.chemistry === 'string') {
-            // 處理舊的字串資料
-            addChemRow(h.chemistry);
-        } else {
-            addChemRow(); // 如果完全沒資料，至少給一組空格子
-        }
-    } else {
-        // ... 新增模式 ...
-        document.getElementById('chem-rows-wrapper').innerHTML = ""; 
-        addChemRow(); // 新增時給一組空格子
-    }
             } else {
                 document.getElementById('modal-title').innerText = "新增藥材";
                 document.querySelectorAll('#edit-modal input[type=text], #edit-modal textarea').forEach(e => e.value="");
-                addOriginRow();
-                addChemRow();
+                addOriginRow(); addChemRow();
                 document.getElementById('preview-img').style.display = 'none';
             }
-
             const inputs = document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select');
-            inputs.forEach(input => {
-                input.oninput = () => { hasUnsavedChanges = true; };
-                input.onchange = () => { hasUnsavedChanges = true; };
-            });
+            inputs.forEach(input => { input.oninput = () => { hasUnsavedChanges = true; }; });
         }
 
         function closeEditModal() {
-            if (hasUnsavedChanges && !confirm("⚠️ 您有未儲存的資料！確定要捨棄變更嗎？")) {
-                return; 
-            }
+            if (hasUnsavedChanges && !confirm("⚠️ 捨棄變更？")) return;
             document.getElementById('edit-modal').style.display = 'none';
             hasUnsavedChanges = false; 
         }
 
-        // --- 動態列表產生器 (保持不變) ---
-        function addOriginRow(data = null) {
-            const wrapper = document.getElementById('origin-rows-wrapper');
-            const div = document.createElement('div');
-            div.className = 'dynamic-row origin-row';
-            let valLat = "", valCh = "";
-            if (data) {
-                if (typeof data === 'string') valLat = data;
-                else { valLat = data.lat || ""; valCh = data.ch || ""; }
-            }
-            div.innerHTML = `
-                <input type="text" class="origin-lat" value="${valLat}" placeholder="學名 (Ephedra sinica)">
-                <input type="text" class="origin-ch" value="${valCh}" placeholder="中文 (草麻黃)">
-                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-            `;
-            wrapper.appendChild(div);
+        // 動態列表 (含修正的 chem row)
+        function addOriginRow(d) { 
+            const w=document.getElementById('origin-rows-wrapper'); const v=document.createElement('div'); v.className='dynamic-row origin-row'; 
+            v.innerHTML=`<input type="text" class="origin-lat" value="${d?.lat||(typeof d==='string'?d:'')}" placeholder="學名"><input type="text" class="origin-ch" value="${d?.ch||''}" placeholder="中文"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`; w.appendChild(v); 
+        }
+        function addConfusingRow(d) {
+            const w=document.getElementById('confusing-rows-wrapper'); const v=document.createElement('div'); v.className='dynamic-row confusing-row';
+            v.innerHTML=`<div style="flex:1"><div style="display:flex;gap:5px"><input class="conf-ch" value="${d?.name_ch||''}" placeholder="中文"><input class="conf-en" value="${d?.name_en||''}" placeholder="學名"></div><input class="conf-note" value="${d?.note||''}" placeholder="備註"></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`; w.appendChild(v);
+        }
+        function addChemRow(d) {
+            const w=document.getElementById('chem-rows-wrapper'); const idx=Math.floor(Date.now()+Math.random()*1000); const v=document.createElement('div'); v.className='chem-row';
+            let nEn="", nCh="", img=""; if(d){ if(typeof d==='string') nEn=d; else{ nEn=d.name_en||d.name||""; nCh=d.name_ch||""; img=d.image||""; } }
+            v.innerHTML=`<div style="display:flex;gap:10px;margin-bottom:8px"><input class="chem-en" value="${nEn}" placeholder="英文"><input class="chem-ch" value="${nCh}" placeholder="中文"><button class="btn btn-danger btn-sm" onclick="this.closest('.chem-row').remove()">X</button></div>
+            <label style="cursor:pointer;background:#eee;padding:5px;border-radius:5px;display:block;text-align:center">📸 上傳結構 <input type="file" style="display:none" onchange="handleChemImg(this,'c-${idx}')"></label>
+            <img id="c-${idx}" src="${img}" class="chem-img-preview" style="display:${img?'block':'none'}"><input type="hidden" class="chem-old-img" value="${img}"><input type="hidden" class="chem-new-base64">`;
+            w.appendChild(v);
         }
 
-        function addConfusingRow(data = null) {
-            const wrapper = document.getElementById('confusing-rows-wrapper');
-            const div = document.createElement('div');
-            div.className = 'dynamic-row confusing-row';
-            let valCh="", valEn="", valNote="";
-            if(data) { valCh=data.name_ch||""; valEn=data.name_en||""; valNote=data.note||""; }
-            
-            div.innerHTML = `
-                <div style="flex:1;">
-                    <div style="display:flex; gap:5px; margin-bottom:5px;">
-                        <input type="text" class="conf-ch" ... placeholder="中文名 (廣防己)">
-            <input type="text" class="conf-en" ... placeholder="學名 (Aristolochia fangchi)">
-        </div>
-        <input type="text" class="conf-note" ... placeholder="備註 (例如：含馬兜鈴酸，具腎毒性)">
-    </div>
-                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
-            `;
-            wrapper.appendChild(div);
-        }
-
-      function addChemRow(data = null) {
-    const wrapper = document.getElementById('chem-rows-wrapper');
-    const idx = Date.now() + Math.random();
-    
-    // 1. 建立容器並命名為 div
-    const div = document.createElement('div');
-    div.className = 'chem-row';
-
-    // 2. 處理資料：確保不管是字串、物件或空的，都不會報錯
-    let nameEn = "";
-    let nameCh = "";
-    let imgVal = "";
-
-    if (data) {
-        if (typeof data === 'string') {
-            nameEn = data;
-        } else {
-            nameEn = data.name_en || data.name || ""; // 相容舊版欄位名
-            nameCh = data.name_ch || "";
-            imgVal = data.image || "";
-        }
-    }
-
-    // 3. 統一使用 div.innerHTML
-    div.innerHTML = `
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-            <input type="text" class="chem-en" placeholder="英文 (Ephedrine)" value="${nameEn}" style="margin:0; flex:1;">
-            <input type="text" class="chem-ch" placeholder="中文 (麻黃鹼)" value="${nameCh}" style="margin:0; flex:1;">
-            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.chem-row').remove()">X</button>
-        </div>
-        <label style="cursor:pointer; background:#eee; padding:5px; border-radius:5px; font-size:0.8rem; display:block; text-align:center;">
-            📸 上傳結構圖 <input type="file" style="display:none" onchange="handleChemImg(this, 'c-img-${idx}')">
-        </label>
-        <img id="c-img-${idx}" src="${imgVal}" class="chem-img-preview" style="display:${imgVal ? 'block' : 'none'}">
-        <input type="hidden" class="chem-old-img" value="${imgVal}">
-        <input type="hidden" class="chem-new-base64">
-    `;
-
-    // 4. 將結果加入畫面
-    wrapper.appendChild(div);
-}
-        // --- 圖片處理 (保持不變) ---
+        // 圖片與儲存 (使用 utils.js 的邏輯)
         function handleImagePreview() {
-            const file = document.getElementById('img-input').files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const scale = 800 / img.width; 
-                    canvas.width = 800; canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    newImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('preview-img').src = newImageBase64;
-                    document.getElementById('preview-img').style.display = 'block';
-                    document.getElementById('img-status').innerText = "準備上傳...";
-                }
-            };
-            reader.readAsDataURL(file);
+            const file = document.getElementById('img-input').files[0]; if(!file)return;
+            const reader = new FileReader(); reader.onload=e=>{ const img=new Image(); img.src=e.target.result; img.onload=()=>{
+                const c=document.createElement('canvas'); const s=800/img.width; c.width=800; c.height=img.height*s;
+                c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+                newImageBase64 = c.toDataURL('image/jpeg', 0.7);
+                document.getElementById('preview-img').src=newImageBase64;
+                document.getElementById('preview-img').style.display='block';
+                document.getElementById('img-status').innerText="✅ 準備上傳";
+            }}; reader.readAsDataURL(file);
+        }
+        function handleChemImg(input, id) {
+            const file = input.files[0]; if(!file)return;
+            const reader = new FileReader(); reader.onload=e=>{ const img=new Image(); img.src=e.target.result; img.onload=()=>{
+                const c=document.createElement('canvas'); const s=500/img.width; c.width=500; c.height=img.height*s;
+                c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+                const b64 = c.toDataURL('image/jpeg', 0.7);
+                document.getElementById(id).src=b64; document.getElementById(id).style.display='block';
+                input.parentElement.nextElementSibling.nextElementSibling.nextElementSibling.value=b64;
+            }}; reader.readAsDataURL(file);
         }
 
-        function handleChemImg(input, imgId) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image(); img.src = e.target.result;
-                img.onload = () => {
-                    const c = document.createElement('canvas');
-                    const s = 500/img.width; c.width=500; c.height=img.height*s;
-                    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-                    const b64 = c.toDataURL('image/jpeg', 0.7);
-                    document.getElementById(imgId).src = b64;
-                    document.getElementById(imgId).style.display = 'block';
-                    input.parentElement.nextElementSibling.nextElementSibling.nextElementSibling.value = b64;
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function uploadImageToGitHub(base64Data, folder) {
-            const fileName = `images/${folder}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
-            const content = base64Data.split(',')[1];
-            const res = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${fileName}`, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: "Upload image", content: content })
-            });
-            if(!res.ok) throw new Error("圖片上傳失敗");
-            const data = await res.json();
-            return data.content.download_url;
-        }
-
-        // === 6. 統一同步與垃圾桶邏輯 ===
-        
-        // ★ 統一的上傳功能 (減少重複代碼)
-        async function syncToGitHub(message) {
-            try {
-                document.getElementById('status-text').innerText = "⏳ 正在同步至雲端...";
-                const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(allHerbs, null, 2))));
-                const res = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${config.path}`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, content: content, sha: sha })
-                });
-                if(!res.ok) throw new Error("JSON 更新失敗");
-                const data = await res.json();
-                sha = data.content.sha;
-                
-                updateDisplayCount();
-                renderTable();
-                alert("🎉 操作成功！");
-                document.getElementById('status-text').innerText = `✅ 已連線: ${config.repo} (${allHerbs.length}筆)`;
-                return true;
-            } catch(e) { 
-                alert("同步失敗: " + e.message); 
-                return false;
-            }
-        }
-
-        // ★ 1. 軟刪除 (移至垃圾桶)
-        async function softDelete(id) {
-            if(!confirm("確定要將此藥材移至垃圾桶嗎？")) return;
-            const herb = allHerbs.find(h => h.id == id);
-            if(herb) {
-                herb.isTrash = true;
-                await syncToGitHub(`Trash ID ${id}`);
-            }
-        }
-
-        // ★ 2. 還原
-        async function restoreHerb(id) {
-            const herb = allHerbs.find(h => h.id == id);
-            if(herb) {
-                herb.isTrash = false;
-                await syncToGitHub(`Restore ID ${id}`);
-            }
-        }
-
-        // ★ 3. 永久刪除
-        async function hardDelete(id) {
-            if(!confirm("⚠️ 警告：這將永久刪除此資料且無法恢復！確定嗎？")) return;
-            allHerbs = allHerbs.filter(h => h.id != id);
-            await syncToGitHub(`Permanent Delete ID ${id}`);
-        }
-
-        // ★ 4. 儲存新增/修改 (含自動 ID)
         async function saveAndUpload() {
-            const idVal = document.getElementById('edit-id').value;
-            const name = document.getElementById('chinese_name').value;
+            const name = document.getElementById('chinese_name').value.trim();
             if(!name) return alert("請輸入中藥名");
+            const idVal = document.getElementById('edit-id').value;
+            const btn = document.querySelector('#edit-modal .btn-primary');
+            btn.innerText = "⏳ 處理中..."; btn.disabled = true;
 
             try {
-                let finalMainImg = document.getElementById('old-image-path').value;
-                if(newImageBase64) {
-                    finalMainImg = await uploadImageToGitHub(newImageBase64, 'herbs');
+                // 上傳主圖 (使用 utils.js 提供的 compressAndUploadImage 邏輯的變體，這裡為了維持邏輯直接用 fetch)
+                // 為了方便，這裡我們直接用 utils.js 裡面類似的邏輯，但因為我們已經在 preview 做完壓縮了，所以直接上傳 base64
+                let finalImg = document.getElementById('old-image-path').value;
+                if(newImageBase64) finalImg = await uploadBase64(newImageBase64, 'herbs');
+
+                // 上傳成分圖
+                const chemData=[]; const rows=document.querySelectorAll('.chem-row');
+                for(let row of rows){
+                    const en=row.querySelector('.chem-en').value; const ch=row.querySelector('.chem-ch').value;
+                    let cImg=row.querySelector('.chem-old-img').value; const cNew=row.querySelector('.chem-new-base64').value;
+                    if(cNew) cImg = await uploadBase64(cNew, 'structures');
+                    if(en||ch) chemData.push({name_en:en, name_ch:ch, image:cImg});
                 }
+                
+                // 收集其他資料
+                const originData=[]; document.querySelectorAll('.origin-row').forEach(r=>{ const l=r.querySelector('.origin-lat').value; const c=r.querySelector('.origin-ch').value; if(l||c) originData.push({lat:l,ch:c}) });
+                const confData=[]; document.querySelectorAll('.confusing-row').forEach(r=>{ const c=r.querySelector('.conf-ch').value; const e=r.querySelector('.conf-en').value; const n=r.querySelector('.conf-note').value; if(c||e||n) confData.push({name_ch:c,name_en:e,note:n}) });
 
-                const chemData = [];
-                const rows = document.querySelectorAll('.chem-row');
-                for(let row of rows) {
-                    const en = row.querySelector('.chem-en').value;
-                    const ch = row.querySelector('.chem-ch').value;
-                    let cImg = row.querySelector('.chem-old-img').value;
-                    const cNew = row.querySelector('.chem-new-base64').value;
-                    if(cNew) cImg = await uploadImageToGitHub(cNew, 'structures');
-                    if(en || ch) chemData.push({name_en:en, name_ch:ch, image:cImg});
-                }
-
-                const originData = [];
-                document.querySelectorAll('.origin-row').forEach(row => {
-                    const lat = row.querySelector('.origin-lat').value.trim();
-                    const ch = row.querySelector('.origin-ch').value.trim();
-                    if(lat || ch) originData.push({ lat, ch });
-                });
-
-                const confusingData = [];
-                document.querySelectorAll('.confusing-row').forEach(row => {
-                    const ch = row.querySelector('.conf-ch').value.trim();
-                    const en = row.querySelector('.conf-en').value.trim();
-                    const note = row.querySelector('.conf-note').value.trim();
-                    if(ch || en || note) confusingData.push({ name_ch: ch, name_en: en, note: note });
-                });
-
-                // ★ 自動流水號邏輯
-                let finalId;
-                if (idVal) {
-                    finalId = parseInt(idVal);
-                } else {
-                    const maxId = allHerbs.reduce((max, item) => Math.max(max, item.id || 0), 0);
-                    finalId = maxId + 1;
-                }
-
-                const newHerb = {
-                    id: finalId,
-                    grade: document.getElementById('edit-grade').value,
-                    chinese_name: name,
-                    origin: originData,
-                    confusing_drugs: confusingData,
-                    latin_name: document.getElementById('latin_name').value,
-                    part: document.getElementById('part').value.trim(),
-                    family_ch: document.getElementById('family_ch').value,
-                    family_en: document.getElementById('family_en').value,
-                    chem_main: document.getElementById('chem_main').value,
-                    chem_sub: document.getElementById('chem_sub').value,
-                    chemistry: chemData,
-                    effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
-                    indications: document.getElementById('indications').value,
-                    image: finalMainImg,
-                    isTrash: false // 預設不是垃圾
+                let finalId = idVal ? parseInt(idVal) : (allHerbs.reduce((max,h)=>Math.max(max,h.id||0),0)+1);
+                const newItem = {
+                    id: finalId, grade: document.getElementById('edit-grade').value, chinese_name: name,
+                    origin: originData, confusing_drugs: confData, latin_name: document.getElementById('latin_name').value,
+                    part: document.getElementById('part').value, family_ch: document.getElementById('family_ch').value, family_en: document.getElementById('family_en').value,
+                    chem_main: document.getElementById('chem_main').value, chem_sub: document.getElementById('chem_sub').value,
+                    chemistry: chemData, effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
+                    indications: document.getElementById('indications').value, image: finalImg, isTrash: false
                 };
 
-                if(idVal) {
-                    const idx = allHerbs.findIndex(h => h.id == idVal);
-                    allHerbs[idx] = newHerb;
-                } else {
-                    allHerbs.push(newHerb);
-                }
+                if(idVal) allHerbs[allHerbs.findIndex(h=>h.id==idVal)] = newItem; else allHerbs.push(newItem);
+                
+                await syncToGitHub(`Update ${name}`);
+                hasUnsavedChanges = false; document.getElementById('edit-modal').style.display='none';
 
-                const success = await syncToGitHub(`Update ${name}`);
-                if (success) {
-                    hasUnsavedChanges = false;
-                    document.getElementById('edit-modal').style.display = 'none';
-                }
-            } catch(e) { alert("儲存過程發生錯誤: " + e.message); }
+            } catch(e) { alert("錯誤: "+e.message); }
+            finally { btn.innerText = "💾 儲存並上傳"; btn.disabled = false; }
         }
+
+        // 內部使用的上傳 (因為我們已經有 Base64，不需再壓縮)
+        async function uploadBase64(b64, folder) {
+            const fileName = `images/${folder}/${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
+            const content = b64.split(',')[1];
+            // 使用 config
+            const url = `https://api.github.com/repos/${JSON.parse(localStorage.getItem('tcm_admin_config')).user}/${JSON.parse(localStorage.getItem('tcm_admin_config')).repo}/contents/${fileName}`;
+            const res = await fetch(url, {
+                method: 'PUT', headers: {'Authorization': `token ${JSON.parse(localStorage.getItem('tcm_admin_config')).token}`, 'Content-Type': 'application/json'},
+                body: JSON.stringify({message:"Upload img", content: content})
+            });
+            if(!res.ok) throw new Error("圖傳失敗");
+            return (await res.json()).content.download_url;
+        }
+
+        async function softDelete(id) { if(confirm("移至垃圾桶？")){ allHerbs.find(h=>h.id==id).isTrash=true; syncToGitHub(`Trash ${id}`); } }
+        async function restoreHerb(id) { allHerbs.find(h=>h.id==id).isTrash=false; syncToGitHub(`Restore ${id}`); }
+        async function hardDelete(id) { if(confirm("永久刪除？")){ allHerbs=allHerbs.filter(h=>h.id!=id); syncToGitHub(`Delete ${id}`); } }
     </script>
 </body>
 </html>
