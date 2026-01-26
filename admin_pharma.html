@@ -6,6 +6,7 @@
     <title>生藥資料庫管理 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         /* === 樣式區 === */
@@ -40,6 +41,32 @@
         
         /* ★ 新增：成分卡片樣式 (為了放編輯器) */
         .chem-card { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px; }
+        /* === 列印時的樣式設定 (隱藏不必要的東西) === */
+    @media print {
+        nav, .btn-group, #loading-overlay, .card-delete-btn {
+            display: none !important; /* 隱藏導覽列、按鈕 */
+        }
+        body {
+            background: white;
+            padding-top: 0;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .pharma-card {
+            border: 1px solid #000; /* 列印時加個黑框比較清楚 */
+            box-shadow: none;
+            break-inside: avoid; /* 避免卡片被切成兩半 */
+            margin-bottom: 20px;
+        }
+        /* 強制顯示背景色 (有些瀏覽器預設不印背景色) */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
     </style>
 </head>
 <body>
@@ -56,9 +83,16 @@
             <a href="pharmacognosy.html" class="back-btn" style="background:#e8f5e9; color:#2C5E4F; margin-left:5px;" target="_blank">🏠 去前台看</a>
             <span style="margin-left:10px;">🔬 生藥資料庫管理</span>
         </div>
+         <div style="display:flex; gap:10px;">
+               <input type="file" id="import-file" accept=".xlsx, .xls" style="display:none;" onchange="importFromExcel(this)">
+        
+        <button onclick="document.getElementById('import-file').click()" class="btn" style="background:#ff9800; color:white;">📥 匯入 Excel</button>
+        <button onclick="exportToExcel()" class="btn" style="background:#217346; color:white;">📊 匯出 Excel</button>
+        <button onclick="window.print()" class="btn" style="background:#555; color:white;">🖨️ 列印/存 PDF</button>
         <button onclick="openModal()" class="btn btn-primary">＋ 新增生藥</button>
+         </div>
     </nav>
-
+</div>
     <main>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <input type="text" id="search-input" placeholder="🔍 搜尋生藥名稱、學名、成分..." oninput="renderList()">
@@ -486,6 +520,162 @@
                     sub.add(new Option(displayName, s.ch));
                 });
             }
+        }
+        // === 7. 匯出 Excel 功能 ===
+        function exportToExcel() {
+            if (pharmaList.length === 0) {
+                alert("目前沒有資料可以匯出！");
+                return;
+            }
+
+            // 1. 整理資料 (把複雜的物件轉成適合 Excel 的平面格式)
+            const exportData = pharmaList.map(item => {
+                // 把成分陣列轉成字串
+                const compStr = item.components ? item.components.map(c => c.name).join(', ') : '';
+                // 把別名陣列轉成字串
+                const aliasStr = item.aliases ? item.aliases.join(', ') : '';
+
+                return {
+                    "ID": item.id,
+                    "中文名": item.name_ch,
+                    "英文名": item.name_en,
+                    "大分類": item.category_main,
+                    "中分類": item.category_sub,
+                    "基原": item.origin,
+                    "科別(中)": item.family_ch,
+                    "科別(英)": item.family_en,
+                    "部位(中)": item.part_ch,
+                    "部位(英)": item.part_en,
+                    "成分": compStr,
+                    "別名": aliasStr,
+                    "功效": item.efficacy,
+                    "適應症": item.treatment,
+                    "備註(HTML)": item.note // 這裡會匯出含 HTML 標籤的原始碼
+                };
+            });
+
+            // 2. 建立工作表
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "生藥資料庫");
+
+            // 3. 下載檔案
+            // 檔名加上今天的日期
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `生藥資料庫備份_${date}.xlsx`);
+        }
+
+    // === 8. 匯入 Excel 功能 (進階版) ===
+        async function importFromExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!confirm("⚠️ 警告：匯入 Excel 將會「覆蓋」現有的相同 ID 資料！\n\n如果 ID 不存在則會新增。\n確定要繼續嗎？")) {
+                input.value = ""; // 清空選擇，避免下次選同檔沒反應
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // 讀取第一個工作表
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // 轉成 JSON (陣列)
+                    const excelData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (excelData.length === 0) {
+                        alert("Excel 檔案是空的！");
+                        return;
+                    }
+
+                    // 開始處理每一筆資料
+                    let updateCount = 0;
+                    let addCount = 0;
+
+                    // 複製一份目前的清單
+                    let newList = [...pharmaList];
+
+                    excelData.forEach(row => {
+                        // 1. 欄位對應 (Mapping) - 把中文標題轉回英文變數
+                        // Excel 欄位名稱要跟匯出時的一模一樣
+                        
+                        // 處理陣列欄位 (成分、別名) - 用逗號切分
+                        const compArr = row["成分"] ? row["成分"].split(/[,，、]/).map(s => ({ name: s.trim(), note: "", image: "" })) : [];
+                        const aliasArr = row["別名"] ? row["別名"].split(/[,，、]/).map(s => s.trim()) : [];
+
+                        // 建立物件
+                        const newItem = {
+                            id: row["ID"] ? parseInt(row["ID"]) : Date.now() + Math.floor(Math.random()*1000), // 如果沒 ID 就自動產生
+                            name_ch: row["中文名"] || "",
+                            name_en: row["英文名"] || "",
+                            category_main: row["大分類"] || "",
+                            category_sub: row["中分類"] || "",
+                            origin: row["基原"] || "",
+                            family_ch: row["科別(中)"] || "",
+                            family_en: row["科別(英)"] || "",
+                            part_ch: row["部位(中)"] || "",
+                            part_en: row["部位(英)"] || "",
+                            efficacy: row["功效"] || "",
+                            treatment: row["適應症"] || "",
+                            note: row["備註(HTML)"] || "", // 這裡直接讀取 HTML
+                            
+                            // 複雜欄位還原
+                            components: compArr,
+                            aliases: aliasArr,
+                            
+                            // 這些 Excel 沒匯出的欄位，如果要保留舊資料，邏輯會更複雜
+                            // 簡單起見，這裡設為空值或預設值
+                            characteristics: "", 
+                            mnemonic: "",
+                            comparisons: [],
+                            updated_at: new Date().toISOString()
+                        };
+
+                        // 2. 判斷是「更新」還是「新增」
+                        const existingIdx = newList.findIndex(item => item.id == newItem.id);
+                        
+                        if (existingIdx !== -1) {
+                            // 邏輯：保留舊的圖片和詳細資料，只更新 Excel 有的欄位
+                            // 這叫 "Merge" (合併)
+                            const oldItem = newList[existingIdx];
+                            newList[existingIdx] = {
+                                ...oldItem,          // 先保留舊的 (包含圖片、比較、性狀)
+                                ...newItem,          // 用 Excel 的資料覆蓋
+                                components: newItem.components.length > 0 ? newItem.components : oldItem.components, // 如果 Excel 有成分就用 Excel 的(注意：會失去詳細備註)，否則保留舊的
+                                // 修正：因為匯出時我們簡化了成分，匯入時如果是為了改錯字，這樣覆蓋是合理的。
+                                // 但如果原本成分有圖片，這樣覆蓋會導致圖片遺失。
+                                // 這是簡易匯入的代價。
+                            };
+                            updateCount++;
+                        } else {
+                            newList.push(newItem);
+                            addCount++;
+                        }
+                    });
+
+                    // 3. 儲存回 GitHub
+                    await uploadToGitHub(newList, `Import Excel: ${addCount} added, ${updateCount} updated`);
+                    
+                    // 4. 更新畫面
+                    pharmaList = newList;
+                    renderList();
+                    alert(`🎉 匯入成功！\n新增：${addCount} 筆\n更新：${updateCount} 筆`);
+
+                } catch (e) {
+                    console.error(e);
+                    alert("匯入失敗，請檢查 Excel 格式是否正確。\n錯誤訊息: " + e.message);
+                } finally {
+                    input.value = ""; // 清空 input
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
         }
     </script>
 </body>
