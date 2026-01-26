@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     editor.on('change', function () { isDirty = true; });
                 }
             });
-}
+
             // 2. 登入檢查
             const configStr = localStorage.getItem('tcm_admin_config');
             if (!configStr) {
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert("連線錯誤: " + e.message);
                 console.error(e);
             }
-        });
+});
 
         // === 產生下拉選單 (自動打勾已存在的資料) ===
         function renderCategorySelect() {
