@@ -273,36 +273,64 @@
     .rich-content ul { margin-left: 20px; padding-left: 0; }
     .rich-content li { margin-bottom: 8px; }
     
-    /* === 7. 手機版 RWD 優化 === */
+/* === 7. 手機版 RWD 優化 (生藥前台修正版) === */
     @media (max-width: 768px) {
-        nav { padding: 12px 15px; flex-wrap: wrap; }
-        .logo { width: 100%; justify-content: center; margin-bottom: 10px; }
-        .nav-links { width: 100%; justify-content: center; gap: 20px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05); }
-        .nav-links a { margin: 0; font-size: 0.95rem; }
-
-        .hero-section { padding: 3rem 1rem 4rem; border-radius: 0 0 25px 25px; }
-        .hero-title { font-size: 1.8rem; }
-        .filter-tags { 
-            justify-content: flex-start; overflow-x: auto; 
-            padding-bottom: 15px; white-space: nowrap; 
-            -webkit-overflow-scrolling: touch; /* 讓滑動更順 */
+        /* 1. 導覽列調整 (跟中藥前台一樣：Logo 置中，按鈕在下排開) */
+        nav { 
+            padding: 10px 15px; 
+            flex-wrap: wrap; /* 允許換行 */
         }
-        .filter-tag { flex-shrink: 0; }
         
-        .container { padding: 15px; margin-top: 10px; }
+        .logo { 
+            width: 100%; 
+            justify-content: center; /* Logo 置中 */
+            margin-bottom: 10px; 
+        }
         
-        /* 手機版維持單欄，但優化間距 */
-        .grid { grid-template-columns: 1fr; gap: 20px; } 
+        /* 如果您的 HTML 結構有包一層 div class="nav-links" */
+        .nav-links { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-around; /* 按鈕平均分散 */
+            padding-top: 10px; 
+            border-top: 1px solid rgba(0,0,0,0.05); /* 加一條淡淡的分隔線 */
+            margin-left: 0; /* 修正可能被電腦版影響的邊距 */
+        }
+        
+        /* 如果您的 HTML 結構是直接放 a 標籤在 nav 裡 (沒有 nav-links)，請改用這個： */
+        /* nav a:not(.logo) {
+            margin: 5px 10px;
+            font-size: 0.9rem;
+        }
+        */
 
+        .nav-links a { 
+            margin: 0; 
+            font-size: 0.9rem; 
+        }
+
+        /* 2. 標題與搜尋框調整 */
+        .hero-title { font-size: 1.6rem; }
+        
+        /* 3. 篩選標籤 (可橫向滑動) */
+        .filter-tags { 
+            justify-content: flex-start; 
+            overflow-x: auto; 
+            padding-bottom: 15px; 
+            white-space: nowrap; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        
+        /* 4. 格線調整 (維持單欄或雙欄，看您決定，這裡預設單欄比較適合生藥結構圖) */
+        .container { padding: 10px; margin-top: 10px; }
+        .grid { grid-template-columns: 1fr; gap: 15px; } 
+
+        /* 卡片內距 */
         .card-body { padding: 20px; }
-        .card-title { font-size: 1.4rem; }
         
-        .modal-content { max-height: 85vh; width: 95%; border-radius: 16px; }
-        .modal-header { padding: 15px 20px; }
-        .modal-body { padding: 25px 20px; }
-        
-        /* 圖片在手機上可以滑動查看 */
-        .chem-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        /* 彈窗滿版 */
+        .modal-content { max-height: 85vh; width: 95%; }
+        .chem-modal-box { width: 90%; }
     }
 </style>
 </head>
