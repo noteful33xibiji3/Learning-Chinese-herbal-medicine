@@ -348,6 +348,10 @@
         const suggestionsBox = document.getElementById('suggestions');
         const resultsGrid = document.getElementById('results-grid');
 
+        let currentData = [];       // 目前要顯示的資料清單 (可能是全部，也可能是搜尋結果)
+        let displayedCount = 0;     // 目前畫面上已經顯示了幾張
+        const ITEMS_PER_PAGE = 20;  // 每次多載入 20 張
+
         // 1. 載入資料
         document.addEventListener('DOMContentLoaded', async () => {
                  document.getElementById('footer-year').innerText = new Date().getFullYear();
@@ -356,7 +360,9 @@
                 if (!response.ok) throw new Error("資料讀取失敗");
                 db = await response.json();
                 document.getElementById('loading').style.display = 'none';
-                renderCards(db); // 預設顯示全部 (或前20筆)
+                currentData = db;      // 設定目前資料為全部
+                displayedCount = 0;    // 重置計數
+                renderCards(currentData); // 開始渲染 (renderCards 會自動處理切片)
             } catch (error) {
                 console.error(error);
                 document.getElementById('loading').innerHTML = `<p style="color:red;">❌ 資料庫讀取失敗</p>`;
@@ -404,7 +410,10 @@
             const val = input.value.trim();
             suggestionsBox.style.display = 'none';
             const matches = getFilteredMatches(val);
-            renderCards(matches);
+           currentData = matches;     // 更新目前的資料清單為搜尋結果
+            displayedCount = 0;        // 重置計數
+            document.getElementById('results-grid').innerHTML = ""; // 先清空畫面
+            renderCards(currentData);  // 渲染搜尋結果的第一頁
         }
 
         // 4. 即時建議
@@ -433,14 +442,19 @@
         }
 
         // 5. 渲染卡片 (美觀版)
+      // 5. 渲染卡片 (含「載入更多」功能)
         function renderCards(data) {
-            resultsGrid.innerHTML = "";
+            // 如果沒有資料
             if (data.length === 0) {
                 resultsGrid.innerHTML = "<p style='text-align:center; width:100%; grid-column:1/-1; color:#666;'>找不到符合的資料...</p>";
                 return;
             }
 
-            data.forEach(item => {
+            // ★ 1. 計算這一批要顯示的範圍 (從 displayedCount 開始，多拿 20 筆)
+            const nextBatch = data.slice(displayedCount, displayedCount + ITEMS_PER_PAGE);
+
+            // ★ 2. 渲染這一批卡片
+            nextBatch.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.onclick = () => openModal(item);
@@ -471,8 +485,41 @@
                 `;
                 resultsGrid.appendChild(card);
             });
-        }
 
+            // ★ 3. 更新目前已顯示的數量
+            displayedCount += nextBatch.length;
+
+            // ★ 4. 處理「載入更多」按鈕
+            // 先移除舊按鈕 (如果有的話)
+            const existingBtn = document.getElementById('load-more-btn-container');
+            if (existingBtn) existingBtn.remove();
+
+            // 如果「已顯示數量」小於「總數量」，代表還有下一頁，就加入按鈕
+            if (displayedCount < data.length) {
+                const btnContainer = document.createElement('div');
+                btnContainer.id = 'load-more-btn-container';
+                // 讓按鈕跨滿整行
+                btnContainer.style.cssText = "grid-column: 1 / -1; text-align: center; margin-top: 20px; padding-bottom: 20px;";
+                
+                btnContainer.innerHTML = `
+                    <button onclick="renderCards(currentData)" style="
+                        padding: 12px 40px; 
+                        background: #e0f2f1; 
+                        color: #2C5E4F; 
+                        border: 1px solid #4A7C59; 
+                        border-radius: 30px; 
+                        cursor: pointer; 
+                        font-weight: bold;
+                        font-size: 1rem;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        transition: 0.2s;
+                    ">
+                        ⬇️ 顯示更多 (${data.length - displayedCount} 筆)
+                    </button>
+                `;
+                resultsGrid.appendChild(btnContainer);
+            }
+        }
         // 6. 開啟詳情視窗
         function openModal(item) {
             const modal = document.getElementById('detail-modal');
