@@ -637,68 +637,57 @@
     }
 
     // 檢查並顯示「📖 查看介紹」按鈕 (★ 這裡修復了按鈕亂跑的問題)
-// === ✅ 改良版：檢查並顯示介紹按鈕 ===
+// === ✅ 修正版：檢查並顯示介紹按鈕 (精準比對版) ===
     function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
         
-        // 1. 決定目標 (優先看中分類，沒有則看大分類)
-        // 例如：選了 "配糖體"，targetKey 就是 "配糖體"
+        // 1. 鎖定目標：目前選中的分類名稱 (一定是中文，例如 "配醣體")
+        // 如果有選中分類，就看中分類；否則看大分類
         let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
         
-        console.log(`🔍 檢查分類介紹: 目標=${targetKey}, 目前資料庫筆數=${Object.keys(categoryData).length}`);
+        // 除錯用：在 Console 顯示目前抓到的目標 (按 F12 可以看)
+        console.log(`正在檢查分類介紹: 目標=[${targetKey}]`, "資料庫有資料嗎?", Object.keys(categoryData).length > 0);
 
-        // 2. 如果沒目標，或是資料庫還沒載入，就隱藏
-        if (!targetKey || Object.keys(categoryData).length === 0) {
-            btnInfo.style.display = 'none';
-            return;
-        }
-
-        // 3. 比對資料庫 (模糊比對，只要 Key 包含目標文字就算找到)
-        // 例如：資料庫存 "配糖體"，目標 "配糖體" -> 成功
-        // 例如：資料庫存 "配糖體 (Glycoside)"，目標 "配糖體" -> 成功
-        const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
-
-        if (matchKey && categoryData[matchKey]) {
-            console.log("✅ 找到介紹資料:", matchKey);
-            // 找到了！顯示按鈕
-            spanName.innerText = matchKey; 
+        // 2. 直接去資料庫找有沒有這個 Key
+        // 因為您的 JSON Key 就是 "配醣體"，變數也是 "配醣體"，直接拿來用最準
+        if (targetKey && categoryData[targetKey]) {
+            console.log("✅ 找到資料！");
+            
+            // 顯示按鈕
+            spanName.innerText = targetKey; 
             btnInfo.style.display = 'inline-flex';
             
-            // ★ 關鍵：把找到的 Key 存到按鈕屬性上
-            btnInfo.setAttribute('data-real-key', matchKey); 
+            // 把 Key 綁定在按鈕上
+            btnInfo.setAttribute('data-real-key', targetKey); 
         } else {
-            console.log("❌ 找不到此分類的介紹資料");
+            console.log("❌ 找不到資料 (或未選分類)");
             btnInfo.style.display = 'none';
         }
     }
 
-    // === ✅ 改良版：打開分類介紹視窗 ===
+    // === ✅ 修正版：打開分類介紹視窗 ===
     function openCategoryModal() {
         const btn = document.getElementById('btn-cat-info');
         
-        // 1. 從按鈕屬性讀取 Key (改用 getAttribute 最保險)
+        // 1. 從按鈕屬性讀取 Key
         const realKey = btn.getAttribute('data-real-key');
         
         if (!realKey) {
-            alert("❌ 程式錯誤：找不到分類 Key");
+            alert("❌ 系統錯誤：找不到分類 Key");
             return;
         }
         
-        // 2. 填入標題與內容
+        // 2. 填入內容
         document.getElementById('cat-modal-title').innerText = `${realKey} - 詳細介紹`;
         
+        // 3. 取得 HTML 內容 (如果有就顯示，沒有就顯示預設文字)
         const content = categoryData[realKey] || "<p>暫無介紹資料</p>";
         document.getElementById('cat-modal-body').innerHTML = content;
         
-        // 3. 顯示視窗
+        // 4. 顯示視窗 (確保 ID 是 cat-modal)
         document.getElementById('cat-modal').style.display = 'flex';
-        
-        // 4. 點擊遮罩關閉 (防止 onclick 衝突)
-        document.getElementById('cat-modal').onclick = function(e) {
-            if (e.target === this) this.style.display = 'none';
-        }
-    }}
+    }
     // === 3. 執行篩選與渲染 (超級搜尋版) ===
     function filterData() {
         // 取得使用者輸入的關鍵字，並轉小寫 (為了不分大小寫)
