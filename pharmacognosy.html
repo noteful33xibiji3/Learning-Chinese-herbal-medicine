@@ -618,28 +618,39 @@
     }
 
     // 檢查並顯示「📖 查看介紹」按鈕 (★ 這裡修復了按鈕亂跑的問題)
+   // === 修正版：檢查並顯示介紹按鈕 (大分類/中分類通吃) ===
     function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
         
-        // 優先找中分類的 Key，沒有才找大分類的 Key
-        let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
+        // 1. 決定目標：
+        // 如果有選中分類 (currentSubCat)，目標就是中分類
+        // 如果沒選中分類，但有選大分類 (currentMainCat)，目標就是大分類
+        let targetKey = '';
         
+        if (currentSubCat) {
+            targetKey = currentSubCat;
+        } else if (currentMainCat !== 'all') {
+            targetKey = currentMainCat;
+        }
+        
+        // 如果還是沒目標 (例如選全部)，就隱藏按鈕
         if (!targetKey) {
             btnInfo.style.display = 'none';
             return;
         }
 
-        // ★ 嚴格比對：必須完全相等，或是後面接著括號 (Glycoside)
-        // 這樣就不會發生點「配糖體」卻跑出「異硫氰酸配糖體」的錯誤
-        const matchKey = Object.keys(categoryData).find(k => {
-            return k === targetKey || k.startsWith(targetKey + " (") || k.startsWith(targetKey + "(");
-        });
+        // 2. 比對資料庫 (模糊比對，解決括號問題)
+        // 邏輯：資料庫的 Key 必須包含 targetKey
+        // 例如：選「配糖體」，可以對應到「配糖體 (Glycoside)」
+        const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
 
+        // 3. 顯示按鈕
         if (matchKey && categoryData[matchKey]) {
-            spanName.innerText = matchKey; // 顯示完整名稱
+            // 按鈕上顯示我們真正找到的那個標題 (例如 "配糖體 (Glycoside)")
+            spanName.innerText = matchKey; 
             btnInfo.style.display = 'inline-flex';
-            btnInfo.dataset.realKey = matchKey; // 存真實 Key 供彈窗用
+            btnInfo.dataset.realKey = matchKey; // 綁定真實 Key 供彈窗使用
         } else {
             btnInfo.style.display = 'none';
         }
