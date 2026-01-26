@@ -449,9 +449,26 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initFilters();
-            loadData();
+            loadData().then(() => {
+                // ★ 新增：檢查網址有沒有搜尋參數 (?q=Ephedrine)
+                const urlParams = new URLSearchParams(window.location.search);
+                const query = urlParams.get('q');
+                if (query) {
+                    const input = document.getElementById('search-input');
+                    input.value = query; // 填入搜尋框
+                    filterData(); // 執行搜尋
+                    
+                    // (選用) 如果只有一筆結果，自動點開
+                    const filtered = allData.filter(item => 
+                        (item.name_en||"").toLowerCase().includes(query.toLowerCase()) || 
+                        (item.components||[]).some(c => c.name.toLowerCase().includes(query.toLowerCase()))
+                    );
+                    if(filtered.length === 1) {
+                        openDetail(filtered[0]);
+                    }
+                }
+            });
         });
-
         // 1. 初始化篩選按鈕 (從 pharma_config.js 讀取)
         function initFilters() {
             const container = document.getElementById('filter-container');
