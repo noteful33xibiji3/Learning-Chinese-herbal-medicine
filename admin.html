@@ -392,14 +392,37 @@
                             indications: row["備註(HTML)"]||"", isTrash: row["狀態"] === "垃圾桶",
                             image: "" 
                         };
-                        const idx = newList.findIndex(h => h.id == newItem.id);
+                        cconst idx = newList.findIndex(h => 
+                            (row["ID"] && h.id == row["ID"]) || // 情況 1: Excel 有填 ID 且吻合
+                            (!row["ID"] && h.chinese_name === newItem.chinese_name) // 情況 2: Excel 沒 ID 但中文名吻合
+                        );
+
                         if (idx !== -1) {
+                            // 找到舊資料 -> 更新模式
                             const old = newList[idx];
+                            
+                            // 1. 強制沿用舊 ID (這樣就不會變成新產生的亂數 ID)
+                            newItem.id = old.id; 
+
+                            // 2. 保留舊圖片
                             newItem.image = old.image; 
-                            if (old.chemistry) newItem.chemistry = newItem.chemistry.map(newC => { const oldC = old.chemistry.find(oc => oc.name_en === newC.name_en); if (oldC && oldC.image) newC.image = oldC.image; return newC; });
-                            newList[idx] = { ...old, ...newItem }; updateCount++;
-                        } else { newList.push(newItem); addCount++; }
-                    });
+                            
+                            // 3. 保留成分圖片邏輯 (維持不變)
+                            if (old.chemistry) {
+                                newItem.chemistry = newItem.chemistry.map(newC => {
+                                    const oldC = old.chemistry.find(oc => oc.name_en === newC.name_en);
+                                    if (oldC && oldC.image) newC.image = oldC.image;
+                                    return newC;
+                                });
+                            }
+                            
+                            newList[idx] = { ...old, ...newItem }; 
+                            updateCount++;
+                        } else { 
+                            // 沒找到 -> 新增模式
+                            newList.push(newItem); 
+                            addCount++; 
+                        }
                     await saveJSON('data/herbs.json', newList, sha, `Import Excel`);
                     const res = await fetchJSON('data/herbs.json'); allHerbs = res.data; sha = res.sha;
                     updateDisplayCount(); renderTable(); alert(`匯入完成！+${addCount}, ~${updateCount}`);
@@ -482,6 +505,19 @@
 
         async function saveAndUpload() {
             const name=document.getElementById('chinese_name').value.trim(); if(!name)return alert("請輸入中藥名");
+            // --- ⬇️ 新增這段檢查邏輯 ⬇️ ---
+    // 檢查是否已有相同名稱的藥材 (且不是正在編輯的那一個)
+    const idVal = document.getElementById('edit-id').value;
+    const sameNameItem = allHerbs.find(h => h.chinese_name === name && h.id != idVal);
+    
+    if (sameNameItem) {
+        if(!confirm(`⚠️ 警告：資料庫中已經有「${name}」(ID: ${sameNameItem.id}) 了！\n\n按「確定」將會覆蓋更新舊資料。\n按「取消」則建立一筆新的重複資料。`)) {
+            // 如果按取消，繼續執行原本的新增邏輯 (會有兩筆)
+        } else {
+            // 如果按確定，偷天換日，把目標 ID 改成舊的那筆，變成更新模式
+            document.getElementById('edit-id').value = sameNameItem.id;
+        }
+    }
             const btn=document.querySelector('#edit-modal .btn-primary'); btn.innerText="⏳ 處理中..."; btn.disabled=true;
             try {
                 let fImg=document.getElementById('old-image-path').value; if(newImageBase64) fImg=await uploadBase64(newImageBase64,'herbs');
