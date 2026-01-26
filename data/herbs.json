@@ -547,5 +547,28 @@
     "indications": "<ul>\n<li class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">龍門乃在長安北，今處處有。葉如茳芒，子形似<span style=\"background: yellow; mso-highlight: yellow;\">馬蹄</span></span></li>\n<li><span style=\"font-size: 9.0pt; font-family: 芫荽; background: yellow; mso-highlight: yellow; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">有瀉下功用</span></li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 21,
+    "grade": "大二上",
+    "chinese_name": "車前草",
+    "origin": [
+      {
+        "lat": "Plantago asiatica",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Plantaginis Herba",
+    "part": "",
+    "family_ch": "車前科",
+    "family_en": "Plantaginaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>\n<p class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">有瀉下功用</span></p>\n<span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">「牛溲」馬勃，指的就是車前草</span></li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
