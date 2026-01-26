@@ -21,10 +21,11 @@
       }
     ],
     "latin_name": "Ephedrae Herba",
+    "part": "",
     "family_ch": "麻黃科",
     "family_en": "Ephedraceae",
-    "chem_main": "生物鹼",
-    "chem_sub": "",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "生物鹼胺 (Alkaloidal amine)",
     "chemistry": [
       {
         "name_en": "Ephedrine",
@@ -43,7 +44,8 @@
       "利水消腫"
     ],
     "indications": "用於風寒感冒，胸悶喘咳，風水浮腫。",
-    "image": ""
+    "image": "",
+    "isTrash": false
   },
   {
     "id": 2,
