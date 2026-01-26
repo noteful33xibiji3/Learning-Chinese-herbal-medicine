@@ -357,9 +357,16 @@
             XLSX.writeFile(wb, `中藥資料庫_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
+        // === 匯入 Excel (中藥後台專用版) ===
         async function importFromExcel(input) {
-            const file = input.files[0]; if (!file) return;
-            if (!confirm("⚠️ 警告：匯入將覆蓋相同 ID 資料！確定嗎？")) { input.value=""; return; }
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!confirm("⚠️ 警告：匯入將覆蓋資料！確定要繼續嗎？")) {
+                input.value = "";
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
@@ -367,47 +374,80 @@
                     const wb = XLSX.read(data, {type: 'array'});
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const json = XLSX.utils.sheet_to_json(ws);
+
                     if (json.length === 0) return alert("檔案是空的");
-                    let updateCount = 0, addCount = 0; let newList = [...allHerbs];
+
+                    let updateCount = 0, addCount = 0;
+                    let newList = [...allHerbs];
+
                     json.forEach(row => {
+                        // 1. 解析基原
                         const originRaw = row["基原(列表)"] || row["基原"];
                         let originArr = [];
-                        if (originRaw) originArr = originRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => { const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/); return m ? { lat: m[1].trim(), ch: m[2]?m[2].trim():"" } : s; });
-                        
+                        if (originRaw) {
+                            originArr = originRaw.split(/[\n;]/).map(s => s.trim()).filter(s => s).map(s => {
+                                const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/);
+                                return m ? { lat: m[1].trim(), ch: m[2] ? m[2].trim() : "" } : s;
+                            });
+                        }
+
+                        // 2. 解析成分
                         const chemRaw = row["成分(列表)"] || row["成分"];
                         let chemArr = [];
-                        if (chemRaw) chemArr = chemRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => { const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/); return m ? { name_en: m[1].trim(), name_ch: m[2]?m[2].trim():"", image:"" } : { name_en: s }; });
+                        if (chemRaw) {
+                            chemArr = chemRaw.split(/[\n;]/).map(s => s.trim()).filter(s => s).map(s => {
+                                const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/);
+                                return m ? { name_en: m[1].trim(), name_ch: m[2] ? m[2].trim() : "", image: "" } : { name_en: s };
+                            });
+                        }
 
+                        // 3. 解析易混淆
                         const confRaw = row["易混淆(列表)"] || row["易混淆"];
                         let confArr = [];
-                        if (confRaw) confArr = confRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => { const m = s.match(/^(.*?)(?:\s*\((.*?)\))?(?:\s*\[(.*?)\])?$/); return m ? { name_ch: m[1].trim(), name_en: m[2]?m[2].trim():"", note: m[3]?m[3].trim():"" } : { name_ch: s }; });
+                        if (confRaw) {
+                            confArr = confRaw.split(/[\n;]/).map(s => s.trim()).filter(s => s).map(s => {
+                                const m = s.match(/^(.*?)(?:\s*\((.*?)\))?(?:\s*\[(.*?)\])?$/);
+                                return m ? { name_ch: m[1].trim(), name_en: m[2] ? m[2].trim() : "", note: m[3] ? m[3].trim() : "" } : { name_ch: s };
+                            });
+                        }
 
+                        // 4. 建立新物件 (注意這裡的逗號和括號)
                         const newItem = {
-                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random()*1000)),
-                            grade: row["年級"]||"大一", chinese_name: row["中文名"]||"", latin_name: row["生藥名"]||"",
-                            origin: originArr, family_ch: row["科名(中)"]||"", family_en: row["科名(英)"]||"",
-                            part: row["部位"]||"", chem_main: row["大分類"]||"", chem_sub: row["子分類"]||"",
-                            chemistry: chemArr, confusing_drugs: confArr,
-                            effects: (row["功效"]||"").split(/[,，]/).map(s=>s.trim()).filter(s=>s),
-                            indications: row["備註(HTML)"]||"", isTrash: row["狀態"] === "垃圾桶",
-                            image: "" 
-                        };
-                        cconst idx = newList.findIndex(h => 
-                            (row["ID"] && h.id == row["ID"]) || // 情況 1: Excel 有填 ID 且吻合
-                            (!row["ID"] && h.chinese_name === newItem.chinese_name) // 情況 2: Excel 沒 ID 但中文名吻合
+                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random() * 1000)),
+                            grade: row["年級"] || "大一",
+                            chinese_name: row["中文名"] || "",
+                            latin_name: row["生藥名"] || "",
+                            origin: originArr,
+                            family_ch: row["科名(中)"] || "",
+                            family_en: row["科名(英)"] || "",
+                            part: row["部位"] || "",
+                            chem_main: row["大分類"] || "",
+                            chem_sub: row["子分類"] || "",
+                            chemistry: chemArr,
+                            confusing_drugs: confArr,
+                            effects: (row["功效"] || "").split(/[,，]/).map(s => s.trim()).filter(s => s),
+                            indications: row["備註(HTML)"] || "",
+                            isTrash: row["狀態"] === "垃圾桶",
+                            image: ""
+                        }; // <--- 這裡一定要有分號，之前的錯誤可能就是因為這裡有問題
+
+                        // 5. ★★★ 判斷重複邏輯 (ID 或 中文名) ★★★
+                        const idx = newList.findIndex(h => 
+                            (row["ID"] && h.id == row["ID"]) || // 如果 Excel 有 ID，優先比對 ID
+                            (!row["ID"] && h.chinese_name === newItem.chinese_name) // 如果 Excel 沒 ID，比對中文名
                         );
 
                         if (idx !== -1) {
-                            // 找到舊資料 -> 更新模式
+                            // 更新舊資料
                             const old = newList[idx];
                             
-                            // 1. 強制沿用舊 ID (這樣就不會變成新產生的亂數 ID)
-                            newItem.id = old.id; 
-
-                            // 2. 保留舊圖片
-                            newItem.image = old.image; 
+                            // 強制沿用舊 ID
+                            newItem.id = old.id;
                             
-                            // 3. 保留成分圖片邏輯 (維持不變)
+                            // 保留舊圖片
+                            newItem.image = old.image;
+                            
+                            // 保留成分圖片
                             if (old.chemistry) {
                                 newItem.chemistry = newItem.chemistry.map(newC => {
                                     const oldC = old.chemistry.find(oc => oc.name_en === newC.name_en);
@@ -416,17 +456,30 @@
                                 });
                             }
                             
-                            newList[idx] = { ...old, ...newItem }; 
+                            newList[idx] = { ...old, ...newItem };
                             updateCount++;
-                        } else { 
-                            // 沒找到 -> 新增模式
-                            newList.push(newItem); 
-                            addCount++; 
+                        } else {
+                            // 新增資料
+                            newList.push(newItem);
+                            addCount++;
                         }
+                    });
+
+                    // 6. 儲存與更新
                     await saveJSON('data/herbs.json', newList, sha, `Import Excel`);
-                    const res = await fetchJSON('data/herbs.json'); allHerbs = res.data; sha = res.sha;
-                    updateDisplayCount(); renderTable(); alert(`匯入完成！+${addCount}, ~${updateCount}`);
-                } catch(e) { console.error(e); alert("匯入失敗: " + e.message); } finally { input.value = ""; }
+                    const res = await fetchJSON('data/herbs.json');
+                    allHerbs = res.data;
+                    sha = res.sha;
+                    updateDisplayCount();
+                    renderTable();
+                    alert(`匯入完成！\n新增：${addCount} 筆\n更新：${updateCount} 筆`);
+
+                } catch (e) {
+                    console.error(e);
+                    alert("匯入失敗: " + e.message);
+                } finally {
+                    input.value = "";
+                }
             };
             reader.readAsArrayBuffer(file);
         }
