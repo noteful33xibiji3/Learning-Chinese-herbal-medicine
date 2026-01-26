@@ -3,46 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生藥學分類 | 本草學園</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>生藥學數位藥典 | 本草學園</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        /* === 全局變數 === */
+        :root {
+            --primary: #4A7C59;
+            --primary-dark: #2C5E4F;
+            --accent: #E8F5E9;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-color: #f4f7f6;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        /* === 導覽列 === */
+        nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-links a { text-decoration: none; color: var(--text-light); margin-left: 20px; font-weight: 500; transition: 0.2s; }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* === 搜尋與篩選區 === */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 3rem 1rem;
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        .hero-title { font-size: 2rem; margin-bottom: 1rem; font-weight: 300; }
+        
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-box {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            outline: none;
+        }
+        
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .filter-tag {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.9rem;
+        }
+        .filter-tag:hover, .filter-tag.active {
+            background: white;
+            color: var(--primary-dark);
+            font-weight: bold;
+        }
+
+        /* === 卡片網格區 === */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* === 藥學卡片設計 === */
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover);
+            border-color: var(--primary);
+        }
+        /* 左側裝飾條 (依分類變色，目前統一綠色) */
+        .card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: var(--primary);
+        }
+
+        .card-body { padding: 20px; flex: 1; }
+        
+        .card-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .card-subtitle {
+            font-size: 0.95rem;
+            color: #888;
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            color: var(--text-light);
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 4px;
+        }
+        .info-label { font-weight: 500; color: #555; }
+
+        .card-footer {
+            padding: 15px 20px;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* === 詳情 Modal === */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 100%; max-width: 900px;
+            max-height: 90vh;
+            border-radius: 20px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px 30px;
+            position: sticky; top: 0; z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title-group h2 { margin: 0; font-size: 1.8rem; }
+        .modal-title-group span { font-family: 'Roboto Mono', monospace; opacity: 0.9; }
+        .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; }
+
+        .modal-body { padding: 30px; }
+
+        /* 詳情區塊樣式 */
+        .detail-section { margin-bottom: 30px; }
+        .section-title {
+            font-size: 1.2rem; font-weight: bold; color: var(--primary-dark);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* 標籤雲 */
+        .tag-cloud { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tag { background: var(--accent); color: var(--primary-dark); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; }
+
+        /* 成分圖片網格 */
+        .chem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .chem-item { text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 10px; transition: 0.2s; }
+        .chem-item:hover { border-color: var(--primary); transform: scale(1.02); }
+        .chem-item img { max-width: 100%; max-height: 100px; object-fit: contain; margin-bottom: 5px; }
+        .chem-name { font-size: 0.9rem; font-weight: bold; color: #444; }
+
+        /* 比較表格 */
+        .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .compare-table th, .compare-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        .compare-table th { background: var(--accent); color: var(--primary-dark); width: 30%; }
+
+        /* Rich Text Note */
+        .rich-content table { width: 100%; border-collapse: collapse; }
+        .rich-content th, .rich-content td { border: 1px solid #ddd; padding: 8px; }
+        .rich-content img { max-width: 100%; height: auto; }
+
+        /* 手機 RWD */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 1.5rem; }
+            .modal-content { max-height: 95vh; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
+
     <nav>
-        <div class="logo">🌿 本草學園</div>
-        <ul class="menu">
-            <li><a href="index.html">中藥查詢</a></li>
-            <li><a href="pharmacognosy.html" class="active">生藥分類</a></li>
-            <li><a href="quiz.html">自我測驗</a></li>
-            <li><a href="mistakes.html">錯題複習</a></li>
-        </ul>
+        <a href="index.html" class="logo">🌿 本草學園</a>
+        <div class="nav-links">
+            <a href="index.html">中藥庫</a>
+            <a href="pharmacognosy.html" style="color:var(--primary);">生藥庫</a>
+            <a href="admin_menu.html">後台管理</a>
+        </div>
     </nav>
 
-    <main>
-        <div class="pharma-layout">
-            <aside class="category-sidebar">
-                <h3>🧪 生藥分類</h3>
-                <div id="category-buttons" class="category-buttons">
-                    </div>
-            </aside>
+    <div class="hero-section">
+        <h1 class="hero-title">生藥學數位藥典</h1>
+        <div class="search-container">
+            <input type="text" id="search-input" class="search-box" placeholder="🔍 搜尋生藥名稱、學名、關鍵成分..." oninput="filterData()">
+        </div>
+        <div id="filter-container" class="filter-tags">
+            <div class="filter-tag active" onclick="setFilter('all', this)">全部</div>
+        </div>
+    </div>
 
-            <section class="content-area">
-                <div class="breadcrumb" id="breadcrumb">請選擇左側分類</div>
+    <div class="container">
+        <div id="loading" style="text-align:center; padding:50px; color:#888;">
+            <h2>⏳ 正在載入生藥資料庫...</h2>
+        </div>
+        
+        <div id="pharma-grid" class="grid"></div>
+    </div>
+
+    <div id="detail-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modal-title">麻黃</h2>
+                    <span id="modal-subtitle">Ephedra</span>
+                </div>
+                <button class="close-btn" onclick="closeModalDirect()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="tag-cloud" id="modal-tags"></div>
                 
-                <div id="subcategory-container" class="subcategory-chips"></div>
-
-                <div id="intro-card" class="intro-card" style="display:none;">
-                    <h2 id="intro-title">分類名稱</h2>
-                    <p id="intro-text">分類簡介...</p>
+                <div class="detail-section">
+                    <div class="section-title">📌 基本資訊</div>
+                    <table class="compare-table">
+                        <tr><th>基原 (Origin)</th><td id="modal-origin"></td></tr>
+                        <tr><th>科別 (Family)</th><td id="modal-family"></td></tr>
+                        <tr><th>使用部位 (Part)</th><td id="modal-part"></td></tr>
+                    </table>
                 </div>
 
-                <h3 id="herb-list-title" style="display:none; margin-top:30px;">相關中藥</h3>
-                <div id="herb-grid" class="herb-grid">
-                    </div>
-            </section>
-        </div>
-    </main>
+                <div class="detail-section">
+                    <div class="section-title">⚗️ 化學成分 (Components)</div>
+                    <div id="modal-chem-grid" class="chem-grid"></div>
+                </div>
 
-    <script src="app.js"></script>
+                <div class="detail-section">
+                    <div class="section-title">💡 特性與功效</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div>
+                            <strong>性狀/特性：</strong>
+                            <p id="modal-char" style="color:#555;"></p>
+                        </div>
+                        <div>
+                            <strong>功效：</strong>
+                            <p id="modal-efficacy" style="color:#555;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section" style="background:#fff3e0; padding:15px; border-radius:10px;">
+                    <strong>💊 治療/適應症：</strong> <span id="modal-treat"></span><br><br>
+                    <strong>🧠 記法/口訣：</strong> <span id="modal-mnemonic" style="color:#d32f2f; font-weight:bold;"></span>
+                </div>
+
+                <div class="detail-section" id="compare-section">
+                    <div class="section-title">⚖️ 易混淆比較</div>
+                    <table class="compare-table">
+                        <thead><tr><th>比較對象</th><th>差異點</th></tr></thead>
+                        <tbody id="modal-compare-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">📝 詳細筆記</div>
+                    <div id="modal-note" class="rich-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="pharma_config.js"></script>
+
+    <script>
+        let allData = [];
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFilters();
+            loadData();
+        });
+
+        // 1. 初始化篩選按鈕 (從 pharma_config.js 讀取)
+        function initFilters() {
+            const container = document.getElementById('filter-container');
+            // 如果有 PHARMA_CATEGORIES 變數 (來自 pharma_config.js)
+            if (typeof PHARMA_CATEGORIES !== 'undefined') {
+                PHARMA_CATEGORIES.forEach(cat => {
+                    const tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+                    tag.innerText = cat.name_ch; // 只顯示大分類
+                    tag.onclick = () => setFilter(cat.name_ch, tag);
+                    container.appendChild(tag);
+                });
+            }
+        }
+
+        // 2. 載入資料
+        async function loadData() {
+            try {
+                // 直接讀取相對路徑的 JSON
+                const res = await fetch('data/pharma.json');
+                if (!res.ok) throw new Error("尚未建立資料庫");
+                
+                // GitHub API 傳回來的是 base64，如果是直接 fetch raw/file 則是 json
+                // 這裡假設是直接 fetch 檔案，如果是 GitHub API 格式需解碼
+                const json = await res.json();
+                
+                // 判斷是否為 GitHub API 回傳格式 (含 content 欄位)
+                if (json.content && json.encoding === 'base64') {
+                    allData = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
+                } else {
+                    allData = json; // 這是直接存取的格式
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                renderGrid(allData);
+
+            } catch (e) {
+                document.getElementById('loading').innerHTML = `
+                    <h3>尚無資料</h3>
+                    <p>請先至後台新增生藥資料</p>
+                    <a href="admin_menu.html" style="color:var(--primary);">前往後台 ></a>
+                `;
+                console.error(e);
+            }
+        }
+
+        // 3. 渲染卡片網格
+        function renderGrid(data) {
+            const grid = document.getElementById('pharma-grid');
+            grid.innerHTML = "";
+
+            if (data.length === 0) {
+                grid.innerHTML = "<p style='text-align:center; width:100%; grid-column:1/-1;'>找不到相關藥材</p>";
+                return;
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openDetail(item);
+                
+                // 處理可能的空值
+                const family = item.family_ch || item.family_en || "未分類";
+                const part = item.part_ch || "-";
+
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div class="card-category">${item.category_main} / ${item.category_sub || ""}</div>
+                        <h3 class="card-title">${item.name_ch}</h3>
+                        <div class="card-subtitle">${item.name_en}</div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">科別</span>
+                            <span>${family}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">部位</span>
+                            <span>${part}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">成分</span>
+                            <span>${item.components ? item.components.length : 0} 種</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        查看詳情 ➔
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 4. 篩選邏輯
+        function filterData() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            
+            const filtered = allData.filter(item => {
+                // 搜尋文字匹配 (中文、英文、學名、成分名)
+                const matchText = (item.name_ch || "").includes(term) || 
+                                  (item.name_en || "").toLowerCase().includes(term) ||
+                                  (item.origin || "").toLowerCase().includes(term) ||
+                                  (item.components || []).some(c => c.name.toLowerCase().includes(term));
+                
+                // 分類匹配
+                const matchCat = currentFilter === 'all' ? true : item.category_main === currentFilter;
+
+                return matchText && matchCat;
+            });
+
+            renderGrid(filtered);
+        }
+
+        function setFilter(category, element) {
+            currentFilter = category;
+            
+            // 更新按鈕樣式
+            document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            filterData();
+        }
+
+        // 5. Modal 詳情邏輯
+        function openDetail(item) {
+            const modal = document.getElementById('detail-modal');
+            
+            // 填入標題
+            document.getElementById('modal-title').innerText = item.name_ch;
+            document.getElementById('modal-subtitle').innerText = item.name_en;
+
+            // 填入基本表
+            document.getElementById('modal-origin').innerText = item.origin || "-";
+            document.getElementById('modal-family').innerText = `${item.family_ch || ""} (${item.family_en || ""})`;
+            document.getElementById('modal-part').innerText = `${item.part_ch || ""} (${item.part_en || ""})`;
+
+            // 填入標籤雲 (別名 + 分類)
+            const tagContainer = document.getElementById('modal-tags');
+            tagContainer.innerHTML = "";
+            [item.category_main, ...(item.aliases || [])].forEach(tagText => {
+                if(tagText) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.innerText = tagText;
+                    tagContainer.appendChild(tag);
+                }
+            });
+
+            // 填入成分網格
+            const chemGrid = document.getElementById('modal-chem-grid');
+            chemGrid.innerHTML = "";
+            if (item.components && item.components.length > 0) {
+                item.components.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'chem-item';
+                    // 如果有圖顯示圖，沒圖顯示 placeholder
+                    const imgSrc = c.image || 'https://via.placeholder.com/150x100?text=No+Structure';
+                    div.innerHTML = `
+                        <img src="${imgSrc}" alt="${c.name}" onclick="window.open('${imgSrc}')" style="cursor:zoom-in">
+                        <div class="chem-name">${c.name}</div>
+                    `;
+                    chemGrid.appendChild(div);
+                });
+            } else {
+                chemGrid.innerHTML = "<span style='color:#999'>無成分資料</span>";
+            }
+
+            // 填入文字區塊
+            document.getElementById('modal-char').innerText = item.characteristics || "暫無";
+            document.getElementById('modal-efficacy').innerText = item.efficacy || "暫無";
+            document.getElementById('modal-treat').innerText = item.treatment || "-";
+            document.getElementById('modal-mnemonic').innerText = item.mnemonic || "-";
+
+            // 填入比較表
+            const compBody = document.getElementById('modal-compare-body');
+            compBody.innerHTML = "";
+            if (item.comparisons && item.comparisons.length > 0) {
+                item.comparisons.forEach(cmp => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${cmp.target}</td><td>${cmp.diff}</td>`;
+                    compBody.appendChild(tr);
+                });
+                document.getElementById('compare-section').style.display = 'block';
+            } else {
+                document.getElementById('compare-section').style.display = 'none';
+            }
+
+            // 填入 Rich Note (HTML)
+            document.getElementById('modal-note').innerHTML = item.note || "<p style='color:#ccc'>無詳細筆記</p>";
+
+            // 顯示 Modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // 禁止背景滾動
+        }
+
+        function closeModalDirect() {
+            document.getElementById('detail-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'detail-modal') {
+                closeModalDirect();
+            }
+        }
+    </script>
 </body>
 </html>
