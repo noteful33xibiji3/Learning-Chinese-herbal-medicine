@@ -88,7 +88,7 @@
         let fileSha = "";
         const FILE_PATH = "data/categories.json";
         let isDirty = false; // 檢查是否有未儲存的變更
-
+document.addEventListener('DOMContentLoaded', async () => {
         // 1. 初始化 TinyMCE (全功能版)
             tinymce.init({
                 selector: '#rich-editor',
@@ -115,7 +115,7 @@
                     editor.on('change', function () { isDirty = true; });
                 }
             });
-
+}
             // 2. 登入檢查
             const configStr = localStorage.getItem('tcm_admin_config');
             if (!configStr) {
