@@ -13,8 +13,8 @@
         --text-dark: #333;
         --text-light: #666;
         --bg-color: #f4f7f6;
-        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --card-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        --card-hover: 0 12px 20px rgba(0,0,0,0.12);
     }
 
     * { box-sizing: border-box; }
@@ -30,7 +30,7 @@
         line-height: 1.6;
     }
 
-    /* === 2. 導覽列 (加入滑動底線特效) === */
+    /* === 2. 導覽列 (加入滑動底線) === */
     nav {
         background: white;
         padding: 1rem 2rem;
@@ -48,13 +48,13 @@
         margin-left: 20px; 
         font-weight: 500; 
         transition: 0.3s; 
-        position: relative; /* 關鍵：為了讓底線定位 */
+        position: relative; /* 為了定位底線 */
         padding-bottom: 5px;
     }
     
     .nav-links a:hover { color: var(--primary); }
 
-    /* ★ 這裡就是「滑動底線」的魔法程式碼 ★ */
+    /* 滑動底線特效 */
     .nav-links a::after {
         content: '';
         position: absolute;
@@ -63,20 +63,17 @@
         bottom: 0;
         left: 0;
         background-color: var(--primary);
-        transition: width 0.3s ease-in-out; /* 寬度變化的動畫 */
+        transition: width 0.3s ease-in-out;
     }
+    .nav-links a:hover::after { width: 100%; }
 
-    .nav-links a:hover::after {
-        width: 100%; /* 滑鼠移上去時，線條變寬 */
-    }
-
-    /* === 3. 搜尋區 === */
+    /* === 3. 搜尋區 (修正文字顏色看不見的問題) === */
     .hero-section {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         padding: 3rem 1rem 4rem 1rem;
         text-align: center;
         color: white;
-        margin-bottom: -30px;
+        margin-bottom: -30px; /* 讓內容區往上蓋 */
         border-radius: 0 0 30px 30px;
     }
     .hero-title { font-size: 2rem; margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 1px; }
@@ -91,7 +88,15 @@
         font-size: 1rem; color: #555; font-weight: bold; cursor: pointer;
         border-right: 1px solid #eee; outline: none; border-radius: 50px 0 0 50px;
     }
-    .search-box { flex: 1; border: none; padding: 15px; font-size: 1.1rem; outline: none; background: transparent; }
+    
+    /* ★ 關鍵修正：強制輸入框文字為深灰色 ★ */
+    .search-box { 
+        flex: 1; border: none; padding: 15px; font-size: 1.1rem; 
+        outline: none; background: transparent; 
+        color: #333 !important; 
+    }
+    .search-box::placeholder { color: #aaa; }
+
     .search-btn {
         background: var(--primary); color: white; border: none;
         padding: 10px 30px; border-radius: 50px; cursor: pointer;
@@ -111,29 +116,31 @@
     }
     .suggestion-item:hover { background-color: var(--accent); }
 
-    /* === 4. 卡片網格區 (電腦版設定) === */
+    /* === 4. 卡片網格區 (電腦版強制多欄) === */
     .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; position: relative; z-index: 10; }
     
-    /* ★ 電腦版：保證並排 (最少 280px 一張，螢幕夠寬就會排 3~4 張) ★ */
+    /* ★ 電腦版預設：強制 4 欄並排 (解決單欄過大問題) ★ */
     .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(4, 1fr); 
         gap: 25px;
         margin-top: 20px;
     }
 
-    /* === 5. 藥材卡片 (維持原本直式樣式) === */
+    /* === 5. 藥材卡片 (左側綠線風格) === */
     .card {
         background: white; border-radius: 16px; overflow: hidden;
         box-shadow: var(--card-shadow); transition: all 0.3s ease;
         position: relative; cursor: pointer; border: 1px solid #eee;
         display: flex; flex-direction: column;
         
-        /* 記憶體優化：只渲染看得到的 */
+        /* 記憶體優化 */
         content-visibility: auto; 
         contain-intrinsic-size: 0 350px; 
     }
     .card:hover { transform: translateY(-5px); box-shadow: var(--card-hover); border-color: var(--primary); }
+    
+    /* 左側綠色裝飾條 */
     .card::before {
         content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--primary);
     }
@@ -172,7 +179,7 @@
     @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
     .modal-header { background: var(--primary); color: white; padding: 20px 30px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 30px; }
+    .modal-body { padding: 30px; color: #333 !important; }
     .section-title { font-size: 1.2rem; font-weight: bold; color: var(--primary-dark); border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px; }
 
     .confusing-box { background: #fff3e0; padding: 15px; border-radius: 10px; border-left: 5px solid #ff9800; }
@@ -188,7 +195,14 @@
     #modal-indications table { width: 100%; border-collapse: collapse; margin: 10px 0; }
     #modal-indications th, #modal-indications td { border: 1px solid #ddd; padding: 8px; }
 
-    /* === 7. 手機版 RWD 優化 === */
+    /* === 7. 響應式斷點 (RWD) - 決定每一行顯示幾張 === */
+    
+    /* 平板 (小於 1024px)：變 3 欄 */
+    @media (max-width: 1024px) {
+        .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* 手機 (小於 768px)：變 2 欄 (您滿意的雙欄模式) */
     @media (max-width: 768px) {
         nav { padding: 10px 15px; flex-wrap: wrap; }
         .nav-links { width: 100%; display: flex; justify-content: space-around; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
@@ -201,19 +215,19 @@
 
         .container { padding: 10px; }
         
-        /* ★ 手機版：並排雙欄 (看起來不會「一個一個」) ★ */
+        /* 手機版：並排雙欄 */
         .grid {
-            grid-template-columns: repeat(2, 1fr); /* 強制兩欄 */
-            gap: 10px; /* 間距縮小 */
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px;
         }
 
-        /* 手機版卡片微調 (適應雙欄) */
+        /* 手機版卡片縮小一點 */
         .card-img-top { height: 120px; }
         .card-body { padding: 10px; }
         .card-title { font-size: 1.1rem; margin-bottom: 2px; }
         .card-subtitle { font-size: 0.8rem; margin-bottom: 8px; }
         .info-row { font-size: 0.75rem; }
-        .card-footer { display: none; } /* 手機版不顯示底部按鈕，讓畫面更清爽 */
+        .card-footer { display: none; } /* 手機版隱藏按鈕，畫面更清爽 */
         
         .modal-content { max-height: 85vh; width: 95%; }
         .chem-modal-box { width: 90%; }
