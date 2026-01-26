@@ -276,12 +276,21 @@
             "油脂 (Lipids/Oil)": ["飽和固定油 (Saturated Fixed Oil)","單不飽和固定油 (Monounsaturated Fixed Oil)","多不飽和固定油 (Polyunsaturated Fixed Oil)","脂肪及其相關化合物 (Fats and Related Compounds)","蠟質 (Waxes)"]
         };
 
-        document.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化編輯器 (加入手機版修正)
             tinymce.init({
-                selector: '#indications', height: 300,
+                selector: '#indications', 
+                height: 300,
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
                 toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter | bullist numlist table link | code',
-                branding: false, menubar: false
+                branding: false, 
+                menubar: false,
+                
+                // ★★★ 關鍵修正：強制手機也使用電腦版介面 (固定工具列) ★★★
+                mobile: {
+                    theme: 'silver', 
+                    toolbar_mode: 'wrap'
+                }
             });
             initCategories();
             const savedConfig = localStorage.getItem('tcm_admin_config');
@@ -547,7 +556,7 @@
             }
             document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select').forEach(i=>i.oninput=()=>{hasUnsavedChanges=true;});
         }
-        function closeEditModal() { if(hasUnsavedChanges&&!confirm("⚠️ 捨棄變更？"))return; document.getElementById('edit-modal').style.display='none'; hasUnsavedChanges=false; }
+        function closeEditModal() { if(hasUnsavedChanges&&!confirm("⚠️ 捨棄變更？"))return; document.getElementById('edit-modal').style.display='none'; hasUnsavedChanges=false;tinymce.get('indications').fire('blur');}
         
         function addOriginRow(d) { const w=document.getElementById('origin-rows-wrapper'); const v=document.createElement('div'); v.className='dynamic-row origin-row'; v.innerHTML=`<input type="text" class="origin-lat" value="${d?.lat||(typeof d==='string'?d:'')}" placeholder="學名"><input type="text" class="origin-ch" value="${d?.ch||''}" placeholder="中文"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`; w.appendChild(v); }
         function addConfusingRow(d) { const w=document.getElementById('confusing-rows-wrapper'); const v=document.createElement('div'); v.className='dynamic-row confusing-row'; v.innerHTML=`<div style="flex:1"><div style="display:flex;gap:5px"><input class="conf-ch" value="${d?.name_ch||''}" placeholder="中文"><input class="conf-en" value="${d?.name_en||''}" placeholder="學名"></div><input class="conf-note" value="${d?.note||''}" placeholder="備註"></div><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`; w.appendChild(v); }
