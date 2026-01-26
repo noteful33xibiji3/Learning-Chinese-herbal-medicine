@@ -3,109 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分類介紹管理 | 本草學園</title>
+    <title>分類介紹編輯 | 本草學園後台</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
-        body { background: #f4f7f6; font-family: 'Noto Sans TC', sans-serif; margin: 0; }
-        .container { max-width: 900px; margin: 30px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; background: #4A7C59; }
-        .btn:hover { background: #2C5E4F; }
-        .btn-back { background: #666; margin-right: 10px; }
-        label { display: block; margin: 15px 0 5px; font-weight: bold; color: #333; }
-        select { width: 100%; padding: 10px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #ccc; }
-        .editor-container { margin-top: 10px; }
+        body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding-top: 70px; }
+        
+        /* === 1. 頂部導覽列 (與其他後台統一) === */
+        nav { 
+            background: white; padding: 15px 30px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            display:flex; justify-content:space-between; align-items:center; 
+            position:fixed; top:0; width:100%; box-sizing:border-box; z-index:100; 
+        }
+        .nav-title { font-size:1.2rem; font-weight:bold; color:#2C5E4F; display:flex; align-items:center; gap:10px; }
+        .back-btn { 
+            text-decoration:none; background:#eee; color:#555; 
+            padding:5px 12px; border-radius:20px; font-size:0.9rem; transition:0.2s; 
+        }
+        .back-btn:hover { background:#ddd; color:#000; }
+        .btn-frontend {
+            text-decoration:none; background:#e0f2f1; color:#2C5E4F; 
+            padding:8px 15px; border-radius:20px; font-weight:bold; 
+            font-size:0.9rem; margin-right:10px; border:1px solid #2C5E4F;
+        }
+
+        /* === 2. 編輯區塊 === */
+        .container { max-width: 1000px; margin: 30px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        label { display: block; margin: 20px 0 8px; font-weight: bold; color: #2C5E4F; font-size: 1.1rem; }
+        
+        /* 下拉選單美化 */
+        select { 
+            width: 100%; padding: 12px; font-size: 1rem; border-radius: 8px; 
+            border: 2px solid #ddd; background-color: #fff; cursor: pointer;
+        }
+        select:focus { border-color: #4A7C59; outline: none; }
+
+        /* 按鈕樣式 */
+        .btn-save { 
+            padding: 15px; width: 100%; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; color: white; 
+            background: linear-gradient(135deg, #4A7C59, #2C5E4F); 
+            font-size: 1.2rem; margin-top: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .btn-save:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        /* 提示框 */
+        .tip-box { background: #fff3e0; padding: 15px; border-left: 5px solid #ff9800; border-radius: 5px; color: #5d4037; margin-bottom: 15px; line-height: 1.6; }
     </style>
 </head>
 <body>
+
+    <nav>
+        <div class="nav-title">
+            <a href="admin_menu.html" class="back-btn">⬅ 回選單</a>
+            <span>📚 分類介紹編輯器</span>
+        </div>
+        <div>
+            <a href="pharmacognosy.html" class="btn-frontend" target="_blank">🏠 去前台預覽</a>
+        </div>
+    </nav>
+
     <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>📖 生藥分類介紹編輯器</h2>
-            <button class="btn btn-back" onclick="location.href='admin_menu.html'">回選單</button>
+        <div style="background:#f9f9f9; padding:20px; border-radius:10px; border:1px solid #eee;">
+            <label style="margin-top:0;">📂 請選擇要編輯的分類 (大分類或中分類)</label>
+            <select id="cat-select" onchange="loadCategoryData()">
+                <option value="">-- 請選擇 --</option>
+            </select>
         </div>
 
-        <label>選擇分類 (Category)</label>
-        <select id="cat-select" onchange="loadCategoryData()">
-            <option value="">-- 請選擇分類 --</option>
-        </select>
-
-        <div id="editor-area" style="display:none; margin-top:20px;">
-            <label>📝 詳細介紹 (含簡介、功用、合成、檢驗、比較表)</label>
-            <div style="background:#fff3e0; padding:10px; font-size:0.9rem; color:#666; margin-bottom:10px; border-radius:5px;">
-                💡 提示：使用上方工具列的 <strong>表格圖示</strong> 來新增比較表。可以自由輸入標題 (如：一、簡介)。
+        <div id="editor-area" style="display:none;">
+            <label>📝 編輯內容</label>
+            <div class="tip-box">
+                💡 <strong>編輯技巧：</strong><br>
+                1. 這是 <strong><span id="current-edit-target"></span></strong> 的專屬介紹頁面。<br>
+                2. 可以插入 <strong>表格</strong> 來做比較（如：生物鹼沈澱試劑比較）。<br>
+                3. 可以插入 <strong>圖片</strong> 來解釋生合成路徑。
             </div>
+            
             <textarea id="rich-editor"></textarea>
             
-            <button class="btn" onclick="saveCategory()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem;">💾 儲存介紹</button>
+            <button class="btn-save" onclick="saveCategory()">💾 儲存介紹內容</button>
         </div>
     </div>
 
     <script src="pharma_config.js"></script>
     <script src="utils.js"></script>
+    
     <script>
-        let categoriesData = {};
-        let fileSha = "";
+        let categoriesData = {}; // 存放所有介紹資料
+        let fileSha = "";        // GitHub SHA
         const FILE_PATH = "data/categories.json";
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // 初始化 TinyMCE (Gmail 風格編輯器)
+            // 1. 初始化編輯器
             tinymce.init({
                 selector: '#rich-editor',
-                height: 500,
-                plugins: 'table lists link image code',
-                toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter | bullist numlist | table | code',
-                content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; }'
+                height: 600,
+                plugins: 'table lists link image code preview',
+                toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter | bullist numlist | table | image code',
+                branding: false
             });
 
-            // 檢查登入
+            // 2. 檢查登入
             const configStr = localStorage.getItem('tcm_admin_config');
-            if (!configStr) return location.href = "admin_menu.html";
+            if (!configStr) {
+                alert("請先登入！");
+                window.location.href = "admin_menu.html";
+                return;
+            }
             const config = JSON.parse(configStr);
-            await initGitHubConfig(config.token, config.user, config.repo);
-
-            // 載入下拉選單 (從 config)
-            const sel = document.getElementById('cat-select');
-            PHARMA_CATEGORIES.forEach(c => {
-                sel.add(new Option(c.name_ch + " (" + c.name_en + ")", c.name_ch));
-            });
-
-            // 載入現有資料
+            
+            // 3. 連線 GitHub & 載入選單
             try {
-                const res = await fetchJSON(FILE_PATH);
-                categoriesData = res.data;
-                fileSha = res.sha;
-            } catch(e) {
-                console.log("尚無 categories.json，將建立新檔");
-                categoriesData = {}; // 初始化
+                await initGitHubConfig(config.token, config.user, config.repo);
+                initCategorySelect(); // 載入分類選單
+                
+                // 載入 JSON 資料
+                try {
+                    const res = await fetchJSON(FILE_PATH);
+                    categoriesData = res.data;
+                    fileSha = res.sha;
+                } catch(e) {
+                    console.log("建立新檔中...");
+                    categoriesData = {};
+                }
+            } catch (e) {
+                alert("連線錯誤: " + e.message);
             }
         });
 
+        // === 產生下拉選單 (含大分類與中分類) ===
+        function initCategorySelect() {
+            const sel = document.getElementById('cat-select');
+            
+            // 讀取 config 中的設定
+            PHARMA_CATEGORIES.forEach(main => {
+                // 1. 加入大分類 (加粗或特殊標記)
+                const mainOpt = document.createElement('option');
+                mainOpt.value = main.name_ch;
+                mainOpt.text = `📂 ${main.name_ch} (大分類)`;
+                mainOpt.style.fontWeight = "bold";
+                mainOpt.style.background = "#e8f5e9";
+                sel.add(mainOpt);
+
+                // 2. 加入底下的中分類 (縮排)
+                if (main.subcategories) {
+                    main.subcategories.forEach(sub => {
+                        const subOpt = document.createElement('option');
+                        // 這裡使用中文名當 key，與資料庫統一
+                        subOpt.value = sub.ch; 
+                        subOpt.text = `　└─ 📄 ${sub.ch} (${sub.en})`;
+                        sel.add(subOpt);
+                    });
+                }
+            });
+        }
+
+        // === 載入選定分類的內容 ===
         function loadCategoryData() {
             const cat = document.getElementById('cat-select').value;
             if (!cat) {
                 document.getElementById('editor-area').style.display = 'none';
                 return;
             }
-            document.getElementById('editor-area').style.display = 'block';
             
-            // 讀取該分類的內容 (如果有的話)
+            document.getElementById('editor-area').style.display = 'block';
+            document.getElementById('current-edit-target').innerText = cat;
+            
+            // 從 JSON 物件中取出該分類的 HTML，如果沒有則為空
             const content = categoriesData[cat] || "";
             tinymce.get('rich-editor').setContent(content);
         }
 
+        // === 儲存 ===
         async function saveCategory() {
             const cat = document.getElementById('cat-select').value;
+            const btn = document.querySelector('.btn-save');
+            
             if (!cat) return alert("請先選擇分類");
 
-            const content = tinymce.get('rich-editor').getContent();
-            categoriesData[cat] = content; // 儲存 HTML
+            btn.innerText = "⏳ 儲存中...";
+            btn.disabled = true;
 
             try {
-                const res = await saveJSON(FILE_PATH, categoriesData, fileSha, `Update Category: ${cat}`);
-                fileSha = res.content.sha;
-                alert("🎉 儲存成功！");
+                // 1. 取得編輯器內容
+                const content = tinymce.get('rich-editor').getContent();
+                
+                // 2. 更新記憶體中的資料
+                categoriesData[cat] = content; 
+
+                // 3. 上傳回 GitHub
+                const res = await saveJSON(FILE_PATH, categoriesData, fileSha, `Update Intro: ${cat}`);
+                fileSha = res.content.sha; // 更新 SHA
+                
+                alert(`🎉 「${cat}」的介紹已儲存成功！`);
+
             } catch(e) {
                 alert("儲存失敗: " + e.message);
+            } finally {
+                btn.innerText = "💾 儲存介紹內容";
+                btn.disabled = false;
             }
         }
     </script>
