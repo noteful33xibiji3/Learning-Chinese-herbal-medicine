@@ -487,7 +487,7 @@
 </div>
     <script src="pharma_config.js"></script>
 
-   <script>
+<script>
     // === 全域變數 ===
     let allData = [];
     let categoryData = {}; 
@@ -522,7 +522,7 @@
             document.getElementById('loading').style.display = 'none';
             renderGrid(allData);
 
-            // C. 檢查網址參數 (例如從中藥庫跳轉過來 ?q=Ephedrine)
+            // C. 檢查網址參數 (中藥庫跳轉邏輯)
             const urlParams = new URLSearchParams(window.location.search);
             const query = urlParams.get('q');
             
@@ -547,7 +547,7 @@
         });
     });
 
-    // === 2. 分類篩選邏輯 (核心升級版) ===
+    // === 2. 分類篩選邏輯 (雙層選單核心) ===
 
     // 初始化：只產生大分類按鈕
     function initFilters() {
@@ -618,7 +618,7 @@
         filterData();
     }
 
-    // 檢查並顯示「📖 查看介紹」按鈕
+    // 檢查並顯示「📖 查看介紹」按鈕 (模糊比對 Key)
     function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
@@ -626,8 +626,7 @@
         // 優先找中分類的 Key，沒有才找大分類的 Key
         let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
         
-        // 模糊比對：因為後台存的可能是 "配糖體 (Glycoside)"，前台選的是 "配糖體"
-        // 只要後台的 Key 包含前台選的 Key，就算匹配
+        // 只要後台的 Key 包含前台選的 Key，就算匹配 (解決括號問題)
         const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
 
         if (targetKey && matchKey && categoryData[matchKey]) {
@@ -789,7 +788,9 @@
 
     // === 5. 成分詳情小視窗 (Popup) ===
     function showChemDetail(c) {
+        // 填入資料 (使用正確的 ID)
         document.getElementById('chem-popup-name').innerText = c.name;
+        
         const img = document.getElementById('chem-popup-img');
         img.src = c.image || 'https://via.placeholder.com/300x200?text=No+Image';
         
@@ -800,6 +801,8 @@
         } else {
             noteBox.style.display = 'none';
         }
+
+        // 顯示彈窗
         document.getElementById('chem-detail-modal').style.display = 'flex';
     }
 
