@@ -10,32 +10,57 @@
     <style>
         /* === 樣式區 === */
         body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
+        
+        /* 導覽列 */
         nav { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .nav-title { font-size: 1.2rem; font-weight: bold; color: #2C5E4F; text-decoration: none; display: flex; align-items: center; gap: 10px; }
         .back-btn { background: #e0e0e0; color: #333; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
         .back-btn:hover { background: #d0d0d0; }
+
+        /* 主容器 */
         main { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        
+        /* 列表區 */
         .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
+        
+        /* 卡片樣式 */
         .pharma-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border-left: 5px solid #4A7C59; position: relative; }
         .pharma-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .card-name { font-size: 1.3rem; font-weight: bold; color: #333; margin: 0; }
         .card-cat { background: #e8f5e9; color: #2C5E4F; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; }
         .card-en { color: #666; font-size: 0.9rem; font-style: italic; }
-        .card-delete-btn { position: absolute; bottom: 15px; right: 15px; background: #ffebee; color: #c62828; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.2s; z-index: 2; }
+        
+        /* 垃圾桶按鈕 */
+        .card-delete-btn {
+            position: absolute; bottom: 15px; right: 15px;
+            background: #ffebee; color: #c62828; border: none;
+            width: 35px; height: 35px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; cursor: pointer; transition: 0.2s;
+            z-index: 2;
+        }
         .card-delete-btn:hover { background: #ffcdd2; transform: scale(1.1); }
+
+        /* 編輯視窗 (Modal) */
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 20px 0; }
         .modal-content { background: white; width: 95%; max-width: 900px; margin: 0 auto 50px auto; padding: 30px; border-radius: 15px; position: relative; }
+        
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #444; }
         input[type="text"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
         .section-title { font-size: 1.1rem; color: #2C5E4F; border-bottom: 2px solid #eee; padding-bottom: 5px; margin: 30px 0 15px 0; font-weight: bold; }
+
         .dynamic-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+        
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
         .btn-primary { background: #4A7C59; }
         .btn-add { background: #607d8b; width: 100%; margin-top: 5px; }
         .btn-danger { background: #e57373; padding: 5px 10px; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; } 
+        
+        /* 載入遮罩 */
         #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:2000; display:flex; justify-content:center; align-items:center; flex-direction:column; }
     </style>
 </head>
@@ -138,14 +163,14 @@
         let fileSha = "";
         const FILE_PATH = "data/pharma.json";
         
-        // ★ 關鍵修正：變數改名，避免與其他檔案衝突
-        let pharmaConfig = null; 
+        // ★ 變數改名：使用 currentConfig 避免與 utils.js 衝突
+        let currentConfig = null;
 
         // === 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
             // 1. 初始化 TinyMCE
             tinymce.init({
-                selector: '#rich-note', // ★ 確保這裡對應 textarea 的 ID
+                selector: '#rich-note', // 對應 HTML ID
                 height: 400,
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
                 toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | ' +
@@ -165,15 +190,15 @@
                 return location.href = 'admin_menu.html';
             }
             
-            // ★ 讀取設定到新變數 pharmaConfig
-            pharmaConfig = JSON.parse(configStr);
+            // ★ 使用新的變數名稱
+            currentConfig = JSON.parse(configStr);
             
             // 3. 核心載入邏輯 (防卡死)
             try {
-                // 檢查 utils.js
-                if (typeof initGitHubConfig === 'undefined') throw new Error("找不到 utils.js，請檢查檔案");
+                // 檢查 utils.js 是否有匯入
+                if (typeof initGitHubConfig === 'undefined') throw new Error("找不到 utils.js，請確認檔案位置");
 
-                await initGitHubConfig(pharmaConfig.token, pharmaConfig.user, pharmaConfig.repo);
+                await initGitHubConfig(currentConfig.token, currentConfig.user, currentConfig.repo);
                 await loadData();
                 initCatSelects();
                 
@@ -186,11 +211,11 @@
             }
         });
 
-        // 1. 讀取資料 (容錯處理)
+        // 1. 讀取資料
         async function loadData() {
             try {
-                const url = `https://api.github.com/repos/${pharmaConfig.user}/${pharmaConfig.repo}/contents/${FILE_PATH}?t=${Date.now()}`;
-                const res = await fetch(url, { headers: { 'Authorization': `token ${pharmaConfig.token}` } });
+                const url = `https://api.github.com/repos/${currentConfig.user}/${currentConfig.repo}/contents/${FILE_PATH}?t=${Date.now()}`;
+                const res = await fetch(url, { headers: { 'Authorization': `token ${currentConfig.token}` } });
                 
                 if (res.ok) {
                     const json = await res.json();
@@ -206,7 +231,6 @@
                 } else {
                     throw new Error("GitHub 回傳錯誤: " + res.status);
                 }
-                
                 renderList();
             } catch (e) {
                 console.error("讀取失敗:", e);
@@ -255,19 +279,19 @@
 
         // 3. 刪除功能
         async function deleteItem(id) {
-            if (!confirm("⚠️ 警告：確定要刪除這筆資料嗎？刪除後無法復原！")) return;
+            if (!confirm("⚠️ 警告：確定要刪除這筆資料嗎？")) return;
             
             const newArr = pharmaList.filter(item => item.id !== id);
             const oldArr = [...pharmaList];
             pharmaList = newArr;
-            renderList();
+            renderList(); // 畫面先變
 
             try {
                 await uploadToGitHub(newArr, `Delete ID: ${id}`);
                 alert("🗑️ 刪除成功！");
             } catch (e) {
                 alert("刪除失敗: " + e.message);
-                pharmaList = oldArr; // 還原
+                pharmaList = oldArr; // 失敗就還原
                 renderList();
             }
         }
@@ -307,7 +331,7 @@
                 }
             } else {
                 document.getElementById('edit-id').value = "";
-                addChemRow(); // 預設給一行成分
+                addChemRow(); 
             }
             modal.style.display = 'block';
         }
@@ -331,7 +355,6 @@
             const imgId = `chem-img-${Date.now()}-${Math.random()}`;
             const imgVal = data.image || "";
             const noteVal = data.note || ""; 
-            
             div.innerHTML = `
                 <div style="display:flex; gap:5px; width:100%;">
                     <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名 (如: Ephedrine)">
@@ -364,11 +387,10 @@
             const name_ch = document.getElementById('name-ch').value.trim();
             if (!name_ch) return alert("中文藥名必填！");
 
-            btn.disabled = true; // 鎖定按鈕
+            btn.disabled = true; 
             btn.innerText = "⏳ 儲存中...";
 
             try {
-                // A. 處理圖片
                 const chemRows = document.querySelectorAll('#chem-list .dynamic-row');
                 const components = [];
                 for (let row of chemRows) {
@@ -384,7 +406,6 @@
                     components.push({ name, note, image: imgUrl });
                 }
 
-                // B. 建立物件
                 const newItem = {
                     id: idVal ? parseInt(idVal) : Date.now(),
                     name_ch, name_en: document.getElementById('name-en').value.trim(),
@@ -414,10 +435,7 @@
                     newList.unshift(newItem);
                 }
 
-                // C. 上傳 (使用 pharmaConfig)
                 await uploadToGitHub(newList, `Update: ${name_ch}`);
-                
-                // D. 成功處理
                 pharmaList = newList;
                 renderList();
                 closeModalDirect(); 
@@ -432,7 +450,7 @@
         }
 
         async function uploadToGitHub(data, msg) {
-            const url = `https://api.github.com/repos/${pharmaConfig.user}/${pharmaConfig.repo}/contents/${FILE_PATH}`;
+            const url = `https://api.github.com/repos/${currentConfig.user}/${currentConfig.repo}/contents/${FILE_PATH}`;
             const body = {
                 message: msg,
                 content: window.btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
@@ -440,7 +458,7 @@
             };
             const res = await fetch(url, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${pharmaConfig.token}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `token ${currentConfig.token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             if (!res.ok) throw new Error("GitHub API Error");
@@ -448,7 +466,6 @@
             fileSha = json.content.sha;
         }
 
-        // 分類選單
         function initCatSelects() {
             const mainSel = document.getElementById('cat-main');
             const filterSel = document.getElementById('filter-cat');
