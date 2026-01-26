@@ -5,398 +5,269 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>生藥學數位藥典 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
-        /* === 全局變數 === */
-        :root {
-            --primary: #4A7C59;
-            --primary-dark: #2C5E4F;
-            --accent: #E8F5E9;
-            --text-dark: #333;
-            --text-light: #666;
-            --bg-color: #f4f7f6;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            color: var(--text-dark);
-        }
-
-        /* === 導覽列 === */
-        nav {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        .nav-links a { text-decoration: none; color: var(--text-light); margin-left: 20px; font-weight: 500; transition: 0.2s; }
-        .nav-links a:hover { color: var(--primary); }
-
-        /* === 搜尋與篩選區 === */
-        .hero-section {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            padding: 3rem 1rem;
-            text-align: center;
-            color: white;
-            margin-bottom: 2rem;
-        }
-        .hero-title { font-size: 2rem; margin-bottom: 1rem; font-weight: 300; }
-        
-        .search-container {
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-        }
-        .search-box {
-            width: 100%;
-            padding: 15px 25px;
-            border-radius: 50px;
-            border: none;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            outline: none;
-        }
-        
-        .filter-tags {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .filter-tag {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 6px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 1px solid rgba(255,255,255,0.3);
-            font-size: 0.9rem;
-        }
-        .filter-tag:hover, .filter-tag.active {
-            background: white;
-            color: var(--primary-dark);
-            font-weight: bold;
-        }
-
-        /* === 卡片網格區 === */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        /* === 藥學卡片設計 === */
-        .card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            cursor: pointer;
-            border: 1px solid #eee;
-            display: flex;
-            flex-direction: column;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--card-hover);
-            border-color: var(--primary);
-        }
-        /* 左側裝飾條 (依分類變色，目前統一綠色) */
-        .card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 6px;
-            background: var(--primary);
-        }
-
-        .card-body { padding: 20px; flex: 1; }
-        
-        .card-category {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin: 0;
-            line-height: 1.2;
-        }
-        
-        .card-subtitle {
-            font-size: 0.95rem;
-            color: #888;
-            font-family: 'Roboto Mono', monospace;
-            margin-bottom: 15px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            margin-top: 8px;
-            color: var(--text-light);
-            border-bottom: 1px dashed #eee;
-            padding-bottom: 4px;
-        }
-        .info-label { font-weight: 500; color: #555; }
-
-        .card-footer {
-            padding: 15px 20px;
-            background: #fafafa;
-            border-top: 1px solid #eee;
-            text-align: right;
-            font-size: 0.9rem;
-            color: var(--primary);
-            font-weight: bold;
-        }
-
-        /* === 詳情 Modal === */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-            z-index: 1000; display: none; justify-content: center; align-items: center;
-            padding: 20px; box-sizing: border-box;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 100%; max-width: 900px;
-            max-height: 90vh;
-            border-radius: 20px;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal-header {
-            background: var(--primary);
-            color: white;
-            padding: 20px 30px;
-            position: sticky; top: 0; z-index: 10;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .modal-title-group h2 { margin: 0; font-size: 1.8rem; }
-        .modal-title-group span { font-family: 'Roboto Mono', monospace; opacity: 0.9; }
-        .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; }
-
-        .modal-body { padding: 30px; }
-
-        /* 詳情區塊樣式 */
-        .detail-section { margin-bottom: 30px; }
-        .section-title {
-            font-size: 1.2rem; font-weight: bold; color: var(--primary-dark);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 8px; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        /* 標籤雲 */
-        .tag-cloud { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-        .tag { background: var(--accent); color: var(--primary-dark); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; }
-
-        /* 成分圖片網格 (優化版) */
-        .chem-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* 格子稍微寬一點 */
-            gap: 15px; 
-        }
-        .chem-item { 
-            text-align: center; 
-            border: 1px solid #eee; 
-            padding: 15px 10px; 
-            border-radius: 12px; 
-            transition: 0.2s; 
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .chem-item:hover { 
-            border-color: var(--primary); 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .chem-item img { 
-            max-width: 100%; 
-            max-height: 120px; 
-            object-fit: contain; 
-            margin-bottom: 10px; 
-            cursor: zoom-in; /* 只有圖片可以點擊放大 */
-        }
-        .chem-name { 
-            font-size: 1rem; 
-            font-weight: bold; 
-            color: #444; 
-            margin-bottom: 5px;
-        }
-        /* 新增：直接顯示的備註樣式 */
-        .chem-inline-note {
-            font-size: 0.85rem;
-            color: #d32f2f; /* 警示紅 */
-            background: #fff3e0; /* 淡橘底 */
-            padding: 4px 8px;
-            border-radius: 6px;
-            margin-top: 5px;
-            line-height: 1.4;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        /* 子分類按鈕樣式 */
-        .sub-tag {
-            background: white;
-            color: #666;
-            padding: 4px 12px;
-            border-radius: 15px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-        .sub-tag:hover { border-color: var(--primary); color: var(--primary); }
-        .sub-tag.active { 
-            background: var(--accent); 
-            color: var(--primary-dark); 
-            border-color: var(--primary); 
-            font-weight: bold;
-        }
-
-        /* 比較表格 */
-        .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .compare-table th, .compare-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
-        .compare-table th { background: var(--accent); color: var(--primary-dark); width: 30%; }
-
-        /* Rich Text Note */
-        .rich-content table { width: 100%; border-collapse: collapse; }
-        .rich-content th, .rich-content td { border: 1px solid #ddd; padding: 8px; }
-        .rich-content img { max-width: 100%; height: auto; }
-
-        /* 手機 RWD */
-        @media (max-width: 768px) {
-            .hero-title { font-size: 1.5rem; }
-            .modal-content { max-height: 95vh; }
-            .grid { grid-template-columns: 1fr; }
-
-            /* === 新增：成分詳情小視窗 === */
-.chem-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); z-index: 2000; /* 比原本的 modal 更高層 */
-    display: none; justify-content: center; align-items: center;
-}
-.chem-modal-box {
-    background: white; padding: 25px; border-radius: 15px;
-    width: 300px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: popIn 0.2s ease-out;
-}
-@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-.chem-detail-img { max-width: 100%; max-height: 200px; object-fit: contain; margin-bottom: 15px; }
-.chem-detail-note { background: #fff3e0; color: #d32f2f; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; }
-        }
-        /* === 化學成分彈窗專用樣式 === */
-        .chem-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); /* 半透明黑底 */
-            z-index: 2000; /* ★ 關鍵：比原本的 1000 大，所以會疊在上面 */
-            display: none; justify-content: center; align-items: center;
-            padding: 20px; box-sizing: border-box;
-            backdrop-filter: blur(2px); /* 讓背景稍微模糊，凸顯這個視窗 */
-        }
-        
-        .chem-modal-box {
-            background: white; width: 100%; max-width: 400px;
-            padding: 20px; border-radius: 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 彈跳特效 */
-        }
-
-        @keyframes popIn { 
-            from { opacity: 0; transform: scale(0.8); } 
-            to { opacity: 1; transform: scale(1); } 
-        }
-        /* === 分類介紹內容樣式 === */
-  /* === 🚑 修正：讓詳細介紹尊重後台排版 (不要強制置中) === */
-    .rich-content {
-        text-align: left; /* 1. 預設靠左對齊 */
-        color: #333 !important; /* 2. 確保文字是黑色的 */
-        font-size: 1.1rem;      /* 3. 字體稍微大一點，閱讀舒適 */
-        line-height: 1.8;       /* 4. 行高拉開，不要擠在一起 */
+   <style>
+    /* === 1. 全局變數與基礎設定 === */
+    :root {
+        --primary: #4A7C59;
+        --primary-dark: #2C5E4F;
+        --accent: #E8F5E9;
+        --text-dark: #333;
+        --text-light: #666;
+        --bg-color: #f4f7f6;
+        /* 更細膩的陰影系統 */
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
-    /* 讓編輯器設定的置中、置右生效 */
-    .rich-content p, .rich-content div, .rich-content h1, .rich-content h2 {
-        /* 如果標籤本身有 style="text-align: center"，這裡會繼承，不會被強制蓋掉 */
-        /* 不需要額外寫 code，瀏覽器預設就會尊重 inline style */
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background-color: var(--bg-color);
+        margin: 0;
+        color: var(--text-dark);
+        line-height: 1.6;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* 確保 footer 置底 */
     }
 
-    /* 圖片通常置中比較好看，這裡可以設個預設值，或是您在後台自己調 */
-    .rich-content img {
-        display: block;
-        margin: 10px auto; /* 預設圖片置中 */
-        max-width: 100%;
+    /* === 2. 導覽列 (玻璃擬態) === */
+    nav {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 0.8rem 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        transition: 0.3s;
     }
+    .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .nav-links a { 
+        text-decoration: none; color: var(--text-light); margin-left: 20px; font-weight: 500; transition: 0.2s; position: relative;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+    /* 連結下劃線動畫 */
+    .nav-links a::after {
+        content: ''; position: absolute; width: 0; height: 2px; bottom: -4px; left: 0;
+        background: var(--primary); transition: width 0.3s;
+    }
+    .nav-links a:hover::after { width: 100%; }
 
-        /* === 🚑 修正：強制彈窗內容顯示黑字 === */
+    /* === 3. 搜尋與篩選區 (Hero Section) === */
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 4rem 1rem 5rem 1rem; /* 底部留白給卡片上浮 */
+        text-align: center;
+        color: white;
+        margin-bottom: -40px; /* 讓內容區往上蓋 */
+        border-radius: 0 0 30px 30px;
+    }
+    .hero-title { font-size: 2.2rem; margin-bottom: 1.5rem; font-weight: 300; letter-spacing: 1px; }
     
-    /* 1. 針對所有彈窗內容區域 */
-    .modal-body {
-        color: #333 !important; /* 強制深灰色 */
+    .search-container {
+        max-width: 800px; margin: 0 auto; position: relative;
+    }
+    .search-box {
+        width: 100%; padding: 15px 25px;
+        border-radius: 50px; border: none;
+        font-size: 1.1rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        outline: none; transition: transform 0.2s;
+    }
+    .search-box:focus { transform: scale(1.02); }
+    
+    .filter-tags {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+        margin-top: 25px; max-width: 1000px; margin-left: auto; margin-right: auto;
+    }
+    .filter-tag {
+        background: rgba(255,255,255,0.15); color: white;
+        padding: 8px 18px; border-radius: 20px;
+        cursor: pointer; transition: 0.2s;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.95rem; backdrop-filter: blur(5px);
+    }
+    .filter-tag:hover, .filter-tag.active {
+        background: white; color: var(--primary-dark); font-weight: bold; transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
-    /* 2. 針對分類介紹的富文本區域 */
-    .rich-content, 
-    .rich-content p, 
-    .rich-content li, 
-    .rich-content span {
-        color: #333 !important;
+    /* === 4. 卡片網格區 === */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 50px 20px; position: relative; z-index: 10; }
+    
+    /* 次級篩選區 */
+    #sub-filter-container { 
+        display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; 
+        background: white; padding: 15px; border-radius: 12px; box-shadow: var(--card-shadow);
+        justify-content: center;
+    }
+    .sub-tag {
+        background: white; color: #666; padding: 6px 16px; border-radius: 20px;
+        cursor: pointer; border: 1px solid #ddd; font-size: 0.9rem; transition: 0.2s;
+    }
+    .sub-tag:hover { border-color: var(--primary); color: var(--primary); }
+    .sub-tag.active { 
+        background: var(--accent); color: var(--primary-dark); border-color: var(--primary); font-weight: bold; 
     }
 
-    /* 3. 針對生藥詳情的筆記區域 */
-    #modal-note, 
-    #modal-note p {
-        color: #333 !important;
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
     }
 
-    /* 4. 確保標題依然是白字 (不被影響) */
-    .modal-header, 
-    .modal-header h2, 
-    .modal-header h3 {
-        color: white !important;
+    /* === 5. 藥材卡片 (效能優化) === */
+    .card {
+        background: white; border-radius: 16px; overflow: hidden;
+        box-shadow: var(--card-shadow); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative; cursor: pointer; border: 1px solid rgba(0,0,0,0.05);
+        display: flex; flex-direction: column;
+        /* ★ 記憶體優化：只渲染可見區域 */
+        content-visibility: auto; contain-intrinsic-size: 0 250px;
     }
-    </style>
+    .card:hover { 
+        transform: translateY(-8px); 
+        box-shadow: var(--card-hover); 
+        border-color: var(--primary); 
+    }
+    /* 左側裝飾條 */
+    .card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; 
+        background: var(--primary); transition: width 0.2s;
+    }
+    .card:hover::before { width: 8px; }
+
+    .card-body { padding: 25px 20px 20px 25px; flex: 1; }
+    
+    .card-category {
+        font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+        color: var(--primary); font-weight: 700; margin-bottom: 5px;
+        background: var(--accent); display: inline-block; padding: 2px 8px; border-radius: 4px;
+    }
+    
+    .card-title { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); margin: 5px 0 0 0; line-height: 1.2; }
+    .card-subtitle { font-size: 0.95rem; color: #888; font-family: 'Roboto Mono', monospace; margin-bottom: 15px; font-style: italic; }
+
+    .info-row {
+        display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 8px;
+        color: var(--text-light); border-bottom: 1px dashed #eee; padding-bottom: 4px;
+    }
+    .info-label { font-weight: 600; color: #555; }
+
+    .card-footer {
+        padding: 12px 20px; background: #fafafa; border-top: 1px solid #eee;
+        text-align: right; font-size: 0.85rem; color: var(--primary); font-weight: bold;
+        transition: 0.2s;
+    }
+    .card:hover .card-footer { background: var(--primary); color: white; }
+
+    /* === 6. 詳情與分類彈窗 (Modals) === */
+    .modal-overlay, .chem-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.75); /* 深色背景 */
+        backdrop-filter: blur(5px);
+        z-index: 1000; display: none; justify-content: center; align-items: center;
+        padding: 20px;
+    }
+    /* 成分彈窗層級更高 */
+    .chem-modal-overlay { z-index: 2000; background: rgba(0,0,0,0.6); }
+    
+    .modal-content {
+        background: white; width: 100%; max-width: 900px; max-height: 90vh;
+        border-radius: 20px; overflow-y: auto; position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chem-modal-box {
+        background: white; width: 100%; max-width: 350px;
+        padding: 30px; border-radius: 16px; text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* 彈跳效果 */
+    }
+
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-header {
+        background: var(--primary); color: white; padding: 20px 30px;
+        position: sticky; top: 0; z-index: 10;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-title-group h2 { margin: 0; font-size: 1.8rem; }
+    .modal-title-group span { font-family: 'Roboto Mono', monospace; opacity: 0.9; }
+    .close-btn { background: none; border: none; color: white; font-size: 2rem; cursor: pointer; opacity: 0.8; transition: 0.2s; }
+    .close-btn:hover { opacity: 1; transform: scale(1.1); }
+
+    .modal-body { padding: 30px; color: #333; }
+
+    /* 詳情內文排版 */
+    .section-title {
+        font-size: 1.2rem; font-weight: bold; color: var(--primary-dark);
+        border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin: 25px 0 15px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .tag-cloud { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .tag { background: var(--accent); color: var(--primary-dark); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: 500; }
+
+    /* 成分網格 */
+    .chem-grid { 
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; 
+    }
+    .chem-item { 
+        text-align: center; border: 1px solid #eee; padding: 15px 10px; border-radius: 12px;
+        transition: 0.2s; background: #fff; cursor: pointer;
+    }
+    .chem-item:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    .chem-item img { max-width: 100%; max-height: 100px; object-fit: contain; margin-bottom: 8px; }
+    .chem-name { font-size: 0.95rem; font-weight: bold; color: #444; }
+
+    /* 比較表格 */
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; border-radius: 8px; overflow: hidden; }
+    .compare-table th, .compare-table td { border: 1px solid #eee; padding: 12px; text-align: left; }
+    .compare-table th { background: var(--accent); color: var(--primary-dark); width: 30%; font-weight: bold; }
+
+    /* Rich Text (HTML 內容) 優化 */
+    .rich-content { text-align: left; color: #333 !important; font-size: 1.05rem; line-height: 1.8; }
+    .rich-content img { display: block; margin: 15px auto; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .rich-content ul, .rich-content ol { margin-left: 20px; padding-left: 0; }
+    .rich-content table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .rich-content th, .rich-content td { border: 1px solid #ddd; padding: 10px; }
+    .rich-content th { background-color: #f9f9f9; }
+
+    /* 成分小視窗樣式 */
+    .chem-detail-img { max-width: 100%; max-height: 200px; object-fit: contain; margin-bottom: 15px; }
+    .chem-detail-note { 
+        background: #fff3e0; color: #d32f2f; padding: 12px; border-radius: 8px; 
+        margin-top: 10px; font-size: 0.95rem; text-align: left;
+    }
+
+    /* === 7. 手機版 RWD 優化 === */
+    @media (max-width: 768px) {
+        nav { padding: 10px 15px; flex-wrap: wrap; }
+        .logo { width: 100%; justify-content: center; margin-bottom: 10px; }
+        .nav-links { width: 100%; justify-content: space-around; padding-top: 10px; border-top: 1px solid #eee; }
+        .nav-links a { margin: 0; font-size: 0.9rem; }
+
+        .hero-title { font-size: 1.6rem; }
+        .filter-tags { justify-content: flex-start; overflow-x: auto; padding-bottom: 10px; white-space: nowrap; } /* 標籤可橫向滑動 */
+        
+        .container { padding: 10px; margin-top: 10px; }
+        .grid { grid-template-columns: 1fr; gap: 15px; } /* 手機轉單欄 */
+
+        /* 卡片維持直式，但調整 padding */
+        .card-body { padding: 20px; }
+        
+        .modal-content { max-height: 85vh; width: 95%; }
+        .chem-modal-box { width: 90%; }
+    }
+</style>
 </head>
 <body>
 
