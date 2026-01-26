@@ -168,27 +168,19 @@
 
         // === 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
-           tinymce.init({
-                selector: '#rich-editor',
-                height: 600,
-                // 加入更多外掛：advlist (進階列表), searchreplace (搜尋取代), autolink (自動連結)
+            // 1. 初始化 TinyMCE
+            tinymce.init({
+                // ★ 關鍵修正：這裡必須對應 HTML 的 ID '#rich-note'
+                selector: '#rich-note', 
+                height: 400,
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
-                
-                // ★ 這裡設定工具列按鈕，我幫您加了剪下複製貼上、對齊全套
                 toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | ' +
                          'bold italic underline strikethrough forecolor backcolor | ' +
                          'alignleft aligncenter alignright alignjustify | ' +
                          'bullist numlist outdent indent | table image link | removeformat code fullscreen',
-                
-                // 允許瀏覽器右鍵選單 (這樣您按右鍵才會有複製貼上)
-                contextmenu: 'link image table',
-                
-                // 讓內容樣式接近前台
                 content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; color: #333; }',
-                
-                branding: false, // 隱藏 TinyMCE 商標
-                menubar: true,   // 顯示上方選單列 (檔案/編輯/檢視...) 方便操作
-                
+                branding: false,
+                menubar: true,
                 setup: function(editor) {
                     editor.on('change', function () { isDirty = true; });
                 }
@@ -352,7 +344,7 @@
             const div = document.createElement('div'); div.className = 'dynamic-row'; div.style.flexDirection = 'column';
             const imgId = `chem-img-${Date.now()}-${Math.random()}`;
             const imgVal = data.image || "";
-            const noteVal = data.note || ""; // 讀取備註
+            const noteVal = data.note || ""; 
             
             div.innerHTML = `
                 <div style="display:flex; gap:5px; width:100%;">
