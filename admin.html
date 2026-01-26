@@ -573,6 +573,10 @@
                 document.getElementById('img-status').innerText=h.image?"✅ 既有圖片":"";
                 if(h.chemistry){ let l=Array.isArray(h.chemistry)?h.chemistry:(typeof h.chemistry==='string'?h.chemistry.split(/[,，]/).map(s=>({name_en:s})):[]); l.forEach(c=>addChemRow(c)); } else addChemRow();
             } else {
+                document.getElementById('edit-grade').value = "大一"; // 年級預設回大一 (或您想要的值)
+                document.getElementById('chem_main').value = "";      // 大分類清空
+                updateSubCats();                                      // 更新子分類選單 (這會把子分類選項清掉)
+                document.getElementById('chem_sub').value = "";       // 子分類清空
                 document.getElementById('modal-title').innerText="新增藥材";
                 document.querySelectorAll('#edit-modal input[type=text], #edit-modal textarea').forEach(e=>e.value="");
                 addOriginRow(); addChemRow(); document.getElementById('preview-img').style.display='none';
