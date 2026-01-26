@@ -399,5 +399,28 @@
     "indications": "",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 15,
+    "grade": "大二上",
+    "chinese_name": "金銀花",
+    "origin": [
+      {
+        "lat": "Lonicera japonica Thunb",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Lonicerae Flos",
+    "part": "",
+    "family_ch": "忍冬科",
+    "family_en": "Caprifoliaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<p>忍冬-凌冬不凋</p>",
+    "image": "",
+    "isTrash": false
   }
 ]
