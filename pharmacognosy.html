@@ -273,6 +273,24 @@
             width: 100%;
             box-sizing: border-box;
         }
+        /* 子分類按鈕樣式 */
+        .sub-tag {
+            background: white;
+            color: #666;
+            padding: 4px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .sub-tag:hover { border-color: var(--primary); color: var(--primary); }
+        .sub-tag.active { 
+            background: var(--accent); 
+            color: var(--primary-dark); 
+            border-color: var(--primary); 
+            font-weight: bold;
+        }
 
         /* 比較表格 */
         .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -356,9 +374,11 @@
             <input type="text" id="search-input" class="search-box" placeholder="🔍 搜尋生藥名稱、學名、關鍵成分..." oninput="filterData()">
         </div>
         <div id="filter-container" class="filter-tags">
-            <div class="filter-tag active" onclick="setFilter('all', this)">全部</div>
-        </div>
+        <div class="filter-tag active" onclick="resetFilter(this)">全部</div>
     </div>
+
+    <div id="sub-filter-container" class="filter-tags" style="margin-top:10px; min-height:10px;"></div>
+
     <div style="text-align:center; margin: 15px 0; height: 40px;">
         <button id="btn-cat-info" onclick="openCategoryModal()" style="display:none; background: linear-gradient(135deg, #4A7C59, #2C5E4F); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition:0.3s; align-items:center; gap:8px;">
             📖 查看「<span id="current-cat-name"></span>」詳細介紹
@@ -467,53 +487,51 @@
 </div>
     <script src="pharma_config.js"></script>
 
-    <script>
-        let allData = [];
-        let currentFilter = 'all';
-        let categoryData = {};
+   <script>
+    // === 全域變數 ===
+    let allData = [];
+    let categoryData = {}; 
+    let currentMainCat = 'all'; // 目前選的大分類
+    let currentSubCat = '';     // 目前選的中分類
 
-        // === 初始化 (合併版：讀取資料 + 網址搜尋) ===
+    // === 1. 初始化與資料載入 ===
     document.addEventListener('DOMContentLoaded', () => {
         initFilters();
         
-        // 1. 使用 Promise.all 同時載入兩份資料
+        // 使用 Promise.all 同時載入兩份資料
         Promise.all([
-            // 載入生藥列表
+            // A. 載入生藥列表
             fetch('data/pharma.json').then(r => r.ok ? r.json() : []).then(json => {
                 if (json.content && json.encoding === 'base64') {
                     return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
                 }
                 return json;
             }),
-            // 載入分類介紹
+            // B. 載入分類介紹
             fetch('data/categories.json').then(r => r.ok ? r.json() : {}).then(json => {
                 if (json.content && json.encoding === 'base64') {
                     return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
                 }
                 return json;
-            }).catch(() => ({})) // 如果檔案不存在，回傳空物件，不報錯
+            }).catch(() => ({})) 
         ]).then(([pharmaList, catInfo]) => {
-            // 資料載入完成，存入全域變數
+            // 資料載入完成
             allData = pharmaList || [];
             categoryData = catInfo || {};
             
             document.getElementById('loading').style.display = 'none';
             renderGrid(allData);
 
-            // 2. ★ 這裡把「網址搜尋邏輯」加回來了！
+            // C. 檢查網址參數 (例如從中藥庫跳轉過來 ?q=Ephedrine)
             const urlParams = new URLSearchParams(window.location.search);
             const query = urlParams.get('q');
             
             if (query) {
-                // 填入搜尋框
                 const input = document.getElementById('search-input');
                 input.value = query;
-                
-                // 執行搜尋
-                filterData();
+                filterData(); // 執行搜尋
 
-                // (選用) 如果搜尋結果只有一筆，自動幫使用者點開詳情
-                // 這裡再過濾一次是為了精確抓到那筆資料
+                // 如果精確匹配到只有一筆，自動點開詳情
                 const filtered = allData.filter(item => 
                     (item.name_en||"").toLowerCase().includes(query.toLowerCase()) || 
                     (item.components||[]).some(c => c.name.toLowerCase().includes(query.toLowerCase()))
@@ -528,149 +546,275 @@
             document.getElementById('loading').innerHTML = "<p>資料讀取失敗，請檢查 GitHub 設定。</p>";
         });
     });
-        // 1. 初始化篩選按鈕 (從 pharma_config.js 讀取)
-        function initFilters() {
-            const container = document.getElementById('filter-container');
-            // 如果有 PHARMA_CATEGORIES 變數 (來自 pharma_config.js)
-            if (typeof PHARMA_CATEGORIES !== 'undefined') {
-                PHARMA_CATEGORIES.forEach(cat => {
-                    const tag = document.createElement('div');
-                    tag.className = 'filter-tag';
-                    tag.innerText = cat.name_ch; // 只顯示大分類
-                    tag.onclick = () => setFilter(cat.name_ch, tag);
-                    container.appendChild(tag);
-                });
-            }
-        }
 
-        // 2. 載入資料
-        async function loadData() {
-            try {
-                // 直接讀取相對路徑的 JSON
-                const res = await fetch('data/pharma.json');
-                if (!res.ok) throw new Error("尚未建立資料庫");
-                
-                // GitHub API 傳回來的是 base64，如果是直接 fetch raw/file 則是 json
-                // 這裡假設是直接 fetch 檔案，如果是 GitHub API 格式需解碼
-                const json = await res.json();
-                
-                // 判斷是否為 GitHub API 回傳格式 (含 content 欄位)
-                if (json.content && json.encoding === 'base64') {
-                    allData = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
-                } else {
-                    allData = json; // 這是直接存取的格式
-                }
+    // === 2. 分類篩選邏輯 (核心升級版) ===
 
-                document.getElementById('loading').style.display = 'none';
-                renderGrid(allData);
-
-            } catch (e) {
-                document.getElementById('loading').innerHTML = `
-                    <h3>尚無資料</h3>
-                    <p>請先至後台新增生藥資料</p>
-                    <a href="admin_menu.html" style="color:var(--primary);">前往後台 ></a>
-                `;
-                console.error(e);
-            }
-        }
-
-        // 3. 渲染卡片網格
-        function renderGrid(data) {
-            const grid = document.getElementById('pharma-grid');
-            grid.innerHTML = "";
-
-            if (data.length === 0) {
-                grid.innerHTML = "<p style='text-align:center; width:100%; grid-column:1/-1;'>找不到相關藥材</p>";
-                return;
-            }
-
-            data.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.onclick = () => openDetail(item);
-                
-                // 處理可能的空值
-                const family = item.family_ch || item.family_en || "未分類";
-                const part = item.part_ch || "-";
-
-                card.innerHTML = `
-                    <div class="card-body">
-                        <div class="card-category">${item.category_main} / ${item.category_sub || ""}</div>
-                        <h3 class="card-title">${item.name_ch}</h3>
-                        <div class="card-subtitle">${item.name_en}</div>
-                        
-                        <div class="info-row">
-                            <span class="info-label">科別</span>
-                            <span>${family}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">部位</span>
-                            <span>${part}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">成分</span>
-                            <span>${item.components ? item.components.length : 0} 種</span>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        查看詳情 ➔
-                    </div>
-                `;
-                grid.appendChild(card);
+    // 初始化：只產生大分類按鈕
+    function initFilters() {
+        const container = document.getElementById('filter-container');
+        // 清空並加入"全部"
+        container.innerHTML = '<div class="filter-tag active" onclick="resetFilter(this)">全部</div>';
+        
+        if (typeof PHARMA_CATEGORIES !== 'undefined') {
+            PHARMA_CATEGORIES.forEach(cat => {
+                const tag = document.createElement('div');
+                tag.className = 'filter-tag';
+                tag.innerText = cat.name_ch; 
+                tag.onclick = () => selectMainCategory(cat.name_ch, tag);
+                container.appendChild(tag);
             });
         }
+    }
 
-        // 4. 篩選邏輯
-        function filterData() {
-            const term = document.getElementById('search-input').value.toLowerCase();
-            
-            const filtered = allData.filter(item => {
-                // 搜尋文字匹配 (中文、英文、學名、成分名)
-                const matchText = (item.name_ch || "").includes(term) || 
-                                  (item.name_en || "").toLowerCase().includes(term) ||
-                                  (item.origin || "").toLowerCase().includes(term) ||
-                                  (item.components || []).some(c => c.name.toLowerCase().includes(term));
-                
-                // 分類匹配
-                const matchCat = currentFilter === 'all' ? true : item.category_main === currentFilter;
+    // 點擊「全部」
+    function resetFilter(el) {
+        currentMainCat = 'all';
+        currentSubCat = '';
+        updateActiveTag(el, 'filter-tag');
+        document.getElementById('sub-filter-container').innerHTML = ""; // 清空子分類
+        checkIntroButton();
+        filterData();
+    }
 
-                return matchText && matchCat;
+    // 點擊「大分類」
+    function selectMainCategory(mainCatName, el) {
+        currentMainCat = mainCatName;
+        currentSubCat = ''; // 重置子分類
+        updateActiveTag(el, 'filter-tag');
+
+        // 產生子分類按鈕
+        renderSubCategories(mainCatName);
+        
+        checkIntroButton(); // 檢查是否有介紹文
+        filterData();
+    }
+
+    // 產生子分類按鈕 UI
+    function renderSubCategories(mainName) {
+        const container = document.getElementById('sub-filter-container');
+        container.innerHTML = ""; 
+
+        // 從 config 找該分類的子分類
+        const catConfig = PHARMA_CATEGORIES.find(c => c.name_ch === mainName);
+        
+        if (catConfig && catConfig.subcategories) {
+            catConfig.subcategories.forEach(sub => {
+                const btn = document.createElement('div');
+                btn.className = 'sub-tag';
+                // 顯示 中文 (英文)
+                btn.innerText = sub.ch; 
+                btn.onclick = () => selectSubCategory(sub.ch, btn);
+                container.appendChild(btn);
             });
-
-            renderGrid(filtered);
         }
+    }
 
-       function setFilter(category, element) {
-        currentFilter = category;
+    // 點擊「中分類」
+    function selectSubCategory(subName, el) {
+        currentSubCat = subName;
+        updateActiveTag(el, 'sub-tag');
         
-        // 更新按鈕樣式
-        document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
-        if(element) element.classList.add('active');
-        
-        // ★ 控制「查看介紹」按鈕的顯示
+        checkIntroButton(); 
+        filterData();
+    }
+
+    // 檢查並顯示「📖 查看介紹」按鈕
+    function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
         
-        // 只有當 (1) 不是選"全部" 且 (2) 該分類有資料時，才顯示按鈕
-        if (category !== 'all' && categoryData[category]) {
-            spanName.innerText = category;
-            btnInfo.style.display = 'inline-flex'; // 顯示按鈕
+        // 優先找中分類的 Key，沒有才找大分類的 Key
+        let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
+        
+        // 模糊比對：因為後台存的可能是 "配糖體 (Glycoside)"，前台選的是 "配糖體"
+        // 只要後台的 Key 包含前台選的 Key，就算匹配
+        const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
+
+        if (targetKey && matchKey && categoryData[matchKey]) {
+            spanName.innerText = matchKey; // 顯示完整名稱
+            btnInfo.style.display = 'inline-flex';
+            btnInfo.dataset.realKey = matchKey; // 存真實 Key 供彈窗用
         } else {
-            btnInfo.style.display = 'none'; // 隱藏按鈕
+            btnInfo.style.display = 'none';
         }
-        
-        filterData();
     }
-        function openCategoryModal() {
-        if (!currentFilter || currentFilter === 'all') return;
+
+    // === 3. 執行篩選與渲染 ===
+    function filterData() {
+        const term = document.getElementById('search-input').value.toLowerCase();
         
-        const title = document.getElementById('cat-modal-title');
-        const body = document.getElementById('cat-modal-body');
+        const filtered = allData.filter(item => {
+            // A. 關鍵字搜尋
+            const matchText = (item.name_ch || "").includes(term) || 
+                              (item.name_en || "").toLowerCase().includes(term) ||
+                              (item.origin || "").toLowerCase().includes(term) ||
+                              (item.components || []).some(c => c.name.toLowerCase().includes(term));
+            
+            // B. 分類篩選
+            let matchCat = true;
+            if (currentMainCat !== 'all') {
+                // 必須符合大分類
+                matchCat = (item.category_main || "").includes(currentMainCat);
+                
+                // 如果有選子分類，必須同時符合子分類
+                if (currentSubCat) {
+                    matchCat = matchCat && (item.category_sub || "").includes(currentSubCat);
+                }
+            }
+
+            return matchText && matchCat;
+        });
+
+        renderGrid(filtered);
+    }
+
+    function renderGrid(data) {
+        const grid = document.getElementById('pharma-grid');
+        grid.innerHTML = "";
+
+        if (data.length === 0) {
+            grid.innerHTML = "<p style='text-align:center; width:100%; grid-column:1/-1;'>找不到相關藥材</p>";
+            return;
+        }
+
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openDetail(item);
+            
+            const family = item.family_ch || item.family_en || "未分類";
+            const part = item.part_ch || "-";
+
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="card-category">${item.category_main} / ${item.category_sub || ""}</div>
+                    <h3 class="card-title">${item.name_ch}</h3>
+                    <div class="card-subtitle">${item.name_en}</div>
+                    
+                    <div class="info-row">
+                        <span class="info-label">科別</span> <span>${family}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">部位</span> <span>${part}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">成分</span> <span>${item.components ? item.components.length : 0} 種</span>
+                    </div>
+                </div>
+                <div class="card-footer">查看詳情 ➔</div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // === 4. 生藥詳情 Modal ===
+    function openDetail(item) {
+        const modal = document.getElementById('detail-modal');
         
-        title.innerText = `${currentFilter} - 詳細介紹`;
-        // 填入 HTML 內容 (如果沒有資料就顯示暫無)
-        body.innerHTML = categoryData[currentFilter] || "<p style='text-align:center; color:#666;'>此分類尚無詳細介紹資料。</p>";
+        document.getElementById('modal-title').innerText = item.name_ch;
+        document.getElementById('modal-subtitle').innerText = item.name_en;
+        document.getElementById('modal-origin').innerText = item.origin || "-";
+        document.getElementById('modal-family').innerText = `${item.family_ch || ""} (${item.family_en || ""})`;
+        document.getElementById('modal-part').innerText = `${item.part_ch || ""} (${item.part_en || ""})`;
+
+        // 標籤雲
+        const tagContainer = document.getElementById('modal-tags');
+        tagContainer.innerHTML = "";
+        [item.category_main, ...(item.aliases || [])].forEach(tagText => {
+            if(tagText) {
+                const tag = document.createElement('span');
+                tag.className = 'tag'; tag.innerText = tagText;
+                tagContainer.appendChild(tag);
+            }
+        });
+
+        // 成分網格 (點擊開啟小視窗)
+        const chemGrid = document.getElementById('modal-chem-grid');
+        chemGrid.innerHTML = "";
+        if (item.components && item.components.length > 0) {
+            item.components.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'chem-item';
+                div.style.cursor = "pointer"; 
+                
+                // 點擊呼叫 showChemDetail
+                div.onclick = () => showChemDetail(c);
+
+                const imgSrc = c.image || 'https://via.placeholder.com/150x100?text=No+Structure';
+                div.innerHTML = `
+                    <img src="${imgSrc}" alt="${c.name}">
+                    <div class="chem-name">${c.name}</div>
+                    ${c.note ? '<span style="font-size:0.8rem; color:#ff9800;">(有備註)</span>' : ''}
+                `;
+                chemGrid.appendChild(div);
+            });
+        } else {
+            chemGrid.innerHTML = "<span style='color:#999'>無成分資料</span>";
+        }
+
+        // 文字區塊
+        document.getElementById('modal-char').innerText = item.characteristics || "暫無";
+        document.getElementById('modal-efficacy').innerText = item.efficacy || "暫無";
+        document.getElementById('modal-treat').innerText = item.treatment || "-";
+        document.getElementById('modal-mnemonic').innerText = item.mnemonic || "-";
+
+        // 比較表
+        const compBody = document.getElementById('modal-compare-body');
+        compBody.innerHTML = "";
+        if (item.comparisons && item.comparisons.length > 0) {
+            item.comparisons.forEach(cmp => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${cmp.target}</td><td>${cmp.diff}</td>`;
+                compBody.appendChild(tr);
+            });
+            document.getElementById('compare-section').style.display = 'block';
+        } else {
+            document.getElementById('compare-section').style.display = 'none';
+        }
+
+        // 筆記
+        document.getElementById('modal-note').innerHTML = item.note || "<p style='color:#ccc'>無詳細筆記</p>";
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModalDirect() {
+        document.getElementById('detail-modal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    function closeModal(event) {
+        if (event.target.id === 'detail-modal') closeModalDirect();
+    }
+
+    // === 5. 成分詳情小視窗 (Popup) ===
+    function showChemDetail(c) {
+        document.getElementById('chem-popup-name').innerText = c.name;
+        const img = document.getElementById('chem-popup-img');
+        img.src = c.image || 'https://via.placeholder.com/300x200?text=No+Image';
         
+        const noteBox = document.getElementById('chem-popup-note-box');
+        if (c.note && c.note.trim() !== "") {
+            document.getElementById('chem-popup-note').innerText = c.note;
+            noteBox.style.display = 'block';
+        } else {
+            noteBox.style.display = 'none';
+        }
+        document.getElementById('chem-detail-modal').style.display = 'flex';
+    }
+
+    function closeChemModal() {
+        document.getElementById('chem-detail-modal').style.display = 'none';
+    }
+
+    // === 6. 分類介紹視窗 (Intro Modal) ===
+    function openCategoryModal() {
+        const btn = document.getElementById('btn-cat-info');
+        const realKey = btn.dataset.realKey;
+        if (!realKey) return;
+        
+        document.getElementById('cat-modal-title').innerText = `${realKey} - 詳細介紹`;
+        document.getElementById('cat-modal-body').innerHTML = categoryData[realKey] || "載入失敗";
         document.getElementById('cat-modal').style.display = 'flex';
     }
 
@@ -680,147 +824,11 @@
         }
     }
 
-        // 5. Modal 詳情邏輯
-        function openDetail(item) {
-            const modal = document.getElementById('detail-modal');
-            
-            // 填入標題
-            document.getElementById('modal-title').innerText = item.name_ch;
-            document.getElementById('modal-subtitle').innerText = item.name_en;
-
-            // 填入基本表
-            document.getElementById('modal-origin').innerText = item.origin || "-";
-            document.getElementById('modal-family').innerText = `${item.family_ch || ""} (${item.family_en || ""})`;
-            document.getElementById('modal-part').innerText = `${item.part_ch || ""} (${item.part_en || ""})`;
-
-            // 填入標籤雲 (別名 + 分類)
-            const tagContainer = document.getElementById('modal-tags');
-            tagContainer.innerHTML = "";
-            [item.category_main, ...(item.aliases || [])].forEach(tagText => {
-                if(tagText) {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.innerText = tagText;
-                    tagContainer.appendChild(tag);
-                }
-            });
-            
-       // --- 修改部分開始 ---
-            // 填入成分網格 (設定點擊事件)
-            const chemGrid = document.getElementById('modal-chem-grid');
-            chemGrid.innerHTML = "";
-            
-            if (item.components && item.components.length > 0) {
-                item.components.forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = 'chem-item';
-                    div.style.cursor = "pointer"; // 讓滑鼠變手指，提示可點擊
-                    
-                    // ★ 關鍵：點擊後呼叫 showChemDetail
-                    div.onclick = () => showChemDetail(c);
-
-                    const imgSrc = c.image || 'https://via.placeholder.com/150x100?text=No+Structure';
-                    
-                    // 這裡只顯示圖片和名字，備註藏起來等點開才看
-                    div.innerHTML = `
-                        <img src="${imgSrc}" alt="${c.name}">
-                        <div class="chem-name">${c.name}</div>
-                        ${c.note ? '<span style="font-size:0.8rem; color:#ff9800;">(有備註)</span>' : ''}
-                    `;
-                    chemGrid.appendChild(div);
-                });
-            } else {
-                chemGrid.innerHTML = "<span style='color:#999'>無成分資料</span>";
-            }
-            // --- 修改部分結束 ---
-            // 填入文字區塊
-            document.getElementById('modal-char').innerText = item.characteristics || "暫無";
-            document.getElementById('modal-efficacy').innerText = item.efficacy || "暫無";
-            document.getElementById('modal-treat').innerText = item.treatment || "-";
-            document.getElementById('modal-mnemonic').innerText = item.mnemonic || "-";
-
-            // 填入比較表
-            const compBody = document.getElementById('modal-compare-body');
-            compBody.innerHTML = "";
-            if (item.comparisons && item.comparisons.length > 0) {
-                item.comparisons.forEach(cmp => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${cmp.target}</td><td>${cmp.diff}</td>`;
-                    compBody.appendChild(tr);
-                });
-                document.getElementById('compare-section').style.display = 'block';
-            } else {
-                document.getElementById('compare-section').style.display = 'none';
-            }
-
-            // 填入 Rich Note (HTML)
-            document.getElementById('modal-note').innerHTML = item.note || "<p style='color:#ccc'>無詳細筆記</p>";
-
-            // 顯示 Modal
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // 禁止背景滾動
-        }
-
-        function closeModalDirect() {
-            document.getElementById('detail-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function closeModal(event) {
-            if (event.target.id === 'detail-modal') {
-                closeModalDirect();
-            }
-        }
-        // === 新增：顯示成分詳情小視窗 ===
-function showChemDetail(component) {
-    const modal = document.getElementById('chem-detail-modal');
-    
-    // 填入資料
-    document.getElementById('chem-detail-name').innerText = component.name;
-    
-    const img = document.getElementById('chem-detail-img');
-    img.src = component.image || '';
-    img.style.display = component.image ? 'block' : 'none';
-
-    const noteContainer = document.getElementById('chem-detail-note-container');
-    const noteText = document.getElementById('chem-detail-note');
-    
-    if (component.note) {
-        noteText.innerText = component.note;
-        noteContainer.style.display = 'block';
-    } else {
-        noteContainer.style.display = 'none';
+    // 輔助：更新按鈕樣式
+    function updateActiveTag(el, className) {
+        document.querySelectorAll('.' + className).forEach(e => e.classList.remove('active'));
+        if(el) el.classList.add('active');
     }
-
-    modal.style.display = 'flex';
-}
-
-function closeChemModal() {
-    document.getElementById('chem-detail-modal').style.display = 'none';
-}
-        // === 新增：控制成分彈窗 ===
-        function showChemDetail(c) {
-            // 1. 填入資料
-            document.getElementById('chem-popup-name').innerText = c.name;
-            
-            const img = document.getElementById('chem-popup-img');
-            img.src = c.image || 'https://via.placeholder.com/300x200?text=No+Image';
-            
-            const noteBox = document.getElementById('chem-popup-note-box');
-            if (c.note && c.note.trim() !== "") {
-                document.getElementById('chem-popup-note').innerText = c.note;
-                noteBox.style.display = 'block';
-            } else {
-                noteBox.style.display = 'none';
-            }
-
-            // 2. 顯示彈窗
-            document.getElementById('chem-detail-modal').style.display = 'flex';
-        }
-
-        function closeChemModal() {
-            document.getElementById('chem-detail-modal').style.display = 'none';
-        }
-    </script>
+</script>
 </body>
 </html>
