@@ -591,16 +591,20 @@
     // === 2. 分類篩選邏輯 (雙層選單核心) ===
 
     // 初始化：只產生大分類按鈕
-    function initFilters() {
+   function initFilters() {
         const container = document.getElementById('filter-container');
         // 清空並加入"全部"
-        container.innerHTML = '<div class="filter-tag active" onclick="resetFilter(this)">全部</div>';
+        container.innerHTML = '<div class="filter-tag active" onclick="resetFilter(this)">全部 (All)</div>';
         
         if (typeof PHARMA_CATEGORIES !== 'undefined') {
             PHARMA_CATEGORIES.forEach(cat => {
                 const tag = document.createElement('div');
                 tag.className = 'filter-tag';
-                tag.innerText = cat.name_ch; 
+                
+                // ★ 修改點：顯示 "中文 (英文)"
+                tag.innerText = `${cat.name_ch} (${cat.name_en})`; 
+                
+                // 點擊時傳入原本的中文 key 即可
                 tag.onclick = () => selectMainCategory(cat.name_ch, tag);
                 container.appendChild(tag);
             });
@@ -631,7 +635,7 @@
     }
 
     // 產生子分類按鈕 UI
-    function renderSubCategories(mainName) {
+   function renderSubCategories(mainName) {
         const container = document.getElementById('sub-filter-container');
         container.innerHTML = ""; 
 
@@ -642,8 +646,11 @@
             catConfig.subcategories.forEach(sub => {
                 const btn = document.createElement('div');
                 btn.className = 'sub-tag';
-                // 顯示 中文 (英文)
-                btn.innerText = sub.ch; 
+                
+                // ★ 修改點：顯示 "中文 (英文)"
+                btn.innerText = `${sub.ch} (${sub.en})`; 
+                
+                // 點擊時傳入原本的中文 key
                 btn.onclick = () => selectSubCategory(sub.ch, btn);
                 container.appendChild(btn);
             });
