@@ -694,18 +694,20 @@
             XLSX.writeFile(workbook, `生藥資料庫備份_${date}.xlsx`);
         }
    // === 8. 匯入 Excel 功能 (智慧解析版) ===
+       // === 8. 匯入 Excel (生藥後台專用修正版) ===
         async function importFromExcel(input) {
             const file = input.files[0];
             if (!file) return;
 
-            if (!confirm("⚠️ 警告：匯入將會覆蓋現有相同 ID 的資料！\n確定要繼續嗎？")) {
+            if (!confirm("⚠️ 警告：匯入將覆蓋資料！確定要繼續嗎？")) {
                 input.value = "";
                 return;
             }
 
             const reader = new FileReader();
             
-            reader.onload = async function(e) {
+            // ★★★ 修正重點：這裡一定要加 async ★★★
+            reader.onload = async function(e) { 
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
@@ -723,38 +725,27 @@
                     let newList = [...pharmaList];
 
                     excelData.forEach(row => {
-                        // === ★ 核心修改：智慧解析成分欄位 ===
+                        // 1. 解析成分 (處理換行或逗號)
                         let compArr = [];
-                        // 檢查 Excel 欄位是 "成分(含備註)" 還是舊的 "成分"
                         const rawCompStr = row["成分(含備註)"] || row["成分"];
-
                         if (rawCompStr) {
-                            // 1. 先用「換行符號」切開每個成分 (因為匯出時是用 \n 分隔)
-                            // 為了保險，我們同時支援 換行(\n) 和 逗號(,)
                             const splitComps = rawCompStr.split(/[\n,，]/g).map(s => s.trim()).filter(s => s);
-
                             compArr = splitComps.map(str => {
-                                // 2. 使用正規表達式 (Regex) 來拆解 "名稱 [備註]"
-                                // 規則：抓取 "名稱" + 可能存在的 "[備註]"
                                 const match = str.match(/^(.*?)(?:\s*\[(.*?)\])?$/);
-                                
                                 if (match) {
-                                    return {
-                                        name: match[1].trim(), // 抓到的名字
-                                        note: match[2] ? match[2].trim() : "", // 抓到的備註 (如果有的話)
-                                        image: "" // ⚠️ 圖片無法從 Excel 文字還原，會變空白
-                                    };
+                                    return { name: match[1].trim(), note: match[2] ? match[2].trim() : "", image: "" };
                                 } else {
                                     return { name: str, note: "", image: "" };
                                 }
                             });
                         }
 
-                        // 處理別名
+                        // 2. 解析別名
                         const aliasArr = row["別名"] ? row["別名"].split(/[,，、]/).map(s => s.trim()) : [];
 
+                        // 3. 建立新物件 (生藥是用 name_ch)
                         const newItem = {
-                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random()*1000)),
+                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random() * 1000)),
                             name_ch: row["中文名"] || "",
                             name_en: row["英文名"] || "",
                             category_main: row["大分類"] || "",
@@ -767,47 +758,50 @@
                             efficacy: row["功效"] || "",
                             treatment: row["適應症"] || "",
                             note: row["備註(HTML)"] || "",
-                            
-                            components: compArr, // 使用解析後的成分陣列
+                            components: compArr,
                             aliases: aliasArr,
-                            
-                            // 保留欄位
                             characteristics: "", 
-                            mnemonic: "",
-                            comparisons: [],
+                            mnemonic: "", 
+                            comparisons: [], 
                             updated_at: new Date().toISOString()
                         };
 
+                        // 4. ★★★ 判斷重複邏輯 (ID 或 中文名) ★★★
                         const existingIdx = newList.findIndex(item => 
                             (row["ID"] && item.id == row["ID"]) || // 情況 1: Excel 有填 ID 且吻合
-                            (!row["ID"] && item.name_ch === newItem.name_ch) // 情況 2: Excel 沒 ID 但中文名吻合
+                            (!row["ID"] && item.name_ch === newItem.name_ch) // 情況 2: Excel 沒 ID 但中文名吻合 (注意這裡是 name_ch)
                         );
 
                         if (existingIdx !== -1) {
-                            // 找到舊資料 -> 更新模式
+                            // 更新舊資料
                             const oldItem = newList[existingIdx];
                             
-                            // 1. 強制沿用舊 ID (這樣就不會變成新產生的亂數 ID)
-                            newItem.id = oldItem.id; 
+                            // 強制沿用舊 ID
+                            newItem.id = oldItem.id;
 
-                            // 2. 保留舊圖片 (生藥沒有最上層 image 欄位，但我們保留成分圖片)
-                            // (這段您原本就有，保持原樣即可)
+                            // 保留舊圖片邏輯 (嘗試從舊資料救回成分圖片)
                             if (oldItem.components) {
                                 newItem.components = newItem.components.map(newC => {
                                     const oldC = oldItem.components.find(oc => oc.name === newC.name);
-                                    if (oldC && oldC.image) newC.image = oldC.image;
+                                    if (oldC && oldC.image) {
+                                        newC.image = oldC.image;
+                                    }
                                     return newC;
                                 });
                             }
-                            
-                            newList[existingIdx] = { ...oldItem, ...newItem }; 
+
+                            newList[existingIdx] = { ...oldItem, ...newItem };
                             updateCount++;
-                        } else { 
-                            // 沒找到 -> 新增模式
-                            newList.push(newItem); 
-                            addCount++; 
+                        } else {
+                            // 新增資料
+                            newList.push(newItem);
+                            addCount++;
                         }
+                    });
+
+                    // 5. 上傳到 GitHub (這裡用了 await，所以外層一定要 async)
                     await uploadToGitHub(newList, `Import Excel: ${addCount} added, ${updateCount} updated`);
+                    
                     pharmaList = newList;
                     renderList();
                     alert(`🎉 匯入成功！\n新增：${addCount} 筆\n更新：${updateCount} 筆`);
@@ -819,6 +813,7 @@
                     input.value = "";
                 }
             };
+            
             reader.readAsArrayBuffer(file);
         }
     </script>
