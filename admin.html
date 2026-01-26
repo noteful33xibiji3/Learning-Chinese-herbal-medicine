@@ -276,21 +276,32 @@
             "油脂 (Lipids/Oil)": ["飽和固定油 (Saturated Fixed Oil)","單不飽和固定油 (Monounsaturated Fixed Oil)","多不飽和固定油 (Polyunsaturated Fixed Oil)","脂肪及其相關化合物 (Fats and Related Compounds)","蠟質 (Waxes)"]
         };
 
-      document.addEventListener('DOMContentLoaded', async () => {
-            // 初始化編輯器 (加入手機版修正)
+     document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化編輯器 (加入右鍵選單功能)
             tinymce.init({
                 selector: '#indications', 
                 height: 300,
+                // 確保 plugins 裡有需要的基礎外掛
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
-                toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter | bullist numlist table link | code',
-                branding: false, 
-                menubar: false,
                 
-                // ★★★ 關鍵修正：強制手機也使用電腦版介面 (固定工具列) ★★★
+                // 工具列設定 (維持您原本的)
+                toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter | bullist numlist table link | code',
+                
+                branding: false, 
+                menubar: false, // 隱藏上方選單，改用右鍵
+                
+                // ★★★ 關鍵修改：自訂右鍵選單 (Context Menu) ★★★
+                // 依序加入：剪下、複製、貼上、純文字貼上、全選
+                contextmenu: 'cut copy paste pastetext selectall | link image table', 
+
+                // 手機版強制使用電腦版介面 (避免工具列亂跑)
                 mobile: {
                     theme: 'silver', 
                     toolbar_mode: 'wrap'
-                }
+                },
+
+                // 讓內容樣式更好看
+                content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; color: #333; }'
             });
             initCategories();
             const savedConfig = localStorage.getItem('tcm_admin_config');
