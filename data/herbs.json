@@ -229,5 +229,28 @@
     "indications": "<ul>\n<li>雲錦花紋為異常維管束</li>\n<li>有馬肝石，能治人髮 有瀉下、強壯、緩下作用</li>\n<li>&nbsp;(化學結構-抗氧化劑)</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 8,
+    "grade": "大二上",
+    "chinese_name": "地黃",
+    "origin": [
+      {
+        "lat": "Rehmannia glutinosa Liboschitz",
+        "ch": "懷慶地黃"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Rehmanniae Radix",
+    "part": "",
+    "family_ch": "玄參科",
+    "family_en": "Scrophulariaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "",
+    "image": "",
+    "isTrash": false
   }
 ]
