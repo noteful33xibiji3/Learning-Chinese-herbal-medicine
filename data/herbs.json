@@ -670,5 +670,28 @@
     "indications": "<p><img src=\"https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/notes/1769451632360_572.jpg\" alt=\"\" width=\"261\" height=\"193\"></p>\n<p>檳榔果皮加工打鬆的乾燥品</p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 26,
+    "grade": "大二上",
+    "chinese_name": "杜仲",
+    "origin": [
+      {
+        "lat": "Eucommia ulmoides",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Eucommiae Cortex",
+    "part": "",
+    "family_ch": "杜仲科",
+    "family_en": "Eucommiaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>木棉</li>\n<li>沒有瀉下功用</li>\n<li>折斷有絲</li>\n<li>一科一屬、雌雄異株、樹皮強壯藥</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
