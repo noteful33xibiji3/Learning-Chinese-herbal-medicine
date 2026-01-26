@@ -252,5 +252,28 @@
     "indications": "",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 9,
+    "grade": "大二上",
+    "chinese_name": "細辛",
+    "origin": [
+      {
+        "lat": "Asarum sieboldii Miq.",
+        "ch": "華細辛"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Asiasari Radix",
+    "part": "",
+    "family_ch": "馬兜鈴科",
+    "family_en": "Aristolochiaceae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>\n<table class=\"MsoTableGrid\" style=\"border-collapse: collapse; border: none; mso-border-alt: solid windowtext .5pt; mso-yfti-tbllook: 1184; mso-padding-alt: 0cm 5.4pt 0cm 5.4pt;\" border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr style=\"mso-yfti-irow: 0; mso-yfti-firstrow: yes; mso-yfti-lastrow: yes;\">\n<td style=\"width: 85.45pt; border: solid windowtext 1.0pt; mso-border-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt;\" valign=\"top\" width=\"114\">\n<p class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">單用不可以過半錢匕</span></p>\n</td>\n</tr>\n</tbody>\n</table>\n</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
