@@ -61,5 +61,35 @@
     "mnemonic": "",
     "note": "<ul>\n<li><strong>別名口訣</strong>：希臘狐狸手套。</li>\n</ul>",
     "updated_at": "2026-01-26T09:13:01.943Z"
+  },
+  {
+    "id": 1769421010213,
+    "category_main": "生物鹼",
+    "category_sub": "吡啶-哌啶類",
+    "name_ch": "檳榔",
+    "name_en": "Areca",
+    "aliases": [
+      "Betal nut",
+      "Areca nut"
+    ],
+    "origin": "Areca catechu",
+    "family_ch": "棕櫚科",
+    "family_en": "Arecaceae",
+    "part_ch": "成熟種子",
+    "part_en": "",
+    "components": [
+      {
+        "name": "Arecoline",
+        "image": "",
+        "note": "檳榔鹼-結構是Pyridine-Piperidine、呈液體"
+      }
+    ],
+    "comparisons": [],
+    "characteristics": "",
+    "efficacy": "驅蟲劑(驅絛蟲)",
+    "treatment": "",
+    "mnemonic": "",
+    "note": "",
+    "updated_at": "2026-01-26T09:50:10.218Z"
   }
 ]
