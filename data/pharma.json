@@ -57,37 +57,37 @@
   },
   {
     "id": 1769418635452,
-    "category_main": "配醣體",
-    "category_sub": "強心配醣體",
     "name_ch": "長夜毛地黃",
     "name_en": "Digitalis Lanata",
-    "aliases": [
-      "Grecian foxglove"
-    ],
+    "category_main": "配醣體",
+    "category_sub": "強心配醣體",
     "origin": "Digitalis Lanata",
     "family_ch": "玄參科",
     "family_en": "Scrophulariaceae",
     "part_ch": "乾燥葉",
     "part_en": "",
+    "aliases": [
+      "Grecian foxglove"
+    ],
+    "comparisons": [],
     "components": [
       {
         "name": "Dixgoxin",
-        "image": "",
-        "note": ""
+        "note": "",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/pharma/1769424075570_918.jpg"
       },
       {
         "name": "Digitoxin",
-        "image": "",
-        "note": ""
+        "note": "",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/pharma/1769424076741_477.jpg"
       }
     ],
-    "comparisons": [],
     "characteristics": "臨床最常使用之強心配糖體為 Digoxin-經由腎臟排瀉，經腸道微生物代謝後活性下降\nLanatoside C去乙醯化後可得 Deslanoside\n\n(Lanatoside C = Digoxigenin+Acetic acid +3 Digitoxose+Glucose)\n\n(Deslanoside = Digoxigenin +3 Digitoxose+Glucose)\nLanatoside都有 acetic acid",
     "efficacy": "",
     "treatment": "",
     "mnemonic": "",
     "note": "<ul>\n<li><strong>別名口訣</strong>：希臘狐狸手套。</li>\n</ul>",
-    "updated_at": "2026-01-26T09:13:01.943Z"
+    "updated_at": "2026-01-26T10:41:17.656Z"
   },
   {
     "id": 1769421010213,
