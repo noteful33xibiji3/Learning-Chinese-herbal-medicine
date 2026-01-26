@@ -521,7 +521,7 @@
 
             <div id="chem-popup-note-box" style="display:none; background:#fff3e0; padding:15px; border-radius:10px; text-align:left; border-left:5px solid #ff9800;">
                 <strong style="color:#e65100;">📝 備註：</strong>
-                <p id="chem-popup-note" style="margin:5px 0 0 0; color:#5d4037;"></p>
+               <div id="chem-popup-note" class="rich-content" style="color:#333; margin-top:5px; font-size:0.95rem;"></div>
             </div>
         </div>
     </div>
@@ -874,19 +874,28 @@
         if (event.target.id === 'detail-modal') closeModalDirect();
     }
 
-    // === 5. 成分詳情小視窗 (Popup) ===
+    // === 5. 成分詳情小視窗 (Popup) - 修正版 ===
     function showChemDetail(c) {
+        // 填入名字
         document.getElementById('chem-popup-name').innerText = c.name;
+        
+        // 填入圖片
         const img = document.getElementById('chem-popup-img');
         img.src = c.image || 'https://via.placeholder.com/300x200?text=No+Image';
         
+        // 填入備註
         const noteBox = document.getElementById('chem-popup-note-box');
+        const noteContent = document.getElementById('chem-popup-note');
+
         if (c.note && c.note.trim() !== "") {
-            document.getElementById('chem-popup-note').innerText = c.note;
+            // ★ 關鍵修改：這裡改成 innerHTML，瀏覽器才會把 <ul> 變成列表，而不是顯示文字
+            noteContent.innerHTML = c.note; 
             noteBox.style.display = 'block';
         } else {
             noteBox.style.display = 'none';
         }
+
+        // 顯示彈窗
         document.getElementById('chem-detail-modal').style.display = 'flex';
     }
 
