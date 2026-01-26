@@ -348,12 +348,26 @@
             to { opacity: 1; transform: scale(1); } 
         }
         /* === 分類介紹內容樣式 === */
-    .rich-content table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-    .rich-content th, .rich-content td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    .rich-content th { background-color: #f5f5f5; font-weight: bold; color: #333; }
-    .rich-content tr:nth-child(even) { background-color: #fafafa; }
-    .rich-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
-    .rich-content h1, .rich-content h2, .rich-content h3 { color: var(--primary-dark); margin-top: 20px; }
+  /* === 🚑 修正：讓詳細介紹尊重後台排版 (不要強制置中) === */
+    .rich-content {
+        text-align: left; /* 1. 預設靠左對齊 */
+        color: #333 !important; /* 2. 確保文字是黑色的 */
+        font-size: 1.1rem;      /* 3. 字體稍微大一點，閱讀舒適 */
+        line-height: 1.8;       /* 4. 行高拉開，不要擠在一起 */
+    }
+
+    /* 讓編輯器設定的置中、置右生效 */
+    .rich-content p, .rich-content div, .rich-content h1, .rich-content h2 {
+        /* 如果標籤本身有 style="text-align: center"，這裡會繼承，不會被強制蓋掉 */
+        /* 不需要額外寫 code，瀏覽器預設就會尊重 inline style */
+    }
+
+    /* 圖片通常置中比較好看，這裡可以設個預設值，或是您在後台自己調 */
+    .rich-content img {
+        display: block;
+        margin: 10px auto; /* 預設圖片置中 */
+        max-width: 100%;
+    }
 
         /* === 🚑 修正：強制彈窗內容顯示黑字 === */
     
