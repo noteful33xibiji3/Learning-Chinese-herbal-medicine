@@ -28,32 +28,32 @@
   },
   {
     "id": 1769412657580,
-    "category_main": "配醣體",
-    "category_sub": "強心配醣體",
     "name_ch": "毛地黃",
     "name_en": "Digitalis Purpurea",
-    "aliases": [
-      "Foxglove"
-    ],
+    "category_main": "配醣體",
+    "category_sub": "強心配醣體",
     "origin": "Digitalis Purpurea",
     "family_ch": "玄參科",
     "family_en": "Scrophulariaceae",
     "part_ch": "乾燥葉",
     "part_en": "",
+    "aliases": [
+      "Foxglove"
+    ],
+    "comparisons": [],
     "components": [
       {
         "name": "Digitalis",
-        "image": "",
-        "note": "脂溶性、血漿蛋白結合率高、分布體積小、具有毒性與蓄積性"
+        "note": "<p>脂溶性、血漿蛋白結合率高、分布體積小、具有毒性與蓄積性</p>",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/pharma/1769424087934_129.jpg"
       }
     ],
-    "comparisons": [],
     "characteristics": "水解後可得 Digitoxigenin+3 Digitoxose+Glucose\n(Digitoxose 結構為2,6-dideoxy-β-D-ribo-hexo-pyranose) 含3個糖基(3個 Digitoxose)-可用Keller Kiliani 試劑檢測",
     "efficacy": "可測量血中膽固醇含量",
     "treatment": "",
     "mnemonic": "",
     "note": "",
-    "updated_at": "2026-01-26T07:47:41.685Z"
+    "updated_at": "2026-01-26T10:41:28.942Z"
   },
   {
     "id": 1769418635452,
