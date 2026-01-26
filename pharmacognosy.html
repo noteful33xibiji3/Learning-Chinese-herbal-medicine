@@ -329,6 +329,13 @@
             from { opacity: 0; transform: scale(0.8); } 
             to { opacity: 1; transform: scale(1); } 
         }
+        /* === 分類介紹內容樣式 === */
+    .rich-content table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .rich-content th, .rich-content td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    .rich-content th { background-color: #f5f5f5; font-weight: bold; color: #333; }
+    .rich-content tr:nth-child(even) { background-color: #fafafa; }
+    .rich-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+    .rich-content h1, .rich-content h2, .rich-content h3 { color: var(--primary-dark); margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -350,6 +357,23 @@
         </div>
         <div id="filter-container" class="filter-tags">
             <div class="filter-tag active" onclick="setFilter('all', this)">全部</div>
+        </div>
+    </div>
+    <div style="text-align:center; margin: 15px 0; height: 40px;">
+        <button id="btn-cat-info" onclick="openCategoryModal()" style="display:none; background: linear-gradient(135deg, #4A7C59, #2C5E4F); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition:0.3s; align-items:center; gap:8px;">
+            📖 查看「<span id="current-cat-name"></span>」詳細介紹
+        </button>
+    </div>
+
+    <div id="cat-modal" class="modal-overlay" onclick="closeCategoryModal(event)">
+        <div class="modal-content" style="max-width:800px;">
+            <div class="modal-header">
+                <h2 id="cat-modal-title" style="margin:0;">分類介紹</h2>
+                <button onclick="document.getElementById('cat-modal').style.display='none'" style="background:none; border:none; color:white; font-size:2rem; cursor:pointer;">×</button>
+            </div>
+            <div class="modal-body rich-content" id="cat-modal-body" style="line-height:1.8; font-size:1.05rem;">
+                載入中...
+            </div>
         </div>
     </div>
 
@@ -446,29 +470,64 @@
     <script>
         let allData = [];
         let currentFilter = 'all';
+        let categoryData = {};
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initFilters();
-            loadData().then(() => {
-                // ★ 新增：檢查網址有沒有搜尋參數 (?q=Ephedrine)
-                const urlParams = new URLSearchParams(window.location.search);
-                const query = urlParams.get('q');
-                if (query) {
-                    const input = document.getElementById('search-input');
-                    input.value = query; // 填入搜尋框
-                    filterData(); // 執行搜尋
-                    
-                    // (選用) 如果只有一筆結果，自動點開
-                    const filtered = allData.filter(item => 
-                        (item.name_en||"").toLowerCase().includes(query.toLowerCase()) || 
-                        (item.components||[]).some(c => c.name.toLowerCase().includes(query.toLowerCase()))
-                    );
-                    if(filtered.length === 1) {
-                        openDetail(filtered[0]);
-                    }
+        // === 初始化 (合併版：讀取資料 + 網址搜尋) ===
+    document.addEventListener('DOMContentLoaded', () => {
+        initFilters();
+        
+        // 1. 使用 Promise.all 同時載入兩份資料
+        Promise.all([
+            // 載入生藥列表
+            fetch('data/pharma.json').then(r => r.ok ? r.json() : []).then(json => {
+                if (json.content && json.encoding === 'base64') {
+                    return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
                 }
-            });
+                return json;
+            }),
+            // 載入分類介紹
+            fetch('data/categories.json').then(r => r.ok ? r.json() : {}).then(json => {
+                if (json.content && json.encoding === 'base64') {
+                    return JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
+                }
+                return json;
+            }).catch(() => ({})) // 如果檔案不存在，回傳空物件，不報錯
+        ]).then(([pharmaList, catInfo]) => {
+            // 資料載入完成，存入全域變數
+            allData = pharmaList || [];
+            categoryData = catInfo || {};
+            
+            document.getElementById('loading').style.display = 'none';
+            renderGrid(allData);
+
+            // 2. ★ 這裡把「網址搜尋邏輯」加回來了！
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q');
+            
+            if (query) {
+                // 填入搜尋框
+                const input = document.getElementById('search-input');
+                input.value = query;
+                
+                // 執行搜尋
+                filterData();
+
+                // (選用) 如果搜尋結果只有一筆，自動幫使用者點開詳情
+                // 這裡再過濾一次是為了精確抓到那筆資料
+                const filtered = allData.filter(item => 
+                    (item.name_en||"").toLowerCase().includes(query.toLowerCase()) || 
+                    (item.components||[]).some(c => c.name.toLowerCase().includes(query.toLowerCase()))
+                );
+                
+                if(filtered.length === 1) {
+                    openDetail(filtered[0]);
+                }
+            }
+        }).catch(err => {
+            console.error("資料載入錯誤:", err);
+            document.getElementById('loading').innerHTML = "<p>資料讀取失敗，請檢查 GitHub 設定。</p>";
         });
+    });
         // 1. 初始化篩選按鈕 (從 pharma_config.js 讀取)
         function initFilters() {
             const container = document.getElementById('filter-container');
@@ -581,15 +640,45 @@
             renderGrid(filtered);
         }
 
-        function setFilter(category, element) {
-            currentFilter = category;
-            
-            // 更新按鈕樣式
-            document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            
-            filterData();
+       function setFilter(category, element) {
+        currentFilter = category;
+        
+        // 更新按鈕樣式
+        document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
+        if(element) element.classList.add('active');
+        
+        // ★ 控制「查看介紹」按鈕的顯示
+        const btnInfo = document.getElementById('btn-cat-info');
+        const spanName = document.getElementById('current-cat-name');
+        
+        // 只有當 (1) 不是選"全部" 且 (2) 該分類有資料時，才顯示按鈕
+        if (category !== 'all' && categoryData[category]) {
+            spanName.innerText = category;
+            btnInfo.style.display = 'inline-flex'; // 顯示按鈕
+        } else {
+            btnInfo.style.display = 'none'; // 隱藏按鈕
         }
+        
+        filterData();
+    }
+        function openCategoryModal() {
+        if (!currentFilter || currentFilter === 'all') return;
+        
+        const title = document.getElementById('cat-modal-title');
+        const body = document.getElementById('cat-modal-body');
+        
+        title.innerText = `${currentFilter} - 詳細介紹`;
+        // 填入 HTML 內容 (如果沒有資料就顯示暫無)
+        body.innerHTML = categoryData[currentFilter] || "<p style='text-align:center; color:#666;'>此分類尚無詳細介紹資料。</p>";
+        
+        document.getElementById('cat-modal').style.display = 'flex';
+    }
+
+    function closeCategoryModal(e) {
+        if (e.target.id === 'cat-modal') {
+            document.getElementById('cat-modal').style.display = 'none';
+        }
+    }
 
         // 5. Modal 詳情邏輯
         function openDetail(item) {
