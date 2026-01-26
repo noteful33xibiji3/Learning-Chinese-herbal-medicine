@@ -720,5 +720,34 @@
     "indications": "<ul>\n<li>烈赤</li>\n<li>lignans and alkaloid</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 28,
+    "grade": "大二上",
+    "chinese_name": "桂皮",
+    "origin": [
+      {
+        "lat": "Cinnamomum cassia",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Cinnamomi Cortex",
+    "part": "",
+    "family_ch": "樟科",
+    "family_en": "Lauraceae",
+    "chem_main": "配糖體 (Glycoside)",
+    "chem_sub": "醛類配醣體 (Aldehyde Glycosides)",
+    "chemistry": [
+      {
+        "name_en": "cinnamaldehyde",
+        "name_ch": "桂皮醛",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/chem/1769452033277_901.jpg"
+      }
+    ],
+    "effects": [],
+    "indications": "<ul>\n<li>\n<p>肉桂</p>\n<p>按范成大桂海志云：凡木葉心皆一縱理，獨桂有兩道如圭形，故字從圭</p>\n</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
