@@ -147,6 +147,7 @@
     <script>
         // 頁面載入時檢查是否已登入
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('footer-year').innerText = new Date().getFullYear();
             const savedConfig = localStorage.getItem('tcm_admin_config');
             if (savedConfig) {
                 const config = JSON.parse(savedConfig);
