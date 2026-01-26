@@ -641,5 +641,34 @@
     "indications": "<p>花檳榔-錯入組織</p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 25,
+    "grade": "大二上",
+    "chinese_name": "大腹毛",
+    "origin": [
+      {
+        "lat": "Areca catechu",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Arecae Semen",
+    "part": "",
+    "family_ch": "棕櫚科",
+    "family_en": "Arecaceae/ Palmae",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "",
+    "chemistry": [
+      {
+        "name_en": "Arecoline",
+        "name_ch": "檳榔鹼",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/chem/1769451670030_263.jpg"
+      }
+    ],
+    "effects": [],
+    "indications": "<p><img src=\"https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/notes/1769451632360_572.jpg\" alt=\"\" width=\"261\" height=\"193\"></p>\n<p>檳榔果皮加工打鬆的乾燥品</p>",
+    "image": "",
+    "isTrash": false
   }
 ]
