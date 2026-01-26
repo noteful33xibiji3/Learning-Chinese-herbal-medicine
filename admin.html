@@ -6,8 +6,10 @@
     <title>後台管理系統 | 本草學園</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
-        /* === 樣式區 (保留原樣) === */
+        /* === 樣式區 === */
         body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); margin-bottom: 20px; position: relative; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
@@ -36,6 +38,16 @@
         .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10; max-height: 200px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
         .suggestion-item:hover { background: #f5f5f5; }
+
+        /* 列印專用樣式 */
+        @media print {
+            nav, .search-box-wrapper, #toggle-trash-btn, .btn-action-group, .btn-edit, .btn-danger, .btn-success {
+                display: none !important;
+            }
+            body { background: white; -webkit-print-color-adjust: exact; }
+            .glass-panel { box-shadow: none; border: 1px solid #ccc; }
+            th { background: #ddd !important; color: black !important; }
+        }
     </style>
 </head>
 <body>
@@ -43,11 +55,9 @@
     <nav style="background: white; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
         <div class="nav-left">
             <a href="admin_menu.html" style="text-decoration:none; font-size:1.2rem; font-weight:bold; color:#2C5E4F;">⬅ 回選單</a>
-            
             <a href="index.html" style="text-decoration:none; background:#e8f5e9; color:#2C5E4F; padding:5px 12px; border-radius:15px; font-size:0.9rem; margin:0 10px; border:1px solid #4A7C59;">
                 🏠 回前台
             </a>
-
             <span style="color:#ddd; margin-right: 10px;">|</span>
             <span style="font-weight:bold; color:#4A7C59;">中藥資料庫管理</span>
         </div>
@@ -68,9 +78,16 @@
                     <input type="text" id="admin-search" placeholder="🔍 搜尋中藥 / 學名..." oninput="handleSearchInput()" style="margin-bottom:0;">
                     <div id="suggestions" class="suggestions-list"></div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button id="toggle-trash-btn" onclick="toggleTrashView()" class="btn btn-info">🗑️ 查看垃圾桶</button>
-                    <button onclick="openEditModal()" class="btn btn-primary">➕ 新增藥材</button>
+                
+                <div class="btn-action-group" style="display:flex; gap:10px;">
+                    <input type="file" id="import-file" accept=".xlsx, .xls" style="display:none;" onchange="importFromExcel(this)">
+                    
+                    <button onclick="document.getElementById('import-file').click()" class="btn" style="background:#ff9800; color:white;">📥 匯入 Excel</button>
+                    <button onclick="exportToExcel()" class="btn" style="background:#217346; color:white;">📊 匯出 Excel</button>
+                    <button onclick="window.print()" class="btn" style="background:#555; color:white;">🖨️ 列印 PDF</button>
+                    
+                    <button id="toggle-trash-btn" onclick="toggleTrashView()" class="btn btn-info">🗑️ 垃圾桶</button>
+                    <button onclick="openEditModal()" class="btn btn-primary">➕ 新增</button>
                 </div>
             </div>
             
@@ -184,91 +201,32 @@
         
         // 分類資料
         const categories = {
-            "配糖體 (Glycoside)": [
-                "強心配醣體 (Cardiac Glycosides)",
-                "蒽醌類配醣體 (Anthraquinone Glycosides)",
-                "皂素配醣體 (Saponin Glycosides)",
-                "氰類配醣體 (Cyanogenic Glycosides)",
-                "異硫氰酸配醣體 (Isothiocyanate Glycosides)",
-                "醇類配醣體 (Alcohol Glycosides)",
-                "醛類配醣體 (Aldehyde Glycosides)",
-                "酚類配醣體 (Phenol Glycosides)"
-            ],
-            "生物鹼 (Alkaloid)": [
-                "吡啶-哌啶類 (Pyridine-Piperidine alkaloid)",
-                "托烷類 (Tropane alkaloid)",
-                "喹啉類 (Quinoline alkaloid)",
-                "異喹啉類 (Isoquinoline alkaloid)",
-                "咪唑類 (Imidazole alkaloid)",
-                "吲哚類 (Indole alkaloid)",
-                "嘌呤類 (Purine base / Xanthine)",
-                "固醇類生物鹼 (Steroidal alkaloid)",
-                "生物鹼胺 (Alkaloidal amine)"
-            ],
-            "多醣類 (Polysaccharides)": [
-                "同質聚醣 (Homoglycan)",
-                "異質聚醣 (Heteroglycan)"
-            ],
-            "苯丙烷類 (Phenylpropanoids)": [
-                "簡單苯丙烷類 (Simple phenylpropanoids)",
-                "木酚素和新木酚素 (Lignans and Neolignans)",
-                "類黃酮 (Flavonoids)",
-                "單寧/鞣質 (Tannins)",
-                "木質素 (Lignins)"
-            ],
-            "萜類 (Terpenoids)": [
-                "單萜 (Monoterpenoids)",
-                "倍半萜 (Sesquiterpene)",
-                "二萜 (Diterpene)",
-                "三萜 (Triterpene)",
-                "肆萜/類胡蘿蔔素 (Tetraterpene / Carotenoids)"
-            ],
-            "揮發油 (Volatile oil)": [
-                "萜類揮發油 (Terpenoids Volatile)",
-                "芳香類揮發油 (Aromatic Volatile)",
-                "其他揮發油 (Other Volatile)"
-            ],
-            "樹脂 (Resins)": [
-                "樹脂類 (Resins)",
-                "油樹脂類 (Oleoresins)",
-                "油膠樹脂類 (Oleogumresins)",
-                "香膠類 (Balsams)"
-            ],
-            "油脂 (Lipids/Oil)": [
-                "飽和固定油 (Saturated Fixed Oil)",
-                "單不飽和固定油 (Monounsaturated Fixed Oil)",
-                "多不飽和固定油 (Polyunsaturated Fixed Oil)",
-                "脂肪及其相關化合物 (Fats and Related Compounds)",
-                "蠟質 (Waxes)"
-            ]
+            "配糖體 (Glycoside)": ["強心配醣體 (Cardiac Glycosides)","蒽醌類配醣體 (Anthraquinone Glycosides)","皂素配醣體 (Saponin Glycosides)","氰類配醣體 (Cyanogenic Glycosides)","異硫氰酸配醣體 (Isothiocyanate Glycosides)","醇類配醣體 (Alcohol Glycosides)","醛類配醣體 (Aldehyde Glycosides)","酚類配醣體 (Phenol Glycosides)"],
+            "生物鹼 (Alkaloid)": ["吡啶-哌啶類 (Pyridine-Piperidine alkaloid)","托烷類 (Tropane alkaloid)","喹啉類 (Quinoline alkaloid)","異喹啉類 (Isoquinoline alkaloid)","咪唑類 (Imidazole alkaloid)","吲哚類 (Indole alkaloid)","嘌呤類 (Purine base / Xanthine)","固醇類生物鹼 (Steroidal alkaloid)","生物鹼胺 (Alkaloidal amine)"],
+            "多醣類 (Polysaccharides)": ["同質聚醣 (Homoglycan)","異質聚醣 (Heteroglycan)"],
+            "苯丙烷類 (Phenylpropanoids)": ["簡單苯丙烷類 (Simple phenylpropanoids)","木酚素和新木酚素 (Lignans and Neolignans)","類黃酮 (Flavonoids)","單寧/鞣質 (Tannins)","木質素 (Lignins)"],
+            "萜類 (Terpenoids)": ["單萜 (Monoterpenoids)","倍半萜 (Sesquiterpene)","二萜 (Diterpene)","三萜 (Triterpene)","肆萜/類胡蘿蔔素 (Tetraterpene / Carotenoids)"],
+            "揮發油 (Volatile oil)": ["萜類揮發油 (Terpenoids Volatile)","芳香類揮發油 (Aromatic Volatile)","其他揮發油 (Other Volatile)"],
+            "樹脂 (Resins)": ["樹脂類 (Resins)","油樹脂類 (Oleoresins)","油膠樹脂類 (Oleogumresins)","香膠類 (Balsams)"],
+            "油脂 (Lipids/Oil)": ["飽和固定油 (Saturated Fixed Oil)","單不飽和固定油 (Monounsaturated Fixed Oil)","多不飽和固定油 (Polyunsaturated Fixed Oil)","脂肪及其相關化合物 (Fats and Related Compounds)","蠟質 (Waxes)"]
         };
 
         // === 2. 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
-            // 3. 初始化 TinyMCE 編輯器 (掛載在 #indications)
             tinymce.init({
                 selector: '#indications',
                 height: 300,
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
-                toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | ' +
-                         'bold italic underline strikethrough forecolor backcolor | ' +
-                         'alignleft aligncenter alignright alignjustify | ' +
-                         'bullist numlist outdent indent | table image link | removeformat code fullscreen',
+                toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | bold italic underline forecolor backcolor | alignleft aligncenter | bullist numlist table link | code',
                 content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; color: #333; }',
-                branding: false,
-                menubar: true
+                branding: false, menubar: true
             });
 
             initCategories();
-            
             const savedConfig = localStorage.getItem('tcm_admin_config');
-            if (!savedConfig) {
-                alert("請先從主選單登入！");
-                window.location.href = 'admin_menu.html';
-                return;
-            }
-            
+            if (!savedConfig) { alert("請先登入！"); window.location.href = 'admin_menu.html'; return; }
             const config = JSON.parse(savedConfig);
+            
             try {
                 await initGitHubConfig(config.token, config.user, config.repo);
                 await loadData();
@@ -278,26 +236,144 @@
             }
         });
 
-        window.addEventListener('beforeunload', (e) => {
-            if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
-        });
-
-        // === 3. 資料存取 ===
+        // === 3. 資料存取 & Excel 邏輯 ===
         async function loadData() {
             try {
                 const result = await fetchJSON('data/herbs.json');
-                allHerbs = result.data;
-                sha = result.sha;
-                updateDisplayCount();
-                renderTable();
+                allHerbs = result.data; sha = result.sha;
+                updateDisplayCount(); renderTable();
             } catch (e) {
-                if (e.message.includes('404')) {
-                    allHerbs = [];
-                    renderTable();
-                } else {
-                    throw e;
-                }
+                if (e.message.includes('404')) { allHerbs = []; renderTable(); } else throw e;
             }
+        }
+
+        // --- 匯出 Excel (含複雜欄位解析) ---
+        function exportToExcel() {
+            if (allHerbs.length === 0) return alert("無資料可匯出");
+            
+            const exportData = allHerbs.map(h => {
+                // 1. 基原轉文字: "Ephedra sinica [草麻黃]"
+                const originStr = Array.isArray(h.origin) 
+                    ? h.origin.map(o => (typeof o==='object' ? `${o.lat} [${o.ch}]` : o)).join('\n') 
+                    : h.origin;
+
+                // 2. 成分轉文字: "Ephedrine [麻黃鹼]"
+                const chemStr = Array.isArray(h.chemistry)
+                    ? h.chemistry.map(c => (typeof c==='object' ? `${c.name_en} [${c.name_ch}]` : c)).join('\n')
+                    : h.chemistry;
+
+                // 3. 易混淆轉文字: "木賊 (Equiseti) [備註]"
+                const confStr = h.confusing_drugs 
+                    ? h.confusing_drugs.map(c => `${c.name_ch} (${c.name_en}) [${c.note}]`).join('\n')
+                    : '';
+
+                return {
+                    "ID": h.id, "年級": h.grade, "中文名": h.chinese_name, "生藥名": h.latin_name,
+                    "基原(列表)": originStr, "科名(中)": h.family_ch, "科名(英)": h.family_en,
+                    "部位": h.part, "大分類": h.chem_main, "子分類": h.chem_sub,
+                    "成分(列表)": chemStr, "功效": (h.effects || []).join(', '),
+                    "易混淆(列表)": confStr, "備註(HTML)": h.indications, "狀態": h.isTrash ? "垃圾桶" : "正常"
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "中藥資料");
+            XLSX.writeFile(wb, `中藥資料庫_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        // --- 匯入 Excel (含智慧解析) ---
+        async function importFromExcel(input) {
+            const file = input.files[0]; if (!file) return;
+            if (!confirm("⚠️ 警告：匯入將覆蓋相同 ID 資料！確定嗎？")) { input.value=""; return; }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, {type: 'array'});
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(ws);
+
+                    if (json.length === 0) return alert("檔案是空的");
+
+                    let updateCount = 0, addCount = 0;
+                    let newList = [...allHerbs];
+
+                    json.forEach(row => {
+                        // 1. 解析基原: "Lat [Ch]" -> {lat, ch}
+                        const originRaw = row["基原(列表)"] || row["基原"];
+                        let originArr = [];
+                        if (originRaw) {
+                            originArr = originRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => {
+                                const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/);
+                                return m ? { lat: m[1].trim(), ch: m[2]?m[2].trim():"" } : s;
+                            });
+                        }
+
+                        // 2. 解析成分: "En [Ch]" -> {name_en, name_ch}
+                        const chemRaw = row["成分(列表)"] || row["成分"];
+                        let chemArr = [];
+                        if (chemRaw) {
+                            chemArr = chemRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => {
+                                const m = s.match(/^(.*?)(?:\s*\[(.*?)\])?$/);
+                                return m ? { name_en: m[1].trim(), name_ch: m[2]?m[2].trim():"", image:"" } : { name_en: s };
+                            });
+                        }
+
+                        // 3. 解析易混淆: "Ch (En) [Note]"
+                        const confRaw = row["易混淆(列表)"] || row["易混淆"];
+                        let confArr = [];
+                        if (confRaw) {
+                            confArr = confRaw.split(/[\n;]/).map(s => s.trim()).filter(s=>s).map(s => {
+                                // 嘗試抓取 名字 (學名) [備註]
+                                const m = s.match(/^(.*?)(?:\s*\((.*?)\))?(?:\s*\[(.*?)\])?$/);
+                                return m ? { name_ch: m[1].trim(), name_en: m[2]?m[2].trim():"", note: m[3]?m[3].trim():"" } : { name_ch: s };
+                            });
+                        }
+
+                        const newItem = {
+                            id: row["ID"] ? parseInt(row["ID"]) : (Date.now() + Math.floor(Math.random()*1000)),
+                            grade: row["年級"]||"大一", chinese_name: row["中文名"]||"", latin_name: row["生藥名"]||"",
+                            origin: originArr, family_ch: row["科名(中)"]||"", family_en: row["科名(英)"]||"",
+                            part: row["部位"]||"", chem_main: row["大分類"]||"", chem_sub: row["子分類"]||"",
+                            chemistry: chemArr, confusing_drugs: confArr,
+                            effects: (row["功效"]||"").split(/[,，]/).map(s=>s.trim()).filter(s=>s),
+                            indications: row["備註(HTML)"]||"", isTrash: row["狀態"] === "垃圾桶",
+                            image: "" // 預設空
+                        };
+
+                        const idx = newList.findIndex(h => h.id == newItem.id);
+                        if (idx !== -1) {
+                            const old = newList[idx];
+                            // 保留舊圖片
+                            newItem.image = old.image; 
+                            // 嘗試保留成分圖片
+                            if (old.chemistry) {
+                                newItem.chemistry = newItem.chemistry.map(newC => {
+                                    const oldC = old.chemistry.find(oc => oc.name_en === newC.name_en);
+                                    if (oldC && oldC.image) newC.image = oldC.image;
+                                    return newC;
+                                });
+                            }
+                            newList[idx] = { ...old, ...newItem };
+                            updateCount++;
+                        } else {
+                            newList.push(newItem);
+                            addCount++;
+                        }
+                    });
+
+                    await saveJSON('data/herbs.json', newList, sha, `Import Excel: +${addCount}, ~${updateCount}`);
+                    const res = await fetchJSON('data/herbs.json'); // 重新抓取更新 sha
+                    allHerbs = res.data; sha = res.sha;
+                    updateDisplayCount(); renderTable();
+                    alert(`匯入完成！新增 ${addCount} 筆，更新 ${updateCount} 筆`);
+
+                } catch(e) { console.error(e); alert("匯入失敗: " + e.message); }
+                finally { input.value = ""; }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         async function syncToGitHub(message) {
@@ -305,25 +381,18 @@
                 document.getElementById('status-text').innerText = "⏳ 同步中...";
                 const res = await saveJSON('data/herbs.json', allHerbs, sha, message);
                 sha = res.content.sha;
-                
-                updateDisplayCount();
-                renderTable();
+                updateDisplayCount(); renderTable();
                 alert("🎉 操作成功！");
                 document.getElementById('status-text').innerText = `✅ 已連線 (${allHerbs.length}筆)`;
                 return true;
-            } catch(e) { 
-                alert("同步失敗: " + e.message); 
-                return false; 
-            }
+            } catch(e) { alert("同步失敗: " + e.message); return false; }
         }
 
         // === 4. 輔助函式 ===
         function initCategories() {
             const mainSel = document.getElementById('chem_main');
             for(let key in categories) {
-                let opt = document.createElement('option');
-                opt.value = key; opt.text = key;
-                mainSel.add(opt);
+                let opt = document.createElement('option'); opt.value = key; opt.text = key; mainSel.add(opt);
             }
         }
         function updateSubCats() {
@@ -331,25 +400,15 @@
             const subSel = document.getElementById('chem_sub');
             subSel.innerHTML = '<option value="">-- 子分類 --</option>';
             if(mainVal && categories[mainVal]) {
-                categories[mainVal].forEach(sub => {
-                    let opt = document.createElement('option');
-                    opt.value = sub; opt.text = sub;
-                    subSel.add(opt);
-                });
+                categories[mainVal].forEach(sub => { let opt = document.createElement('option'); opt.value = sub; opt.text = sub; subSel.add(opt); });
             }
         }
         function updateDisplayCount() {
             const countLabel = document.getElementById('herb-total-count');
-            const activeCount = allHerbs.filter(h => !h.isTrash).length;
-            const trashCount = allHerbs.filter(h => h.isTrash).length;
-            if (countLabel) countLabel.innerText = `正常: ${activeCount} | 桶: ${trashCount}`;
+            if (countLabel) countLabel.innerText = `正常: ${allHerbs.filter(h => !h.isTrash).length} | 桶: ${allHerbs.filter(h => h.isTrash).length}`;
         }
-        
         function logout() {
-            if(confirm("確定要登出並返回主選單？")) {
-                localStorage.removeItem('tcm_admin_config');
-                window.location.href = 'admin_menu.html';
-            }
+            if(confirm("確定要登出並返回主選單？")) { localStorage.removeItem('tcm_admin_config'); window.location.href = 'admin_menu.html'; }
         }
 
         // === 5. 表格與搜尋 ===
@@ -357,15 +416,9 @@
             const btn = document.getElementById('toggle-trash-btn');
             const title = document.getElementById('view-title');
             if (currentView === 'active') {
-                currentView = 'trash';
-                btn.innerText = "🔙 回到清單";
-                btn.style.background = "#455a64";
-                title.innerText = "🗑️ 垃圾桶";
+                currentView = 'trash'; btn.innerText = "🔙 回到清單"; btn.style.background = "#455a64"; title.innerText = "🗑️ 垃圾桶";
             } else {
-                currentView = 'active';
-                btn.innerText = "🗑️ 查看垃圾桶";
-                btn.style.background = "#607d8b";
-                title.innerText = "藥材清單";
+                currentView = 'active'; btn.innerText = "🗑️ 垃圾桶"; btn.style.background = "#607d8b"; title.innerText = "藥材清單";
             }
             renderTable();
         }
@@ -374,7 +427,6 @@
             const list = filterList || allHerbs;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
-            
             const displayList = list.filter(h => currentView === 'trash' ? h.isTrash : !h.isTrash);
 
             [...displayList].sort((a,b) => b.id - a.id).forEach(herb => {
@@ -385,14 +437,11 @@
                         const first = herb.origin[0];
                         originPrev = (typeof first === 'object') ? `${first.lat||''} ${first.ch||''}` : first;
                         if (herb.origin.length > 1) originPrev += ' ...';
-                    } else if (typeof herb.origin === 'string') {
-                        originPrev = herb.origin;
-                    }
+                    } else if (typeof herb.origin === 'string') originPrev = herb.origin;
                 }
                 
-                let confusingPrev = herb.confusing_drugs && herb.confusing_drugs.length > 0 
-                    ? `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>` : '-';
-
+                let confusingPrev = herb.confusing_drugs && herb.confusing_drugs.length > 0 ? `<span style="color:#d32f2f; font-weight:bold;">⚠️ ${herb.confusing_drugs.length}</span>` : '-';
+                
                 let actionButtons = currentView === 'active' 
                     ? `<button class="btn btn-edit btn-sm" onclick="openEditModal(${herb.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="softDelete(${herb.id})">🗑️</button>`
                     : `<button class="btn btn-success btn-sm" onclick="restoreHerb(${herb.id})">⏪ 還原</button> <button class="btn btn-danger btn-sm" onclick="hardDelete(${herb.id})">🔥 永久刪除</button>`;
@@ -407,35 +456,27 @@
             const suggestionsDiv = document.getElementById('suggestions');
             if (!term) { suggestionsDiv.style.display = 'none'; renderTable(); return; }
             
-            const matches = allHerbs.filter(h => {
-                return (h.chinese_name && h.chinese_name.includes(term)) ||
-                       (h.latin_name && h.latin_name.toLowerCase().includes(term));
-            });
+            const matches = allHerbs.filter(h => (h.chinese_name && h.chinese_name.includes(term)) || (h.latin_name && h.latin_name.toLowerCase().includes(term)));
             renderTable(matches);
             
             if (matches.length > 0) {
                 suggestionsDiv.innerHTML = matches.slice(0,5).map(h => `<div class="suggestion-item" onclick="openEditModal(${h.id})"><span>${h.chinese_name}</span> <small style="color:#888;">${h.latin_name||''}</small></div>`).join('');
                 suggestionsDiv.style.display = 'block';
-            } else {
-                suggestionsDiv.style.display = 'none';
-            }
+            } else suggestionsDiv.style.display = 'none';
         }
 
-        // === 6. 編輯、刪除、圖片處理 ===
+        // === 6. 編輯與儲存 ===
         function openEditModal(id = null) {
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'flex';
             document.getElementById('edit-id').value = id || "";
             document.getElementById('img-input').value = "";
             document.getElementById('suggestions').style.display = 'none'; 
-            newImageBase64 = null;
-            hasUnsavedChanges = false;
+            newImageBase64 = null; hasUnsavedChanges = false;
 
             document.getElementById('origin-rows-wrapper').innerHTML = "";
             document.getElementById('confusing-rows-wrapper').innerHTML = "";
             document.getElementById('chem-rows-wrapper').innerHTML = "";
-
-            // 清空編輯器
             tinymce.get('indications').setContent("");
 
             if (id) {
@@ -452,33 +493,27 @@
                 document.getElementById('family_ch').value = h.family_ch || "";
                 document.getElementById('family_en').value = h.family_en || "";
                 document.getElementById('effects').value = (h.effects || []).join(', ');
-                
-                // 4. 讀取舊的 indications 到編輯器中 (如果是 HTML 格式會自動渲染)
                 tinymce.get('indications').setContent(h.indications || "");
 
                 document.getElementById('chem_main').value = h.chem_main || ""; updateSubCats();
                 document.getElementById('chem_sub').value = h.chem_sub || "";
 
                 document.getElementById('old-image-path').value = h.image || "";
-                const preview = document.getElementById('preview-img');
-                preview.src = h.image || "";
-                preview.style.display = h.image ? 'block' : 'none';
+                document.getElementById('preview-img').src = h.image || "";
+                document.getElementById('preview-img').style.display = h.image ? 'block' : 'none';
                 document.getElementById('img-status').innerText = h.image ? "✅ 既有圖片" : "";
 
                 if (h.chemistry) {
                     let list = Array.isArray(h.chemistry) ? h.chemistry : (typeof h.chemistry === 'string' ? h.chemistry.split(/[,，]/).map(s=>({name_en:s})) : []);
                     list.forEach(c => addChemRow(c));
-                } else {
-                    addChemRow();
-                }
+                } else addChemRow();
             } else {
                 document.getElementById('modal-title').innerText = "新增藥材";
                 document.querySelectorAll('#edit-modal input[type=text], #edit-modal textarea').forEach(e => e.value="");
                 addOriginRow(); addChemRow();
                 document.getElementById('preview-img').style.display = 'none';
             }
-            const inputs = document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select');
-            inputs.forEach(input => { input.oninput = () => { hasUnsavedChanges = true; }; });
+            document.querySelectorAll('#edit-modal input, #edit-modal textarea, #edit-modal select').forEach(i => i.oninput = () => { hasUnsavedChanges = true; });
         }
 
         function closeEditModal() {
@@ -487,7 +522,6 @@
             hasUnsavedChanges = false; 
         }
 
-        // 動態列表 (含修正的 chem row)
         function addOriginRow(d) { 
             const w=document.getElementById('origin-rows-wrapper'); const v=document.createElement('div'); v.className='dynamic-row origin-row'; 
             v.innerHTML=`<input type="text" class="origin-lat" value="${d?.lat||(typeof d==='string'?d:'')}" placeholder="學名"><input type="text" class="origin-ch" value="${d?.ch||''}" placeholder="中文"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>`; w.appendChild(v); 
@@ -505,7 +539,6 @@
             w.appendChild(v);
         }
 
-        // 圖片與儲存 (使用 utils.js 的邏輯)
         function handleImagePreview() {
             const file = document.getElementById('img-input').files[0]; if(!file)return;
             const reader = new FileReader(); reader.onload=e=>{ const img=new Image(); img.src=e.target.result; img.onload=()=>{
@@ -552,21 +585,17 @@
 
                 let finalId = idVal ? parseInt(idVal) : (allHerbs.reduce((max,h)=>Math.max(max,h.id||0),0)+1);
                 
-                // 5. 取得編輯器內容 (HTML 格式)
-                const indicationsHTML = tinymce.get('indications').getContent();
-
                 const newItem = {
                     id: finalId, grade: document.getElementById('edit-grade').value, chinese_name: name,
                     origin: originData, confusing_drugs: confData, latin_name: document.getElementById('latin_name').value,
                     part: document.getElementById('part').value, family_ch: document.getElementById('family_ch').value, family_en: document.getElementById('family_en').value,
                     chem_main: document.getElementById('chem_main').value, chem_sub: document.getElementById('chem_sub').value,
                     chemistry: chemData, effects: document.getElementById('effects').value.split(/[,，]/).map(s=>s.trim()).filter(s=>s),
-                    indications: indicationsHTML, // 存入 HTML
+                    indications: tinymce.get('indications').getContent(),
                     image: finalImg, isTrash: false
                 };
 
                 if(idVal) allHerbs[allHerbs.findIndex(h=>h.id==idVal)] = newItem; else allHerbs.push(newItem);
-                
                 await syncToGitHub(`Update ${name}`);
                 hasUnsavedChanges = false; document.getElementById('edit-modal').style.display='none';
 
