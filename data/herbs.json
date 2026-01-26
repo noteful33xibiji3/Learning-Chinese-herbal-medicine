@@ -749,5 +749,38 @@
     "indications": "<ul>\n<li>\n<p>肉桂</p>\n<p>按范成大桂海志云：凡木葉心皆一縱理，獨桂有兩道如圭形，故字從圭</p>\n</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 29,
+    "grade": "大二上",
+    "chinese_name": "黃柏皮",
+    "origin": [
+      {
+        "lat": "Phellodendron chinense Schneid.",
+        "ch": "川黃柏"
+      },
+      {
+        "lat": "Phellodendron amurense Ruprecht",
+        "ch": "關黃柏"
+      },
+      {
+        "lat": "Phellodendron wilsonii Hayata",
+        "ch": "台灣黃柏"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Phellodendri Cortex",
+    "part": "",
+    "family_ch": "芸香科",
+    "family_en": "Rutaceae",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "異喹啉類 (Isoquinoline alkaloid)",
+    "chemistry": [],
+    "effects": [
+      "苦味健胃整腸劑  跌打損傷藥"
+    ],
+    "indications": "<ul>\n<li>\n<p>蘗木(本經)、黃蘗(本草經集著)</p>\n<p>成分與黃連類似-小蘗鹼berberine</p>\n<p>苦味健胃整腸劑</p>\n<p>跌打損傷藥</p>\n<p>&nbsp;</p>\n</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
