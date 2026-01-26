@@ -520,5 +520,32 @@
     "indications": "<ul>\n<li>\n<p class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">煮臭肉用</span></p>\n<span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">anethole (major)</span></li>\n<li><span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">揮發油</span></li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 20,
+    "grade": "大二上",
+    "chinese_name": "決明子",
+    "origin": [
+      {
+        "lat": "Cassia obtusifolia",
+        "ch": "決明"
+      },
+      {
+        "lat": "Cassia tora",
+        "ch": "小決明"
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Cassiae Semen",
+    "part": "",
+    "family_ch": "豆科",
+    "family_en": "Fabaceae/ Leguminosae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">龍門乃在長安北，今處處有。葉如茳芒，子形似<span style=\"background: yellow; mso-highlight: yellow;\">馬蹄</span></span></li>\n<li><span style=\"font-size: 9.0pt; font-family: 芫荽; background: yellow; mso-highlight: yellow; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">有瀉下功用</span></li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
