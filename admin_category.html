@@ -43,6 +43,62 @@
         .status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; }
         .status-saved { background-color: #4caf50; }
         .status-unsaved { background-color: #ccc; }
+        /* === 📱 手機版適配 (RWD) === */
+    @media (max-width: 768px) {
+        /* 1. 調整導覽列 */
+        nav { 
+            flex-direction: column; 
+            padding: 10px 15px; 
+            gap: 15px; 
+        }
+        
+        /* 讓按鈕群組在手機上自動換行，且按鈕填滿寬度 */
+        nav div:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        /* 「強制重整」與「去前台預覽」按鈕變大，好點擊 */
+        nav button, nav .btn-frontend {
+            flex: 1; /* 兩個按鈕各佔一半 */
+            text-align: center;
+            padding: 10px;
+            margin: 0 !important;
+        }
+
+        /* 2. 調整主容器 */
+        .container { 
+            padding: 20px; 
+            margin: 15px auto; 
+            width: 95%; /* 不要太寬 */
+        }
+
+        /* 3. 調整下拉選單與標籤字體 */
+        label { font-size: 1rem; margin-top: 10px; }
+        select { padding: 10px; font-size: 1rem; }
+
+        /* 4. 調整編輯器高度 (手機上不要太高，不然會滑不到下面的按鈕) */
+        .tox-tinymce {
+            height: 400px !important; /* 強制覆蓋原本的 600px */
+        }
+
+        /* 5. 儲存按鈕置底懸浮 (Optional: 讓按鈕更好按) */
+        /* 如果您希望儲存按鈕一直浮在最下面，可以取消下面這段註解 */
+        /*
+        .btn-save {
+            position: fixed;
+            bottom: 20px;
+            left: 5%;
+            width: 90%;
+            z-index: 1000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        body { padding-bottom: 80px; } 
+        */
+    }
     </style>
 </head>
 <body>
