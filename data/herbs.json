@@ -497,5 +497,28 @@
     "indications": "<ul>\n<li>別名:蕺菜、十藥</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 19,
+    "grade": "大二上",
+    "chinese_name": "八角茴香",
+    "origin": [
+      {
+        "lat": "Illicium verum",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Anisi Stellati Fructus",
+    "part": "",
+    "family_ch": "木蘭科",
+    "family_en": "Magnoliaceae",
+    "chem_main": "揮發油 (Volatile oil)",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>\n<p class=\"MsoNormal\"><span style=\"font-size: 9.0pt; font-family: 芫荽;\">煮臭肉用</span></p>\n<span lang=\"EN-US\" style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">anethole (major)</span></li>\n<li><span style=\"font-size: 9.0pt; font-family: 芫荽; mso-ansi-language: EN-US; mso-fareast-language: ZH-TW; mso-bidi-language: AR-SA;\">揮發油</span></li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
