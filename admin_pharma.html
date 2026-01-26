@@ -465,15 +465,38 @@
             const json = await res.json();
             fileSha = json.content.sha;
         }
-
+// 分類選單初始化
         function initCatSelects() {
             const mainSel = document.getElementById('cat-main');
             const filterSel = document.getElementById('filter-cat');
+            
             if (typeof PHARMA_CATEGORIES !== 'undefined') {
                 PHARMA_CATEGORIES.forEach(cat => {
-                    const opt = new Option(cat.name_ch, cat.name_ch);
+                    // ★ 修正：顯示文字改為 "中文 (英文)"
+                    const displayName = `${cat.name_ch} (${cat.name_en})`;
+                    
+                    // Option(顯示文字, 存檔值) -> 存檔值只存中文，顯示則包含英文
+                    const opt = new Option(displayName, cat.name_ch);
+                    
                     mainSel.add(opt);
                     filterSel.add(opt.cloneNode(true));
+                });
+            }
+        }
+
+        // 中分類連動更新
+        function updateSubCats() {
+            const val = document.getElementById('cat-main').value;
+            const sub = document.getElementById('cat-sub');
+            sub.innerHTML = '<option value="">- 中分類 -</option>';
+            
+            const found = PHARMA_CATEGORIES.find(c => c.name_ch === val);
+            
+            if(found && found.subcategories) {
+                found.subcategories.forEach(s => {
+                    // ★ 修正：顯示文字改為 "中文 (英文)"
+                    const displayName = `${s.ch} (${s.en})`;
+                    sub.add(new Option(displayName, s.ch));
                 });
             }
         }
