@@ -10,58 +10,36 @@
     <style>
         /* === 樣式區 === */
         body { background: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; }
-        
-        /* 導覽列 */
         nav { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .nav-title { font-size: 1.2rem; font-weight: bold; color: #2C5E4F; text-decoration: none; display: flex; align-items: center; gap: 10px; }
         .back-btn { background: #e0e0e0; color: #333; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
         .back-btn:hover { background: #d0d0d0; }
-
-        /* 主容器 */
         main { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        
-        /* 列表區 */
         .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
-        
-        /* 卡片樣式 */
         .pharma-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border-left: 5px solid #4A7C59; position: relative; }
         .pharma-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
         .card-name { font-size: 1.3rem; font-weight: bold; color: #333; margin: 0; }
         .card-cat { background: #e8f5e9; color: #2C5E4F; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; }
         .card-en { color: #666; font-size: 0.9rem; font-style: italic; }
-        
-        /* 垃圾桶按鈕 */
-        .card-delete-btn {
-            position: absolute; bottom: 15px; right: 15px;
-            background: #ffebee; color: #c62828; border: none;
-            width: 35px; height: 35px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; cursor: pointer; transition: 0.2s;
-            z-index: 2;
-        }
+        .card-delete-btn { position: absolute; bottom: 15px; right: 15px; background: #ffebee; color: #c62828; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.2s; z-index: 2; }
         .card-delete-btn:hover { background: #ffcdd2; transform: scale(1.1); }
-
-        /* 編輯視窗 (Modal) */
         #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 20px 0; }
         .modal-content { background: white; width: 95%; max-width: 900px; margin: 0 auto 50px auto; padding: 30px; border-radius: 15px; position: relative; }
-        
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #444; }
         input[type="text"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        
         .section-title { font-size: 1.1rem; color: #2C5E4F; border-bottom: 2px solid #eee; padding-bottom: 5px; margin: 30px 0 15px 0; font-weight: bold; }
-
         .dynamic-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
-        
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
         .btn-primary { background: #4A7C59; }
         .btn-add { background: #607d8b; width: 100%; margin-top: 5px; }
         .btn-danger { background: #e57373; padding: 5px 10px; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; } 
-        
-        /* 載入遮罩 */
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
         #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:2000; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        
+        /* ★ 新增：成分卡片樣式 (為了放編輯器) */
+        .chem-card { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -102,7 +80,7 @@
             <input type="hidden" id="edit-id">
 
             <div class="form-group" style="background:#e8f5e9; padding:15px; border-radius:10px;">
-                <label>📌 生藥分類 (依據 Word 設定)</label>
+                <label>📌 生藥分類</label>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <select id="cat-main" onchange="updateSubCats()"><option value="">- 大分類 -</option></select>
                     <select id="cat-sub"><option value="">- 中分類 -</option></select>
@@ -115,7 +93,7 @@
                 <div><label>生藥名稱 (英文)</label><input type="text" id="name-en" placeholder="例如：Ephedra"></div>
             </div>
             
-            <label style="margin-top:10px;">別名 (Alias)</label>
+            <label style="margin-top:10px;">別名</label>
             <div id="alias-list"></div>
             <button class="btn btn-add" onclick="addAliasRow()">+ 新增別名</button>
 
@@ -130,9 +108,9 @@
                 <div><label>使用部位 (英文)</label><input type="text" id="part-en" placeholder="Stem"></div>
             </div>
 
-            <div class="section-title">⚗️ 化學成分 (Components)</div>
+            <div class="section-title">⚗️ 化學成分 (Components) - 支援詳細格式</div>
             <div id="chem-list"></div>
-            <button class="btn btn-add" style="background:#4A7C59;" onclick="addChemRow()">+ 新增成分與結構圖</button>
+            <button class="btn btn-add" style="background:#4A7C59;" onclick="addChemRow()">+ 新增成分</button>
 
             <div class="section-title">⚖️ 比較 (Comparison)</div>
             <div id="compare-list"></div>
@@ -140,9 +118,9 @@
 
             <div class="section-title">特性與功效</div>
             <div class="form-group"><label>性狀/特性</label><textarea id="characteristics" rows="3"></textarea></div>
-            <div class="form-group"><label>功效 (Efficacy)</label><textarea id="efficacy" rows="3"></textarea></div>
-            <div class="form-group"><label>適應症/治療</label><textarea id="treatment" rows="2"></textarea></div>
-            <div class="form-group"><label>記法 (Mnemonic)</label><input type="text" id="mnemonic" placeholder="口訣..."></div>
+            <div class="form-group"><label>功效</label><textarea id="efficacy" rows="3"></textarea></div>
+            <div class="form-group"><label>適應症</label><textarea id="treatment" rows="2"></textarea></div>
+            <div class="form-group"><label>記法</label><input type="text" id="mnemonic" placeholder="口訣..."></div>
 
             <div class="section-title">📝 詳細備註</div>
             <textarea id="rich-note"></textarea>
@@ -158,60 +136,43 @@
     <script src="utils.js"></script>
 
     <script>
-        // === 全域變數 ===
         let pharmaList = [];
         let fileSha = "";
         const FILE_PATH = "data/pharma.json";
-        
-        // ★ 變數改名：使用 currentConfig 避免與 utils.js 衝突
         let currentConfig = null;
 
-        // === 初始化 ===
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. 初始化 TinyMCE
+            // 1. 初始化下方的大編輯器
             tinymce.init({
-                selector: '#rich-note', // 對應 HTML ID
+                selector: '#rich-note', 
                 height: 400,
                 plugins: 'table lists link image code preview searchreplace autolink fullscreen charmap',
-                toolbar: 'undo redo | cut copy paste | blocks fontfamily fontsize | ' +
-                         'bold italic underline strikethrough forecolor backcolor | ' +
-                         'alignleft aligncenter alignright alignjustify | ' +
-                         'bullist numlist outdent indent | table image link | removeformat code fullscreen',
+                toolbar: 'undo redo | cut copy paste | blocks | bold italic underline forecolor backcolor | alignleft aligncenter | bullist numlist | table image | code',
                 content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 16px; color: #333; }',
-                branding: false,
-                menubar: true
+                branding: false, menubar: true
             });
 
-            // 2. 登入檢查
             const configStr = localStorage.getItem('tcm_admin_config');
             if (!configStr) {
                 alert("請先登入！");
                 document.getElementById('loading-overlay').style.display = 'none';
                 return location.href = 'admin_menu.html';
             }
-            
-            // ★ 使用新的變數名稱
             currentConfig = JSON.parse(configStr);
             
-            // 3. 核心載入邏輯 (防卡死)
             try {
-                // 檢查 utils.js 是否有匯入
-                if (typeof initGitHubConfig === 'undefined') throw new Error("找不到 utils.js，請確認檔案位置");
-
+                if (typeof initGitHubConfig === 'undefined') throw new Error("找不到 utils.js");
                 await initGitHubConfig(currentConfig.token, currentConfig.user, currentConfig.repo);
                 await loadData();
                 initCatSelects();
-                
             } catch (e) {
                 alert("初始化錯誤: " + e.message);
                 console.error(e);
             } finally {
-                // ★ 關鍵：無論成功失敗，都要把載入畫面關掉
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         });
 
-        // 1. 讀取資料
         async function loadData() {
             try {
                 const url = `https://api.github.com/repos/${currentConfig.user}/${currentConfig.repo}/contents/${FILE_PATH}?t=${Date.now()}`;
@@ -220,13 +181,9 @@
                 if (res.ok) {
                     const json = await res.json();
                     fileSha = json.sha;
-                    if (json.content) {
-                        pharmaList = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
-                    } else {
-                        pharmaList = [];
-                    }
+                    if (json.content) pharmaList = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
+                    else pharmaList = [];
                 } else if (res.status === 404) {
-                    console.log("尚未建立 pharma.json，將初始化為新檔");
                     pharmaList = [];
                 } else {
                     throw new Error("GitHub 回傳錯誤: " + res.status);
@@ -239,12 +196,10 @@
             }
         }
 
-        // 2. 渲染列表
         function renderList() {
             const container = document.getElementById('pharma-list');
             const search = document.getElementById('search-input').value.toLowerCase();
             const filter = document.getElementById('filter-cat').value;
-            
             container.innerHTML = "";
 
             const filtered = pharmaList.filter(item => {
@@ -252,53 +207,38 @@
                 const matchCat = filter ? item.category_main === filter : true;
                 return matchSearch && matchCat;
             });
-            
             const sortedList = [...filtered].sort((a,b) => b.id - a.id);
 
             sortedList.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'pharma-card';
                 div.onclick = () => openModal(item.id);
-                
                 div.innerHTML = `
-                    <div class="card-header">
-                        <span class="card-name">${item.name_ch}</span>
-                        <span class="card-cat">${item.category_sub || item.category_main}</span>
-                    </div>
+                    <div class="card-header"><span class="card-name">${item.name_ch}</span><span class="card-cat">${item.category_sub || item.category_main}</span></div>
                     <div class="card-en">${item.name_en}</div>
-                    <div style="font-size:0.85rem; color:#888; margin-top:5px;">
-                        ${item.family_ch || ""} / ${item.part_ch || ""}
-                    </div>
-                    <button class="card-delete-btn" onclick="event.stopPropagation(); deleteItem(${item.id})" title="刪除此資料">
-                        🗑️
-                    </button>
+                    <div style="font-size:0.85rem; color:#888; margin-top:5px;">${item.family_ch || ""} / ${item.part_ch || ""}</div>
+                    <button class="card-delete-btn" onclick="event.stopPropagation(); deleteItem(${item.id})" title="刪除">🗑️</button>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // 3. 刪除功能
         async function deleteItem(id) {
             if (!confirm("⚠️ 警告：確定要刪除這筆資料嗎？")) return;
-            
             const newArr = pharmaList.filter(item => item.id !== id);
             const oldArr = [...pharmaList];
-            pharmaList = newArr;
-            renderList(); // 畫面先變
-
+            pharmaList = newArr; renderList();
             try {
                 await uploadToGitHub(newArr, `Delete ID: ${id}`);
                 alert("🗑️ 刪除成功！");
-            } catch (e) {
-                alert("刪除失敗: " + e.message);
-                pharmaList = oldArr; // 失敗就還原
-                renderList();
-            }
+            } catch (e) { alert("刪除失敗"); pharmaList = oldArr; renderList(); }
         }
 
-        // 4. 編輯視窗
+        // === 編輯視窗相關 ===
         function openModal(id = null) {
-            const modal = document.getElementById('edit-modal');
+            // 1. 先把舊的成分編輯器全部銷毀，避免 ID 衝突
+            removeChemEditors();
+            
             document.querySelectorAll('input, select, textarea').forEach(i => i.value = '');
             document.getElementById('alias-list').innerHTML = "";
             document.getElementById('chem-list').innerHTML = "";
@@ -326,6 +266,7 @@
                     tinymce.get('rich-note').setContent(item.note || '');
 
                     (item.aliases || []).forEach(v => addAliasRow(v));
+                    // 填入成分 (帶有 HTML 備註)
                     (item.components || []).forEach(v => addChemRow(v));
                     (item.comparisons || []).forEach(v => addCompareRow(v));
                 }
@@ -333,13 +274,16 @@
                 document.getElementById('edit-id').value = "";
                 addChemRow(); 
             }
-            modal.style.display = 'block';
+            document.getElementById('edit-modal').style.display = 'block';
         }
 
-        function closeModalDirect() { document.getElementById('edit-modal').style.display = 'none'; }
-        function closeModal() { if(confirm("確定關閉？未儲存變更將遺失")) closeModalDirect(); }
+        function closeModalDirect() { 
+            document.getElementById('edit-modal').style.display = 'none'; 
+            removeChemEditors(); // 關閉時也清理編輯器
+        }
+        function closeModal() { if(confirm("確定關閉？")) closeModalDirect(); }
 
-        // 5. 動態欄位
+        // === 動態欄位 ===
         function addAliasRow(val = "") {
             const div = document.createElement('div'); div.className = 'dynamic-row';
             div.innerHTML = `<input type="text" class="alias-input" value="${val}" placeholder="別名"><button class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>`;
@@ -350,24 +294,69 @@
             div.innerHTML = `<input type="text" class="comp-target" value="${data.target||''}" placeholder="對象"><input type="text" class="comp-diff" value="${data.diff||''}" placeholder="差異"><button class="btn btn-danger" onclick="this.parentElement.remove()">✕</button>`;
             document.getElementById('compare-list').appendChild(div);
         }
+
+        // === ★ 核心修改：成分列 + 迷你編輯器 ===
         function addChemRow(data = {}) {
-            const div = document.createElement('div'); div.className = 'dynamic-row'; div.style.flexDirection = 'column';
-            const imgId = `chem-img-${Date.now()}-${Math.random()}`;
+            const div = document.createElement('div'); 
+            div.className = 'chem-card'; // 改用卡片式佈局
+            
+            const imgId = `chem-img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            // 為編輯器產生唯一 ID
+            const noteId = `chem-note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const imgVal = data.image || "";
-            const noteVal = data.note || ""; 
+            const noteVal = data.note || ""; // 這裡是 HTML
+
             div.innerHTML = `
-                <div style="display:flex; gap:5px; width:100%;">
-                    <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名 (如: Ephedrine)">
-                    <input type="text" class="chem-note" value="${noteVal}" placeholder="備註 (如: 毒性)">
-                    <button class="btn btn-danger" onclick="this.closest('.dynamic-row').remove()">✕</button>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <input type="text" class="chem-name" value="${data.name||''}" placeholder="成分名稱 (如: Ephedrine)" style="font-weight:bold; width:70%;">
+                    <button class="btn btn-danger" onclick="removeChemRow(this, '${noteId}')">刪除此成分</button>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="background:#eee; padding:5px; border-radius:5px; cursor:pointer;">📸 上傳結構 <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')"></label>
-                    <img id="${imgId}" src="${imgVal}" style="max-height:60px; display:${imgVal?'block':'none'}; border:1px solid #ccc;">
+                
+                <div style="display:flex; gap:15px; margin-bottom:10px; align-items:center; background:#eee; padding:5px; border-radius:5px;">
+                    <label style="cursor:pointer; font-weight:bold;">📸 結構圖 <input type="file" style="display:none" onchange="handleChemUpload(this, '${imgId}')"></label>
+                    <img id="${imgId}" src="${imgVal}" style="max-height:50px; display:${imgVal?'block':'none'}; border:1px solid #ccc;">
                     <input type="hidden" class="chem-img-url" value="${imgVal}">
-                </div>`;
+                </div>
+
+                <label>成分備註 (可排版)：</label>
+                <textarea id="${noteId}" class="chem-note-editor">${noteVal}</textarea>
+            `;
             document.getElementById('chem-list').appendChild(div);
+
+            // ★ 立即初始化這個小編輯器
+            initMiniEditor(noteId);
         }
+
+        // 初始化迷你編輯器
+        function initMiniEditor(id) {
+            tinymce.init({
+                selector: `#${id}`,
+                height: 200,
+                menubar: false, // 隱藏選單
+                plugins: 'lists link code charmap',
+                toolbar: 'bold italic forecolor | bullist numlist | removeformat', // 精簡工具列
+                content_style: 'body { font-family: "Noto Sans TC", sans-serif; font-size: 14px; margin: 10px; }',
+                branding: false
+            });
+        }
+
+        // 刪除成分列時，要先銷毀編輯器
+        function removeChemRow(btn, editorId) {
+            if(confirm("確定刪除此成分？")) {
+                tinymce.remove(`#${editorId}`); // 釋放記憶體
+                btn.closest('.chem-card').remove();
+            }
+        }
+
+        // 清理所有成分編輯器 (在關閉視窗時呼叫)
+        function removeChemEditors() {
+            // 找出所有 class 為 chem-note-editor 的 ID
+            const editors = document.querySelectorAll('.chem-note-editor');
+            editors.forEach(el => {
+                tinymce.remove(`#${el.id}`);
+            });
+        }
+
         function handleChemUpload(input, viewId) {
             const file = input.files[0];
             if(!file) return;
@@ -380,7 +369,7 @@
             reader.readAsDataURL(file);
         }
 
-        // 6. 儲存邏輯 (防呆 + 自動關閉 + SHA處理)
+        // === 儲存邏輯 ===
         async function saveData() {
             const btn = document.getElementById('btn-save');
             const idVal = document.getElementById('edit-id').value;
@@ -391,13 +380,20 @@
             btn.innerText = "⏳ 儲存中...";
 
             try {
-                const chemRows = document.querySelectorAll('#chem-list .dynamic-row');
+                // A. 收集成分資料 (需從編輯器取值)
+                const chemRows = document.querySelectorAll('.chem-card');
                 const components = [];
+                
                 for (let row of chemRows) {
                     const name = row.querySelector('.chem-name').value.trim();
-                    const note = row.querySelector('.chem-note').value.trim();
                     if (!name) continue;
-                    
+
+                    // ★ 從 TinyMCE 獲取 HTML 內容
+                    const textarea = row.querySelector('.chem-note-editor');
+                    // 使用 tinymce.get(id).getContent()
+                    const editor = tinymce.get(textarea.id);
+                    const note = editor ? editor.getContent() : textarea.value;
+
                     let imgUrl = row.querySelector('.chem-img-url').value;
                     const fileInput = row.querySelector('input[type="file"]');
                     if (fileInput.fileObj) {
@@ -443,6 +439,7 @@
 
             } catch (e) {
                 alert("儲存失敗: " + e.message);
+                console.error(e);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "💾 儲存資料";
@@ -465,42 +462,31 @@
             const json = await res.json();
             fileSha = json.content.sha;
         }
-// 分類選單初始化
+
         function initCatSelects() {
             const mainSel = document.getElementById('cat-main');
             const filterSel = document.getElementById('filter-cat');
-            
             if (typeof PHARMA_CATEGORIES !== 'undefined') {
                 PHARMA_CATEGORIES.forEach(cat => {
-                    // ★ 修正：顯示文字改為 "中文 (英文)"
                     const displayName = `${cat.name_ch} (${cat.name_en})`;
-                    
-                    // Option(顯示文字, 存檔值) -> 存檔值只存中文，顯示則包含英文
                     const opt = new Option(displayName, cat.name_ch);
-                    
                     mainSel.add(opt);
                     filterSel.add(opt.cloneNode(true));
                 });
             }
         }
-
-        // 中分類連動更新
         function updateSubCats() {
             const val = document.getElementById('cat-main').value;
             const sub = document.getElementById('cat-sub');
             sub.innerHTML = '<option value="">- 中分類 -</option>';
-            
             const found = PHARMA_CATEGORIES.find(c => c.name_ch === val);
-            
             if(found && found.subcategories) {
                 found.subcategories.forEach(s => {
-                    // ★ 修正：顯示文字改為 "中文 (英文)"
                     const displayName = `${s.ch} (${s.en})`;
                     sub.add(new Option(displayName, s.ch));
                 });
             }
         }
-    
     </script>
 </body>
 </html>
