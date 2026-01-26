@@ -474,5 +474,28 @@
     "indications": "<ul>\n<li>茺蔚-果實</li>\n</ul>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 18,
+    "grade": "大二上",
+    "chinese_name": "魚腥草",
+    "origin": [
+      {
+        "lat": "Houttuynia cordata ",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Houttuyniae Herba",
+    "part": "",
+    "family_ch": "三白草科",
+    "family_en": "Saururaceae ",
+    "chem_main": "生物鹼 (Alkaloid)",
+    "chem_sub": "托烷類 (Tropane alkaloid)",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<ul>\n<li>別名:蕺菜、十藥</li>\n</ul>",
+    "image": "",
+    "isTrash": false
   }
 ]
