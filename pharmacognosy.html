@@ -637,44 +637,57 @@
     }
 
     // 檢查並顯示「📖 查看介紹」按鈕 (★ 這裡修復了按鈕亂跑的問題)
-   // === 修正版：檢查並顯示介紹按鈕 (大分類/中分類通吃) ===
+  // === ✅ 修正版：檢查並顯示介紹按鈕 ===
     function checkIntroButton() {
         const btnInfo = document.getElementById('btn-cat-info');
         const spanName = document.getElementById('current-cat-name');
         
-        // 1. 決定目標：
-        // 如果有選中分類 (currentSubCat)，目標就是中分類
-        // 如果沒選中分類，但有選大分類 (currentMainCat)，目標就是大分類
-        let targetKey = '';
+        // 1. 決定目標 (優先看中分類，沒有則看大分類)
+        let targetKey = currentSubCat ? currentSubCat : (currentMainCat !== 'all' ? currentMainCat : '');
         
-        if (currentSubCat) {
-            targetKey = currentSubCat;
-        } else if (currentMainCat !== 'all') {
-            targetKey = currentMainCat;
-        }
-        
-        // 如果還是沒目標 (例如選全部)，就隱藏按鈕
-        if (!targetKey) {
+        // 2. 如果沒目標，或是資料庫還沒載入，就隱藏
+        if (!targetKey || Object.keys(categoryData).length === 0) {
             btnInfo.style.display = 'none';
             return;
         }
 
-        // 2. 比對資料庫 (模糊比對，解決括號問題)
-        // 邏輯：資料庫的 Key 必須包含 targetKey
-        // 例如：選「配糖體」，可以對應到「配糖體 (Glycoside)」
+        // 3. 比對資料庫 (模糊比對，例如選 "生物鹼"，可以抓到 "生物鹼 (Alkaloid)")
         const matchKey = Object.keys(categoryData).find(k => k.includes(targetKey));
 
-        // 3. 顯示按鈕
         if (matchKey && categoryData[matchKey]) {
-            // 按鈕上顯示我們真正找到的那個標題 (例如 "配糖體 (Glycoside)")
+            // 找到了！顯示按鈕
             spanName.innerText = matchKey; 
             btnInfo.style.display = 'inline-flex';
-            btnInfo.dataset.realKey = matchKey; // 綁定真實 Key 供彈窗使用
+            
+            // ★ 關鍵：把找到的 Key 存到按鈕上，讓 openCategoryModal 讀取
+            btnInfo.setAttribute('data-real-key', matchKey); 
         } else {
             btnInfo.style.display = 'none';
         }
     }
 
+    // === ✅ 修正版：打開分類介紹視窗 ===
+    function openCategoryModal() {
+        const btn = document.getElementById('btn-cat-info');
+        
+        // 1. 從按鈕屬性讀取 Key
+        const realKey = btn.getAttribute('data-real-key');
+        
+        if (!realKey) {
+            console.error("找不到分類 Key");
+            return;
+        }
+        
+        // 2. 填入內容
+        document.getElementById('cat-modal-title').innerText = `${realKey} - 詳細介紹`;
+        
+        // 確保有內容，沒有的話顯示預設文字
+        const content = categoryData[realKey] || "<p>暫無介紹資料</p>";
+        document.getElementById('cat-modal-body').innerHTML = content;
+        
+        // 3. 顯示視窗 (您的 ID 是 cat-modal)
+        document.getElementById('cat-modal').style.display = 'flex';
+    }
     // === 3. 執行篩選與渲染 (超級搜尋版) ===
     function filterData() {
         // 取得使用者輸入的關鍵字，並轉小寫 (為了不分大小寫)
@@ -895,59 +908,7 @@
         document.querySelectorAll('.' + className).forEach(e => e.classList.remove('active'));
         if(el) el.classList.add('active');
     }
-    // === 補上這段：顯示分類介紹的邏輯 ===
-async function showCategoryIntro(catName) {
-    // 1. 顯示載入中
-    const modal = document.getElementById('cat-intro-modal');
-    const titleEl = document.getElementById('cat-intro-title');
-    const contentEl = document.getElementById('cat-intro-content');
-    
-    // 如果 HTML 裡沒有這個 Modal，請忽略（或者您需要先在 HTML 補上 Modal）
-    if (!modal) {
-        console.error("找不到分類介紹的 Modal 元素 (id='cat-intro-modal')");
-        return;
-    }
 
-    modal.style.display = 'flex';
-    titleEl.innerText = catName;
-    contentEl.innerHTML = '<p style="text-align:center;">⏳ 讀取中...</p>';
-
-    try {
-        // 2. 讀取 categories.json
-        // 注意：這裡假設 categories.json 跟 HTML 在同一層的 data 資料夾
-        // 為了避免快取，加個時間戳記
-        const res = await fetch(`data/categories.json?t=${Date.now()}`);
-        if (!res.ok) throw new Error("無法讀取分類資料");
-        
-        const catData = await res.json();
-        
-        // 3. 尋找對應的內容
-        // 這裡的 catName 可能是 "生物鹼 (Alkaloid)" 或單純 "生物鹼"
-        // 我們嘗試模糊比對 Key
-        let content = "尚無介紹資料。";
-        
-        // 嘗試直接對應
-        if (catData[catName]) {
-            content = catData[catName];
-        } else {
-            // 嘗試比對中文名稱
-            const key = Object.keys(catData).find(k => k.includes(catName.split(' ')[0]));
-            if (key) content = catData[key];
-        }
-
-        contentEl.innerHTML = content;
-
-    } catch (e) {
-        console.error(e);
-        contentEl.innerHTML = `<p style="color:red; text-align:center;">讀取失敗：${e.message}</p>`;
-    }
-}
-
-// 關閉分類 Modal 的函式
-function closeCatModal() {
-    const modal = document.getElementById('cat-intro-modal');
-    if (modal) modal.style.display = 'none';
-}
 </script>
 </body>
 </html>
