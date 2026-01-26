@@ -95,14 +95,19 @@
   },
   {
     "id": 3,
-    "grade": "大一",
+    "grade": "大二上",
     "chinese_name": "知母",
-    "origin": [],
+    "origin": [
+      {
+        "lat": "Anemarrhena asphodeloides Bunge",
+        "ch": ""
+      }
+    ],
     "confusing_drugs": [],
-    "latin_name": "",
+    "latin_name": "Anemarrhenae Rhizoma",
     "part": "",
-    "family_ch": "",
-    "family_en": "",
+    "family_ch": "百合科",
+    "family_en": "Liliaceae",
     "chem_main": "",
     "chem_sub": "",
     "chemistry": [],
