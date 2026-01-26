@@ -95,29 +95,19 @@
   },
   {
     "id": 3,
-    "grade": "大二上",
+    "grade": "大一",
     "chinese_name": "知母",
-    "origin": [
-      {
-        "lat": "Anemarrhena asphodeloides Bunge",
-        "ch": ""
-      }
-    ],
+    "origin": [],
     "confusing_drugs": [],
-    "latin_name": "Anemarrhenae Rhizoma",
-    "family_ch": "百合科",
-    "family_en": "Liliaceae",
+    "latin_name": "",
+    "part": "",
+    "family_ch": "",
+    "family_en": "",
     "chem_main": "",
     "chem_sub": "",
-    "chemistry": [
-      {
-        "name_en": "saponin",
-        "name_ch": "",
-        "image": ""
-      }
-    ],
+    "chemistry": [],
     "effects": [],
-    "indications": "中品藥\nsaponin\n",
+    "indications": "",
     "image": "",
     "isTrash": false
   },
