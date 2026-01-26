@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生藥學測驗 | 本草學園</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 沿用統一風格 */
+        body { font-family: 'Noto Sans TC', sans-serif; background: #f4f7f6; margin: 0; color: #333; }
+        nav { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: 700; color: #2C5E4F; text-decoration: none; }
+        
+        .quiz-container { max-width: 700px; margin: 30px auto; padding: 20px; }
+        
+        /* 題目卡 */
+        .question-card { background: white; padding: 40px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .q-img { max-width: 100%; max-height: 250px; margin-bottom: 20px; cursor: zoom-in; }
+        .q-text { font-size: 1.4rem; font-weight: bold; color: #2C5E4F; margin-bottom: 20px; }
+        
+        /* 選項網格 */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .option-btn { background: white; border: 2px solid #ddd; padding: 15px; border-radius: 12px; font-size: 1rem; cursor: pointer; transition: 0.2s; color: #555; }
+        .option-btn:hover { background: #f9f9f9; border-color: #aaa; }
+        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+
+        /* 控制面板 */
+        .control-panel { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .btn-start { background: #4A7C59; color: white; border: none; padding: 12px 40px; border-radius: 50px; font-size: 1.2rem; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button onclick="location.href='quiz.html'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">❮</button>
+            <a href="#" class="logo">⚗️ 生藥學測驗</a>
+        </div>
+    </nav>
+
+    <div id="setup-panel" class="control-panel">
+        <h2 style="color:#2C5E4F;">測驗設定</h2>
+        <div style="text-align:left; margin-bottom:20px;">
+            <label style="display:block; margin-bottom:10px; font-weight:bold;">選擇題型：</label>
+            <select id="pharma-mode" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <option value="struct_to_name">看結構圖 ➡ 猜成分名</option>
+                <option value="name_to_family">看生藥名 ➡ 猜科別</option>
+                <option value="name_to_origin">看生藥名 ➡ 猜基原</option>
+            </select>
+        </div>
+        <button class="btn-start" onclick="startPharmaQuiz()">開始測驗</button>
+    </div>
+
+    <div id="quiz-panel" class="quiz-container" style="display:none;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:bold; color:#666;">
+            <span>進度: <span id="q-idx">1</span>/10</span>
+            <span>得分: <span id="q-score">0</span></span>
+        </div>
+        
+        <div class="question-card">
+            <img id="q-image" class="q-img" src="" style="display:none;" onclick="window.open(this.src)">
+            <div id="q-question" class="q-text">題目</div>
+            <div id="options-area" class="options-grid"></div>
+        </div>
+        
+        <div id="feedback" style="text-align:center; height:20px; font-weight:bold;"></div>
+    </div>
+
+    <div id="result-panel" class="control-panel" style="display:none;">
+        <h1>測驗結束</h1>
+        <div style="font-size:3rem; color:#4A7C59; font-weight:bold;" id="final-score">0</div>
+        <button class="btn-start" onclick="location.reload()">再測一次</button>
+        <button class="btn-start" onclick="location.href='quiz.html'" style="background:#666; margin-left:10px;">回大廳</button>
+    </div>
+
+    <script>
+        let allPharma = [];
+        let quizQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+
+        async function startPharmaQuiz() {
+            try {
+                // 讀取生藥資料
+                const res = await fetch('data/pharma.json');
+                const json = await res.json();
+                // 處理 GitHub API 格式
+                if (json.content && json.encoding === 'base64') {
+                    allPharma = JSON.parse(decodeURIComponent(escape(window.atob(json.content))));
+                } else {
+                    allPharma = json;
+                }
+
+                if (allPharma.length < 4) return alert("資料不足，無法測驗");
+
+                generateQuestions();
+                
+                document.getElementById('setup-panel').style.display = 'none';
+                document.getElementById('quiz-panel').style.display = 'block';
+                showQuestion();
+
+            } catch (e) {
+                alert("資料讀取失敗");
+                console.error(e);
+            }
+        }
+
+        function generateQuestions() {
+            const mode = document.getElementById('pharma-mode').value;
+            quizQuestions = [];
+            
+            // 隨機選 10 題 (或全部)
+            const pool = allPharma.sort(() => 0.5 - Math.random()).slice(0, 10);
+
+            pool.forEach(item => {
+                let qText = "", qImg = "", ans = "";
+                let distractors = [];
+
+                if (mode === 'struct_to_name') {
+                    // 找有結構圖的成分
+                    if (item.components && item.components.length > 0) {
+                        const comp = item.components.find(c => c.image);
+                        if (comp) {
+                            qImg = comp.image;
+                            qText = "此結構屬於哪個成分？";
+                            ans = comp.name;
+                            // 錯誤選項：其他生藥的成分名
+                            distractors = allPharma.filter(p => p.id !== item.id)
+                                .map(p => (p.components && p.components.length>0) ? p.components[0].name : p.name_en)
+                                .sort(() => 0.5 - Math.random()).slice(0, 3);
+                        }
+                    }
+                } else if (mode === 'name_to_family') {
+                    qText = `${item.name_ch} (${item.name_en}) 屬於哪一科？`;
+                    ans = item.family_ch || item.family_en;
+                    distractors = allPharma.filter(p => p.id !== item.id)
+                        .map(p => p.family_ch || p.family_en)
+                        .sort(() => 0.5 - Math.random()).slice(0, 3);
+                } else if (mode === 'name_to_origin') {
+                    qText = `${item.name_ch} 的基原是？`;
+                    ans = item.origin;
+                    distractors = allPharma.filter(p => p.id !== item.id)
+                        .map(p => p.origin)
+                        .sort(() => 0.5 - Math.random()).slice(0, 3);
+                }
+
+                // 如果成功產生題目
+                if (ans) {
+                    quizQuestions.push({
+                        q: qText, img: qImg, ans: ans,
+                        opts: [...distractors, ans].sort(() => 0.5 - Math.random())
+                    });
+                }
+            });
+        }
+
+        function showQuestion() {
+            if (currentIdx >= quizQuestions.length) return showResult();
+            
+            const q = quizQuestions[currentIdx];
+            document.getElementById('q-idx').innerText = currentIdx + 1;
+            document.getElementById('q-question').innerText = q.q;
+            
+            const imgEl = document.getElementById('q-image');
+            if (q.img) { imgEl.src = q.img; imgEl.style.display = 'inline-block'; }
+            else { imgEl.style.display = 'none'; }
+
+            const optsDiv = document.getElementById('options-area');
+            optsDiv.innerHTML = "";
+            q.opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(btn, opt === q.ans);
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+            
+            if (isCorrect) {
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('feedback').innerText = "✅ 正確！";
+                document.getElementById('feedback').style.color = "green";
+            } else {
+                btn.classList.add('wrong');
+                // 顯示正確答案
+                btns.forEach(b => {
+                    if(b.innerText === quizQuestions[currentIdx].ans) b.classList.add('correct');
+                });
+                document.getElementById('feedback').innerText = "❌ 錯誤";
+                document.getElementById('feedback').style.color = "red";
+            }
+            document.getElementById('q-score').innerText = score;
+
+            setTimeout(() => {
+                currentIdx++;
+                document.getElementById('feedback').innerText = "";
+                showQuestion();
+            }, 1500);
+        }
+
+        function showResult() {
+            document.getElementById('quiz-panel').style.display = 'none';
+            document.getElementById('result-panel').style.display = 'block';
+            document.getElementById('final-score').innerText = score;
+        }
+    </script>
+</body>
+</html>
