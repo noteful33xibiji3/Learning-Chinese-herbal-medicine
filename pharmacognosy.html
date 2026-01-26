@@ -384,14 +384,16 @@
     </div>
 
     <div id="detail-modal" class="modal-overlay" onclick="closeModal(event)">
-    <div class="modal-title-group">
-    <div id="modal-id" style="font-size:0.9rem; color:rgba(255,255,255,0.8); font-family:'Roboto Mono'; margin-bottom:2px;">#ID</div>
-    
-    <h2 id="modal-title">麻黃</h2>
-    <span id="modal-subtitle">Ephedra</span>
-</div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div id="modal-id" style="font-size:0.9rem; color:rgba(255,255,255,0.8); font-family:'Roboto Mono'; margin-bottom:2px;">#ID</div>
+                    <h2 id="modal-title" style="margin:0;">載入中...</h2>
+                    <span id="modal-subtitle" style="font-style:italic; opacity:0.9;">Loading...</span>
+                </div>
                 <button class="close-btn" onclick="closeModalDirect()">×</button>
             </div>
+            
             <div class="modal-body">
                 <div class="tag-cloud" id="modal-tags"></div>
                 
@@ -785,7 +787,14 @@
     // === 4. 生藥詳情 Modal ===
     function openDetail(item) {
         const modal = document.getElementById('detail-modal');
-        
+        if (!modal) return; // 如果找不到彈窗就停止，防止報錯
+
+        // ★ 安全填入 ID (如果 HTML 裡沒有 modal-id 也不會當機)
+        const idEl = document.getElementById('modal-id');
+        if (idEl) idEl.innerText = `#${item.id}`; 
+
+        document.getElementById('modal-title').innerText = item.name_ch;
+        document.getElementById('modal-subtitle').innerText = item.name_en;
         document.getElementById('modal-id').innerText = `#${item.id}`;
         document.getElementById('modal-title').innerText = item.name_ch;
         document.getElementById('modal-subtitle').innerText = item.name_en;
