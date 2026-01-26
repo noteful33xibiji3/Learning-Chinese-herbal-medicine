@@ -895,6 +895,59 @@
         document.querySelectorAll('.' + className).forEach(e => e.classList.remove('active'));
         if(el) el.classList.add('active');
     }
+    // === 補上這段：顯示分類介紹的邏輯 ===
+async function showCategoryIntro(catName) {
+    // 1. 顯示載入中
+    const modal = document.getElementById('cat-intro-modal');
+    const titleEl = document.getElementById('cat-intro-title');
+    const contentEl = document.getElementById('cat-intro-content');
+    
+    // 如果 HTML 裡沒有這個 Modal，請忽略（或者您需要先在 HTML 補上 Modal）
+    if (!modal) {
+        console.error("找不到分類介紹的 Modal 元素 (id='cat-intro-modal')");
+        return;
+    }
+
+    modal.style.display = 'flex';
+    titleEl.innerText = catName;
+    contentEl.innerHTML = '<p style="text-align:center;">⏳ 讀取中...</p>';
+
+    try {
+        // 2. 讀取 categories.json
+        // 注意：這裡假設 categories.json 跟 HTML 在同一層的 data 資料夾
+        // 為了避免快取，加個時間戳記
+        const res = await fetch(`data/categories.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("無法讀取分類資料");
+        
+        const catData = await res.json();
+        
+        // 3. 尋找對應的內容
+        // 這裡的 catName 可能是 "生物鹼 (Alkaloid)" 或單純 "生物鹼"
+        // 我們嘗試模糊比對 Key
+        let content = "尚無介紹資料。";
+        
+        // 嘗試直接對應
+        if (catData[catName]) {
+            content = catData[catName];
+        } else {
+            // 嘗試比對中文名稱
+            const key = Object.keys(catData).find(k => k.includes(catName.split(' ')[0]));
+            if (key) content = catData[key];
+        }
+
+        contentEl.innerHTML = content;
+
+    } catch (e) {
+        console.error(e);
+        contentEl.innerHTML = `<p style="color:red; text-align:center;">讀取失敗：${e.message}</p>`;
+    }
+}
+
+// 關閉分類 Modal 的函式
+function closeCatModal() {
+    const modal = document.getElementById('cat-intro-modal');
+    if (modal) modal.style.display = 'none';
+}
 </script>
 </body>
 </html>
