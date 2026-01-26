@@ -618,5 +618,28 @@
     "indications": "<p>連陽八座</p>\n<p>&nbsp;</p>",
     "image": "",
     "isTrash": false
+  },
+  {
+    "id": 24,
+    "grade": "大二上",
+    "chinese_name": "檳榔子",
+    "origin": [
+      {
+        "lat": "Areca catechu",
+        "ch": ""
+      }
+    ],
+    "confusing_drugs": [],
+    "latin_name": "Arecae Semen",
+    "part": "",
+    "family_ch": "棕櫚科",
+    "family_en": "Arecaceae/ Palmae",
+    "chem_main": "",
+    "chem_sub": "",
+    "chemistry": [],
+    "effects": [],
+    "indications": "<p>花檳榔-錯入組織</p>",
+    "image": "",
+    "isTrash": false
   }
 ]
