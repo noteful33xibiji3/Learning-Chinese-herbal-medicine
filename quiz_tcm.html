@@ -17,7 +17,7 @@
         body { background: var(--bg); font-family: 'Noto Sans TC', sans-serif; margin: 0; color: var(--text); }
         * { box-sizing: border-box; }
 
-        /* === 導覽列 (統一風格) === */
+        /* === 導覽列 === */
         nav { 
             background: white; padding: 1rem 2rem; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
@@ -35,7 +35,7 @@
         /* === 主容器 === */
         main { max-width: 800px; margin: 30px auto; padding: 0 20px; }
 
-        /* === 玻璃擬態面板 === */
+        /* === 面板樣式 === */
         .panel {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -49,14 +49,13 @@
             display: flex; align-items: center; justify-content: center; gap: 10px;
         }
 
-        /* === 區塊標題 === */
         .section-header { 
             font-size: 1rem; color: var(--primary); font-weight: bold; 
             margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
             background: var(--accent); padding: 8px 15px; border-radius: 10px; width: fit-content;
         }
 
-        /* === 1. 年級篩選 (美化 Checkbox) === */
+        /* === 1. 年級篩選 === */
         .grade-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .grade-label { cursor: pointer; flex: 1; min-width: 80px; }
         .grade-label input { display: none; }
@@ -70,7 +69,7 @@
             box-shadow: 0 4px 10px rgba(74, 124, 89, 0.3); transform: translateY(-2px);
         }
 
-        /* === 2. 藥材選擇 (Chips) === */
+        /* === 2. 藥材選擇 === */
         .search-bar { 
             display: flex; gap: 10px; margin-bottom: 15px; 
             background: white; padding: 5px; border-radius: 50px; border: 1px solid #ddd;
@@ -100,7 +99,7 @@
             background: var(--primary-dark); color: white; border-color: var(--primary-dark); 
         }
 
-        /* === 3. 配對模式 (Cards) === */
+        /* === 3. 配對模式 === */
         .match-card { 
             background: #fff8e1; border-radius: 15px; padding: 20px; 
             display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;
@@ -113,7 +112,7 @@
         }
         .arrow { font-size: 1.5rem; color: #f57c00; }
 
-        /* === 4. 測驗機制 (Radio Cards) === */
+        /* === 4. 測驗機制 === */
         .logic-grid { display: flex; gap: 15px; }
         .logic-label { flex: 1; cursor: pointer; }
         .logic-label input { display: none; }
@@ -125,7 +124,7 @@
             border-color: var(--primary); background: var(--accent); color: var(--primary-dark);
         }
 
-        /* === 開始按鈕 === */
+        /* === 按鈕 === */
         .btn-start { 
             background: linear-gradient(135deg, #4A7C59, #2C5E4F); color: white; border: none; 
             padding: 15px; width: 100%; border-radius: 50px; font-size: 1.2rem; font-weight: bold; 
@@ -148,7 +147,9 @@
             display: flex; align-items: center; justify-content: center; text-align: center;
         }
         .option-btn:hover { border-color: #ccc; background: #f9f9f9; }
-        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        
+        /* 答題狀態樣式 */
+        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; font-weight: bold; }
         .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; animation: shake 0.4s; }
 
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
@@ -282,7 +283,7 @@
     </main>
 
     <script>
-        // === 邏輯區 (完全保留您的功能) ===
+        // === 邏輯區 ===
         window.allHerbs = []; window.quizList = []; window.currentIdx = 0;
         window.score = 0; window.selectedHerbIds = new Set(); 
         window.quizLogic = "standard"; window.sessionWrongHerbs = []; 
@@ -354,7 +355,7 @@
             window.updateCount();
         };
 
-        // --- 測驗核心 ---
+        // --- 測驗核心 (修正版：手動跳題 + 顯示正解) ---
         window.startQuiz = function() {
             window.quizList = window.allHerbs.filter(h => window.selectedHerbIds.has(h.id));
             if (window.quizList.length === 0) return alert("請至少選擇一味藥材！");
@@ -410,6 +411,7 @@
             if (window.currentIdx >= window.quizList.length) return window.endQuiz();
 
             document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-finish').style.display = 'none';
             document.getElementById('q-current').innerText = window.currentIdx + 1;
             document.getElementById('q-score').innerText = window.score;
             document.getElementById('progress-bar').style.width = `${((window.currentIdx)/window.quizList.length)*100}%`;
@@ -447,13 +449,16 @@
             options.sort(() => Math.random() - 0.5);
 
             let btnsHtml = options.map(opt => 
-                `<button class="option-btn" onclick="window.checkAnswer(this, ${opt.isCorrect})">${opt.html}</button>`
+                // ★ 這裡很重要：把 data-is-correct 屬性加進去，方便稍後檢查時找到正確按鈕
+                `<button class="option-btn" data-is-correct="${opt.isCorrect}" onclick="window.checkAnswer(this, ${opt.isCorrect})">${opt.html}</button>`
             ).join('');
 
             document.getElementById('quiz-content').innerHTML = content + `<div class="options-grid">${btnsHtml}</div>`;
         };
 
+        // ★ 核心修改：判斷答案並顯示結果
         window.checkAnswer = function(btn, isCorrect) {
+            // 1. 鎖定所有按鈕，不能再點
             document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
             const herb = window.quizList[window.currentIdx];
 
@@ -462,6 +467,10 @@
                 window.score += 10;
             } else {
                 btn.classList.add('wrong');
+                // ★ 這裡：答錯時，自動幫你把「正確的那個按鈕」標示成綠色
+                const correctBtn = document.querySelector('.option-btn[data-is-correct="true"]');
+                if (correctBtn) correctBtn.classList.add('correct');
+
                 if(!window.sessionWrongHerbs.find(h => h.id === herb.id)) window.sessionWrongHerbs.push(herb);
                 if (window.quizLogic === "reinforce") {
                     window.quizList.splice(window.currentIdx + 3, 0, herb);
@@ -470,13 +479,12 @@
             }
             document.getElementById('q-score').innerText = window.score;
             
-            setTimeout(() => {
-                if (window.currentIdx === window.quizList.length - 1) {
-                    document.getElementById('btn-finish').style.display = 'block';
-                } else {
-                    window.nextQuestion(true);
-                }
-            }, 1000); // 自動跳下一題
+            // ★ 移除 setTimeout，改為顯示「下一題」或「結束」按鈕
+            if (window.currentIdx === window.quizList.length - 1) {
+                document.getElementById('btn-finish').style.display = 'block';
+            } else {
+                document.getElementById('btn-next').style.display = 'block';
+            }
         };
 
         window.endQuiz = function() {
