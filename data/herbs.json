@@ -135,17 +135,17 @@
     "part": "乾燥根",
     "family_ch": "豆科",
     "family_en": "Fabaceae/ Leguminosae",
-    "chem_main": "",
+    "chem_main": "配糖體 (Glycoside)",
     "chem_sub": "",
     "chemistry": [
       {
         "name_en": "Glycyrrhizin",
-        "name_ch": "",
-        "image": ""
+        "name_ch": "甘草次酸",
+        "image": "https://raw.githubusercontent.com/noteful33xibiji3/Learning-Chinese-herbal-medicine/main/images/chem/1774233704533_604.jpg"
       }
     ],
     "effects": [],
-    "indications": "國老、乾燥根\n 有增強Steroid hormone -月亮臉\n",
+    "indications": "<p>國老、乾燥根 有增強Steroid hormone -月亮臉</p>\n<p>&nbsp;</p>\n<p>&nbsp;</p>",
     "image": "",
     "isTrash": false
   },
